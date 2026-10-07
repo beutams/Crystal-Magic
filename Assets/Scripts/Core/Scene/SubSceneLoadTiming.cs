@@ -8,6 +8,9 @@ namespace CrystalMagic.Core
     /// <summary>Observes public ECS streaming state without forcing imports or retaining ECS buffers.</summary>
     internal sealed class SubSceneLoadTiming
     {
+#if UNITY_EDITOR
+        private static readonly Type ResolverType = typeof(SceneSystem).Assembly.GetType("Unity.Scenes.ResolveSceneReferenceSystem");
+#endif
         private readonly string _name;
         private readonly Stopwatch _clock = Stopwatch.StartNew();
         private string _lastState;
@@ -70,6 +73,21 @@ namespace CrystalMagic.Core
                     $"ManualWorldUpdate={SceneLoadTiming.Milliseconds(worldUpdateMilliseconds)}";
 #if UNITY_EDITOR
                 detail += $" EditorUpdating={UnityEditor.EditorApplication.isUpdating} EditorCompiling={UnityEditor.EditorApplication.isCompiling} EditorPaused={UnityEditor.EditorApplication.isPaused}";
+                if (world != null && world.IsCreated)
+                {
+                    var initialization = world.GetExistingSystemManaged<InitializationSystemGroup>();
+                    var streaming = world.GetExistingSystemManaged<SceneSystemGroup>();
+                    var resolver = ResolverType != null ? world.GetExistingSystemManaged(ResolverType) : null;
+                    Entity scene = subScene != null
+                        ? SceneSystem.GetSceneEntity(world.Unmanaged, subScene.SceneGUID) : Entity.Null;
+                    bool blocked = scene != Entity.Null && world.EntityManager.HasComponent<DisableSceneResolveAndLoad>(scene);
+                    bool disabled = scene != Entity.Null && world.EntityManager.HasComponent<Disabled>(scene);
+                    detail += $" WorldVersion={world.EntityManager.GlobalSystemVersion}" +
+                        $" InitEnabled={initialization?.Enabled} InitVersion={initialization?.LastSystemVersion}" +
+                        $" StreamingEnabled={streaming?.Enabled} StreamingVersion={streaming?.LastSystemVersion}" +
+                        $" ResolverEnabled={resolver?.Enabled} ResolverVersion={resolver?.LastSystemVersion}" +
+                        $" ResolveBlocked={blocked} SceneEntityDisabled={disabled} EditorSceneLoaded={subScene != null && subScene.IsLoaded}";
+                }
 #endif
                 SceneLoadTiming.Mark("SUBSCENE WAIT", detail);
                 _nextReport = now + 1000;

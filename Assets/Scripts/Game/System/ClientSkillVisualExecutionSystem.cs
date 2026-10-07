@@ -18,6 +18,7 @@ public partial class ClientSkillVisualExecutionSystem : SystemBase
     private const uint JournalLifetimeFrames = 256;
 
     private EntityQuery _runtimeQuery;
+    private SkillEffectIdentity _executingIdentity;
 
     protected override void OnCreate()
     {
@@ -34,11 +35,9 @@ public partial class ClientSkillVisualExecutionSystem : SystemBase
         Entity runtimeEntity = _runtimeQuery.GetSingletonEntity();
         ClientSkillVisualRuntimeComponent runtime =
             EntityManager.GetComponentData<ClientSkillVisualRuntimeComponent>(runtimeEntity);
-        DynamicBuffer<ClientPredictedSkillVisualEventElement> journal =
-            EntityManager.GetBuffer<ClientPredictedSkillVisualEventElement>(runtimeEntity);
         if (runtime.HasPendingRollback != 0)
         {
-            CleanupRollback(runtime.RollbackFrame, journal);
+            CleanupRollback(runtime.RollbackFrame, runtimeEntity);
             runtime.HasPendingRollback = 0;
             EntityManager.SetComponentData(runtimeEntity, runtime);
         }
@@ -49,15 +48,15 @@ public partial class ClientSkillVisualExecutionSystem : SystemBase
             requestBuffer.ToNativeArray(Allocator.Temp);
         requestBuffer.Clear();
         for (int index = 0; index < requests.Length; index++)
-            ExecuteRequest(requests[index], journal);
+            ExecuteRequest(requests[index], runtimeEntity);
 
         if (FrameManagerUtility.TryGet(EntityManager, out ClientFrameManager frame))
-            TrimJournal(frame.currentFrame, journal);
+            TrimJournal(frame.currentFrame, EntityManager.GetBuffer<ClientPredictedSkillVisualEventElement>(runtimeEntity));
     }
 
     private void ExecuteRequest(
         in ClientSkillVisualRequestElement visualRequest,
-        DynamicBuffer<ClientPredictedSkillVisualEventElement> journal)
+        Entity runtimeEntity)
     {
         SkillReleaseRequest request = visualRequest.Request;
         if (!SkillReleaseSnapshotUtility.TryCreate(
@@ -83,6 +82,8 @@ public partial class ClientSkillVisualExecutionSystem : SystemBase
                 request.OriginPosition.y,
                 request.OriginPosition.z);
             context.SourceSkillId = request.SkillId;
+            context.EffectIdentity = SkillEffectIdentity.Create(EntityManager, request.OriginEntity,
+                visualRequest.Frame, visualRequest.RequestOrdinal);
             context.HasTargetEntity = request.HasTargetEntity;
             context.TargetEntity = request.TargetEntity;
             context.HasPosition = request.HasTargetPosition;
@@ -90,12 +91,7 @@ public partial class ClientSkillVisualExecutionSystem : SystemBase
                 request.TargetPosition.x,
                 request.TargetPosition.y,
                 request.TargetPosition.z);
-            ExecuteVisualEffects(
-                resolvedSkill.EffectChain,
-                context,
-                visualRequest,
-                journal,
-                0);
+            SkillExecutor.ExecuteEffects(resolvedSkill.EffectChain, context);
         }
         finally
         {
@@ -103,71 +99,84 @@ public partial class ClientSkillVisualExecutionSystem : SystemBase
         }
     }
 
-    private void ExecuteVisualEffects(
-        EffectData[] effects,
-        SkillContent context,
-        in ClientSkillVisualRequestElement request,
-        DynamicBuffer<ClientPredictedSkillVisualEventElement> journal,
-        int path)
+    // Presentation is the client leaf of the common effect graph. Searches and
+    // gameplay-safe containers continue through SkillExecutor on both peers.
+    public bool TryExecutePresentation(EffectData effect, SkillContent context)
     {
-        if (effects == null)
-            return;
-
-        for (int index = 0; index < effects.Length; index++)
+        Entity runtimeEntity = _runtimeQuery.GetSingletonEntity();
+        SkillEffectIdentity identity = context.EffectIdentity;
+        DynamicBuffer<ClientPredictedSkillVisualEventElement> journal =
+            EntityManager.GetBuffer<ClientPredictedSkillVisualEventElement>(runtimeEntity);
+        for (int index = 0; index < journal.Length; index++)
+            if (journal[index].Identity.Equals(identity)) return true;
+        ClientSkillVisualRequestElement request = new()
         {
-            EffectData effect = effects[index];
-            if (effect == null || !PassEffectConditions(effect, context))
-                continue;
-
-            int effectOrdinal = ComposeEffectOrdinal(path, index);
-            if (HasJournalEntry(journal, request.Frame, request.RequestOrdinal, effectOrdinal))
-                continue;
-
+            Frame = identity.CastFrame, RequestOrdinal = identity.CastOrdinal,
+            Request = new SkillReleaseRequest { SkillId = context.SourceSkillId, OriginEntity = context.OriginEntity },
+        };
+        int ordinal = unchecked((int)identity.Path);
+        SkillEffectIdentity previous = _executingIdentity;
+        _executingIdentity = identity;
+        try
+        {
             switch (effect)
             {
-                case SpawnVfxEffectData spawnVfx:
-                    SpawnVfx(spawnVfx, context, request, effectOrdinal, journal);
-                    break;
-                case SpawnFollowVfxEffectData followVfx:
-                    SpawnFollowVfx(followVfx, context, request, effectOrdinal, journal);
-                    break;
-                case SpawnLineVfxEffectData lineVfx:
-                    SpawnLineVfx(lineVfx, context, request, effectOrdinal, journal);
-                    break;
-                case MoveVfxEffectData moveVfx:
-                    SpawnMoveVfx(moveVfx, context, request, effectOrdinal, journal);
-                    break;
-                case SpawnProjectileEffectData projectile:
-                    SpawnProjectileVfx(projectile, context, request, effectOrdinal, journal);
-                    break;
-                case PersistentEffectData persistent:
-                    if (TryGetPersistentReleasePosition(context, out float3 persistentPosition))
+                case SpawnVfxEffectData data: SpawnVfx(data, context, request, ordinal, runtimeEntity); return true;
+                case SpawnFollowVfxEffectData data: SpawnFollowVfx(data, context, request, ordinal, runtimeEntity); return true;
+                case SpawnLineVfxEffectData data: SpawnLineVfx(data, context, request, ordinal, runtimeEntity); return true;
+                case MoveVfxEffectData data: SpawnMoveVfx(data, context, request, ordinal, runtimeEntity); return true;
+                case SpawnProjectileEffectData data: new SpawnProjectileEffect(data).Execute(context); return true;
+                case SpawnSoundEffectData data:
+                    new SpawnSoundEffect(data).Execute(context);
+                    AddJournalEntry(runtimeEntity, request, ordinal, ClientPresentationEventType.Sound,
+                        data.AudioPath, context.Position, Entity.Null, Entity.Null, false);
+                    return true;
+                case CameraShakeEffectData data:
+                    new CameraShakeEffect(data).Execute(context);
+                    AddJournalEntry(runtimeEntity, request, ordinal, ClientPresentationEventType.CameraShake,
+                        string.Empty, context.Position, Entity.Null, Entity.Null, false);
+                    return true;
+                case PersistentEffectData data:
+                    // Random placements need an authoritative choice, as before.
+                    if (data.PlacementCount > 1 || data.PlacementRadius > 0f) return true;
+                    if (TryGetPersistentReleasePosition(context, out float3 position) &&
+                        (!data.ValidatePlacementPosition || SpawnPositionUtility.IsValid(EntityManager, position, data.PlacementClearanceRadius)))
                     {
-                        SkillContent persistentContext = SkillContentReferencePool.Get(context);
+                        SkillContent child = SkillContentReferencePool.Get(context);
                         try
                         {
-                            persistentContext.HasPosition = true;
-                            persistentContext.Position = new Vector3(
-                                persistentPosition.x,
-                                persistentPosition.y,
-                                persistentPosition.z);
-                            persistentContext.HasTargetEntity = false;
-                            persistentContext.TargetEntity = Entity.Null;
-                            ExecuteVisualEffects(
-                                persistent.OnStartEffects,
-                                persistentContext,
-                                request,
-                                journal,
-                                effectOrdinal);
+                            child.HasPosition = true; child.Position = position;
+                            child.HasTargetEntity = false; child.TargetEntity = Entity.Null;
+                            SkillExecutor.ExecuteEffects(data.OnStartEffects, child);
                         }
-                        finally
-                        {
-                            SkillContentReferencePool.Return(persistentContext);
-                        }
+                        finally { SkillContentReferencePool.Return(child); }
                     }
-                    break;
+                    return true;
+                default: return false;
             }
         }
+        finally { _executingIdentity = previous; }
+    }
+
+    public void RecordProjectile(SkillContent context, SpawnProjectileEffectData data, Entity anchor, Entity visual)
+    {
+        SkillEffectIdentity previous = _executingIdentity;
+        _executingIdentity = context.EffectIdentity;
+        try
+        {
+            ClientSkillVisualRequestElement request = new()
+            {
+                Frame = context.EffectIdentity.CastFrame, RequestOrdinal = context.EffectIdentity.CastOrdinal,
+                Request = new SkillReleaseRequest { SkillId = context.SourceSkillId, OriginEntity = context.OriginEntity },
+            };
+            int ordinal = unchecked((int)context.EffectIdentity.Path);
+            TagVisual(anchor, request, ordinal, 0);
+            if (visual != Entity.Null) TagVisual(visual, request, ordinal, 1);
+            AddJournalEntry(_runtimeQuery.GetSingletonEntity(), request, ordinal,
+                ClientPresentationEventType.SpawnFollowVfx, data.VisualPrefabName,
+                EntityManager.GetComponentData<LocalTransform>(anchor).Position, visual, anchor, true);
+        }
+        finally { _executingIdentity = previous; }
     }
 
     private void SpawnVfx(
@@ -175,7 +184,7 @@ public partial class ClientSkillVisualExecutionSystem : SystemBase
         SkillContent context,
         in ClientSkillVisualRequestElement request,
         int effectOrdinal,
-        DynamicBuffer<ClientPredictedSkillVisualEventElement> journal)
+        Entity runtimeEntity)
     {
         if (string.IsNullOrWhiteSpace(data.VfxPrefabName) ||
             !SpriteEffectSpawnUtility.TryGetReleasePosition(context, out float3 position))
@@ -199,7 +208,7 @@ public partial class ClientSkillVisualExecutionSystem : SystemBase
 
         TagVisual(visualEntity, request, effectOrdinal, 0);
         AddJournalEntry(
-            journal,
+            runtimeEntity,
             request,
             effectOrdinal,
             ClientPresentationEventType.SpawnVfx,
@@ -215,7 +224,7 @@ public partial class ClientSkillVisualExecutionSystem : SystemBase
         SkillContent context,
         in ClientSkillVisualRequestElement request,
         int effectOrdinal,
-        DynamicBuffer<ClientPredictedSkillVisualEventElement> journal)
+        Entity runtimeEntity)
     {
         if (string.IsNullOrWhiteSpace(data.VfxPrefabName) ||
             !SpriteEffectSpawnUtility.TryGetFollowTarget(
@@ -257,7 +266,7 @@ public partial class ClientSkillVisualExecutionSystem : SystemBase
             });
         TagVisual(visualEntity, request, effectOrdinal, 0);
         AddJournalEntry(
-            journal,
+            runtimeEntity,
             request,
             effectOrdinal,
             ClientPresentationEventType.SpawnFollowVfx,
@@ -273,11 +282,11 @@ public partial class ClientSkillVisualExecutionSystem : SystemBase
         SkillContent context,
         in ClientSkillVisualRequestElement request,
         int effectOrdinal,
-        DynamicBuffer<ClientPredictedSkillVisualEventElement> journal)
+        Entity runtimeEntity)
     {
         if (string.IsNullOrWhiteSpace(data.VfxPrefabName) ||
             !context.HasPosition ||
-            !TryGetOriginPosition(context, out float3 originPosition))
+            !SpriteEffectSpawnUtility.TryGetOriginPosition(context, out float3 originPosition))
         {
             return;
         }
@@ -321,7 +330,7 @@ public partial class ClientSkillVisualExecutionSystem : SystemBase
         if (firstVisual == Entity.Null)
             return;
         AddJournalEntry(
-            journal,
+            runtimeEntity,
             request,
             effectOrdinal,
             ClientPresentationEventType.SpawnLineVfx,
@@ -337,7 +346,7 @@ public partial class ClientSkillVisualExecutionSystem : SystemBase
         SkillContent context,
         in ClientSkillVisualRequestElement request,
         int effectOrdinal,
-        DynamicBuffer<ClientPredictedSkillVisualEventElement> journal)
+        Entity runtimeEntity)
     {
         if (string.IsNullOrWhiteSpace(data.VfxPrefabName) ||
             !SpriteEffectSpawnUtility.TryGetReleasePosition(context, out float3 releasePosition))
@@ -349,7 +358,7 @@ public partial class ClientSkillVisualExecutionSystem : SystemBase
                                new float3(data.StartOffset.x, data.StartOffset.y, data.StartOffset.z);
         float3 endPosition = startPosition +
                              new float3(data.MoveOffset.x, data.MoveOffset.y, data.MoveOffset.z);
-        float duration = math.max(0.001f, data.Duration);
+        float duration = math.max(0f, data.Duration);
         if (!SpriteEffectSpawnUtility.TrySpawn(
                 EntityManager,
                 data.VfxPrefabName,
@@ -375,10 +384,11 @@ public partial class ClientSkillVisualExecutionSystem : SystemBase
                 StartRealtime = UnityEngine.Time.realtimeSinceStartupAsDouble,
                 Duration = duration,
                 Initialized = 1,
+                DestroyOnArrival = 1,
             });
         TagVisual(visualEntity, request, effectOrdinal, 0);
         AddJournalEntry(
-            journal,
+            runtimeEntity,
             request,
             effectOrdinal,
             ClientPresentationEventType.MoveVfx,
@@ -389,108 +399,48 @@ public partial class ClientSkillVisualExecutionSystem : SystemBase
             false);
     }
 
-    private void SpawnProjectileVfx(
-        SpawnProjectileEffectData data,
-        SkillContent context,
-        in ClientSkillVisualRequestElement request,
-        int effectOrdinal,
-        DynamicBuffer<ClientPredictedSkillVisualEventElement> journal)
-    {
-        if (string.IsNullOrWhiteSpace(data.VisualPrefabName) ||
-            !TryGetOriginPosition(context, out float3 originPosition) ||
-            !context.HasPosition)
-        {
-            return;
-        }
-
-        float3 targetPosition = new(context.Position.x, context.Position.y, context.Position.z);
-        float3 direction = targetPosition - originPosition;
-        direction.z = 0f;
-        if (math.lengthsq(direction) <= 0.0001f)
-            return;
-
-        direction = math.normalize(direction);
-        float3 startPosition = originPosition + direction * data.SpawnOffsetDistance;
-        float traveledDistance = math.max(0f, data.Speed) * GetPredictionAgeSeconds(request.Frame);
-        if (data.MaxRange > 0f && traveledDistance >= data.MaxRange)
-            return;
-        startPosition += direction * traveledDistance;
-        quaternion rotation = quaternion.RotateZ(math.atan2(direction.y, direction.x));
-        Entity anchorEntity = EntityManager.CreateEntity();
-        EntityManager.AddComponentData(
-            anchorEntity,
-            LocalTransform.FromPositionRotationScale(startPosition, rotation, 1f));
-        EntityManager.AddComponentData(anchorEntity, new ClientPredictedProjectileComponent
-        {
-            Direction = direction,
-            Speed = math.max(0f, data.Speed),
-            MaxRange = math.max(0f, data.MaxRange),
-            TraveledDistance = traveledDistance,
-        });
-        EntityManager.AddComponent<DungeonRuntimeOwnedEntity>(anchorEntity);
-        EntityManager.AddComponent<DestroyEntityFlag>(anchorEntity);
-        EntityManager.SetComponentEnabled<DestroyEntityFlag>(anchorEntity, false);
-        TagVisual(anchorEntity, request, effectOrdinal, 0);
-
-        if (!SpriteEffectSpawnUtility.TrySpawn(
-                EntityManager,
-                data.VisualPrefabName,
-                startPosition,
-                rotation,
-                data.VisualScale,
-                0f,
-                out Entity visualEntity))
-        {
-            EntityManager.DestroyEntity(anchorEntity);
-            return;
-        }
-
-        float3 offset = new(data.VisualOffset.x, data.VisualOffset.y, data.VisualOffset.z);
-        SpriteEffectSpawnUtility.SetOrAddComponentData(
-            EntityManager,
-            visualEntity,
-            new EffectVisualFollowComponent
-            {
-                Target = anchorEntity,
-                Offset = offset,
-                AlignRotation = 1,
-                EndWhenTargetMissing = 1,
-            });
-        TagVisual(visualEntity, request, effectOrdinal, 1);
-        AddJournalEntry(
-            journal,
-            request,
-            effectOrdinal,
-            ClientPresentationEventType.SpawnFollowVfx,
-            data.VisualPrefabName,
-            startPosition,
-            visualEntity,
-            anchorEntity,
-            true);
-    }
-
     private void CleanupRollback(
         uint rollbackFrame,
-        DynamicBuffer<ClientPredictedSkillVisualEventElement> journal)
+        Entity runtimeEntity)
     {
+        using NativeArray<ClientPredictedSkillVisualEventElement> snapshot =
+            EntityManager.GetBuffer<ClientPredictedSkillVisualEventElement>(runtimeEntity).ToNativeArray(Allocator.Temp);
         using EntityQuery query = EntityManager.CreateEntityQuery(
             ComponentType.ReadOnly<ClientPredictedSkillVisualComponent>());
         using NativeArray<Entity> entities = query.ToEntityArray(Allocator.Temp);
         for (int index = 0; index < entities.Length; index++)
         {
             Entity entity = entities[index];
-            if (EntityManager.GetComponentData<ClientPredictedSkillVisualComponent>(entity).Frame > rollbackFrame &&
-                EntityManager.Exists(entity))
+            if (!EntityManager.Exists(entity)) continue;
+            ClientPredictedSkillVisualComponent tag = EntityManager.GetComponentData<ClientPredictedSkillVisualComponent>(entity);
+            if (tag.Frame > rollbackFrame && !IsConfirmedVisual(snapshot, tag))
             {
-                EntityManager.DestroyEntity(entity);
+                if (EntityManager.HasComponent<ClientPredictedProjectileComponent>(entity))
+                    ClientProjectilePredictionUtility.Release(EntityManager, entity);
+                else EntityManager.DestroyEntity(entity);
             }
         }
 
+        DynamicBuffer<ClientPredictedSkillVisualEventElement> journal =
+            EntityManager.GetBuffer<ClientPredictedSkillVisualEventElement>(runtimeEntity);
         for (int index = journal.Length - 1; index >= 0; index--)
         {
-            if (journal[index].Frame > rollbackFrame)
+            if (journal[index].Frame > rollbackFrame && journal[index].IsConfirmed == 0)
                 journal.RemoveAt(index);
         }
+    }
+
+    private static bool IsConfirmedVisual(
+        NativeArray<ClientPredictedSkillVisualEventElement> journal,
+        in ClientPredictedSkillVisualComponent tag)
+    {
+        for (int index = 0; index < journal.Length; index++)
+        {
+            ClientPredictedSkillVisualEventElement entry = journal[index];
+            if (entry.IsConfirmed != 0 && entry.Identity.Equals(tag.Identity))
+                return true;
+        }
+        return false;
     }
 
     private static void TrimJournal(
@@ -500,33 +450,14 @@ public partial class ClientSkillVisualExecutionSystem : SystemBase
         for (int index = journal.Length - 1; index >= 0; index--)
         {
             uint eventFrame = journal[index].Frame;
-            if (currentFrame >= eventFrame && currentFrame - eventFrame > JournalLifetimeFrames)
+            if (currentFrame >= eventFrame && currentFrame - eventFrame > JournalLifetimeFrames &&
+                (journal[index].AnchorEntity == Entity.Null || journal[index].IsProjectile == 0))
                 journal.RemoveAt(index);
         }
     }
 
-    private static bool HasJournalEntry(
-        DynamicBuffer<ClientPredictedSkillVisualEventElement> journal,
-        uint frame,
-        int requestOrdinal,
-        int effectOrdinal)
-    {
-        for (int index = 0; index < journal.Length; index++)
-        {
-            ClientPredictedSkillVisualEventElement entry = journal[index];
-            if (entry.Frame == frame &&
-                entry.RequestOrdinal == requestOrdinal &&
-                entry.EffectOrdinal == effectOrdinal)
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     private void AddJournalEntry(
-        DynamicBuffer<ClientPredictedSkillVisualEventElement> journal,
+        Entity runtimeEntity,
         in ClientSkillVisualRequestElement request,
         int effectOrdinal,
         ClientPresentationEventType type,
@@ -536,8 +467,12 @@ public partial class ClientSkillVisualExecutionSystem : SystemBase
         Entity anchorEntity,
         bool isProjectile)
     {
+        // Instantiation and tagging have invalidated any buffer acquired by the caller.
+        DynamicBuffer<ClientPredictedSkillVisualEventElement> journal =
+            EntityManager.GetBuffer<ClientPredictedSkillVisualEventElement>(runtimeEntity);
         journal.Add(new ClientPredictedSkillVisualEventElement
         {
+            Identity = _executingIdentity,
             Frame = request.Frame,
             RequestOrdinal = request.RequestOrdinal,
             EffectOrdinal = effectOrdinal,
@@ -560,6 +495,7 @@ public partial class ClientSkillVisualExecutionSystem : SystemBase
     {
         ClientPredictedSkillVisualComponent tag = new()
         {
+            Identity = _executingIdentity,
             Frame = request.Frame,
             RequestOrdinal = request.RequestOrdinal,
             EffectOrdinal = effectOrdinal,
@@ -569,48 +505,6 @@ public partial class ClientSkillVisualExecutionSystem : SystemBase
             EntityManager.SetComponentData(entity, tag);
         else
             EntityManager.AddComponentData(entity, tag);
-    }
-
-    private static bool PassEffectConditions(EffectData effect, SkillContent context)
-    {
-        if (effect.Conditions == null || effect.Conditions.Count == 0)
-            return true;
-
-        Entity conditionEntity = context.HasTargetEntity &&
-                                 context.TargetEntity != Entity.Null &&
-                                 context.EntityManager.Exists(context.TargetEntity)
-            ? context.TargetEntity
-            : context.HasOriginEntity &&
-              context.OriginEntity != Entity.Null &&
-              context.EntityManager.Exists(context.OriginEntity)
-                ? context.OriginEntity
-                : Entity.Null;
-        return conditionEntity != Entity.Null &&
-               EffectConditionUtility.Pass(effect.Conditions, context, conditionEntity);
-    }
-
-    private bool TryGetOriginPosition(SkillContent context, out float3 position)
-    {
-        if (context.HasOriginPositionSnapshot)
-        {
-            position = new float3(
-                context.OriginPositionSnapshot.x,
-                context.OriginPositionSnapshot.y,
-                context.OriginPositionSnapshot.z);
-            return true;
-        }
-
-        if (context.HasOriginEntity &&
-            context.OriginEntity != Entity.Null &&
-            EntityManager.Exists(context.OriginEntity) &&
-            EntityManager.HasComponent<LocalTransform>(context.OriginEntity))
-        {
-            position = EntityManager.GetComponentData<LocalTransform>(context.OriginEntity).Position;
-            return true;
-        }
-
-        position = float3.zero;
-        return false;
     }
 
     private bool TryGetPersistentReleasePosition(SkillContent context, out float3 position)
@@ -630,28 +524,7 @@ public partial class ClientSkillVisualExecutionSystem : SystemBase
             return true;
         }
 
-        return TryGetOriginPosition(context, out position);
+        return SpriteEffectSpawnUtility.TryGetOriginPosition(context, out position);
     }
 
-    private float GetPredictionAgeSeconds(uint predictionFrame)
-    {
-        if (!FrameManagerUtility.TryGet(EntityManager, out ClientFrameManager frame) ||
-            frame.currentFrame < predictionFrame)
-        {
-            return 0f;
-        }
-
-        uint completedMovementFrames = frame.currentFrame - predictionFrame;
-        if (completedMovementFrames > 0u)
-            completedMovementFrames--;
-        return completedMovementFrames * math.max(1, frame.frameInterval) / 1000f;
-    }
-
-    private static int ComposeEffectOrdinal(int path, int index)
-    {
-        unchecked
-        {
-            return path * 397 ^ index + 1;
-        }
-    }
 }

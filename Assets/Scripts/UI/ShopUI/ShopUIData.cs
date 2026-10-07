@@ -1,4 +1,4 @@
-﻿// AUTO-GENERATED — DO NOT EDIT MANUALLY
+// AUTO-GENERATED — DO NOT EDIT MANUALLY
 // Right-click Prefab → Assets/Tools/Generate UIData to regenerate
 
 using UnityEngine;
@@ -6,18 +6,29 @@ using CrystalMagic.Core;
 
 public class ShopUIData : UIData
 {
+    public UINode Backdrop;
     public UINode ShopView;
     public UINode ShopView_Viewport;
     public UINode ShopView_Viewport_Content;
     public UINode ShopView_Viewport_Content_CommodityItem;
     public UINode ShopView_Viewport_Content_CommodityItem_Select;
+    public UINode ShopView_Viewport_Content_CommodityItem_Select_Marker;
     public UINode ShopView_Viewport_Content_CommodityItem_IconBG;
     public UINode ShopView_Viewport_Content_CommodityItem_IconBG_Mask;
     public UINode ShopView_Viewport_Content_CommodityItem_IconBG_Mask_Icon;
     public UINode ShopView_Viewport_Content_CommodityItem_Name;
     public UINode ShopView_Viewport_Content_CommodityItem_Description;
+    public UINode ShopView_Viewport_Content_CommodityItem_PriceTag;
     public UINode ShopView_Viewport_Content_CommodityItem_Coin;
     public UINode ShopView_Viewport_Content_CommodityItem_Price;
+    public UINode ShopView_TitleLeft;
+    public UINode ShopView_TitleRight;
+    public UINode ShopView_TitleStar1;
+    public UINode ShopView_TitleStar2;
+    public UINode ShopView_TitleStar3;
+    public UINode ShopView_FooterLeft;
+    public UINode ShopView_FooterRight;
+    public UINode ShopView_Hint;
     public UINode InventoryView;
     public UINode InventoryView_Viewport;
     public UINode InventoryView_Viewport_Content;
@@ -27,27 +38,56 @@ public class ShopUIData : UIData
     public UINode InventoryView_Viewport_Content_InventoryItem_IconBG_Mask_Icon;
     public UINode InventoryView_Viewport_Content_InventoryItem_Count;
     public UINode InventoryView_Viewport_Content_InventoryItem_Name;
+    public UINode InventoryView_TitleLeft;
+    public UINode InventoryView_TitleRight;
+    public UINode InventoryView_TitleStar;
+    public UINode InventoryView_BalanceLabel;
+    public UINode InventoryView_Hint;
+    public UINode InventoryView_FooterStar;
+    public UINode ShopHeader;
+    public UINode ShopHeader_Title;
+    public UINode InventoryHeader;
+    public UINode InventoryHeader_Title;
     public UINode Coin;
     public UINode Coin_Money;
     public UINode Coin_MoneyText;
+    public UINode Back;
+    public UINode Back_Default;
+    public UINode Back_Click;
+    public UINode Back_Title;
+    public UINode InventorySort;
+    public UINode InventorySort_Default;
+    public UINode InventorySort_Click;
+    public UINode InventorySort_Title;
     public UINode Drag;
     public UINode Drag_Mask;
     public UINode Drag_Mask_Icon;
 
     public override void Bind(Transform root)
     {
+        Backdrop = UINode.From(Find(root, "Backdrop"));
         ShopView = UINode.From(Find(root, "ShopView"));
         ShopView_Viewport = UINode.From(Find(root, "ShopView/Viewport"));
         ShopView_Viewport_Content = UINode.From(Find(root, "ShopView/Viewport/Content"));
         ShopView_Viewport_Content_CommodityItem = UINode.From(Find(root, "ShopView/Viewport/Content/CommodityItem"));
         ShopView_Viewport_Content_CommodityItem_Select = UINode.From(Find(root, "ShopView/Viewport/Content/CommodityItem/Select"));
+        ShopView_Viewport_Content_CommodityItem_Select_Marker = UINode.From(Find(root, "ShopView/Viewport/Content/CommodityItem/Select/Marker"));
         ShopView_Viewport_Content_CommodityItem_IconBG = UINode.From(Find(root, "ShopView/Viewport/Content/CommodityItem/IconBG"));
         ShopView_Viewport_Content_CommodityItem_IconBG_Mask = UINode.From(Find(root, "ShopView/Viewport/Content/CommodityItem/IconBG/Mask"));
         ShopView_Viewport_Content_CommodityItem_IconBG_Mask_Icon = UINode.From(Find(root, "ShopView/Viewport/Content/CommodityItem/IconBG/Mask/Icon"));
         ShopView_Viewport_Content_CommodityItem_Name = UINode.From(Find(root, "ShopView/Viewport/Content/CommodityItem/Name"));
         ShopView_Viewport_Content_CommodityItem_Description = UINode.From(Find(root, "ShopView/Viewport/Content/CommodityItem/Description"));
+        ShopView_Viewport_Content_CommodityItem_PriceTag = UINode.From(Find(root, "ShopView/Viewport/Content/CommodityItem/PriceTag"));
         ShopView_Viewport_Content_CommodityItem_Coin = UINode.From(Find(root, "ShopView/Viewport/Content/CommodityItem/Coin"));
         ShopView_Viewport_Content_CommodityItem_Price = UINode.From(Find(root, "ShopView/Viewport/Content/CommodityItem/Price"));
+        ShopView_TitleLeft = UINode.From(Find(root, "ShopView/TitleLeft"));
+        ShopView_TitleRight = UINode.From(Find(root, "ShopView/TitleRight"));
+        ShopView_TitleStar1 = UINode.From(Find(root, "ShopView/TitleStar1"));
+        ShopView_TitleStar2 = UINode.From(Find(root, "ShopView/TitleStar2"));
+        ShopView_TitleStar3 = UINode.From(Find(root, "ShopView/TitleStar3"));
+        ShopView_FooterLeft = UINode.From(Find(root, "ShopView/FooterLeft"));
+        ShopView_FooterRight = UINode.From(Find(root, "ShopView/FooterRight"));
+        ShopView_Hint = UINode.From(Find(root, "ShopView/Hint"));
         InventoryView = UINode.From(Find(root, "InventoryView"));
         InventoryView_Viewport = UINode.From(Find(root, "InventoryView/Viewport"));
         InventoryView_Viewport_Content = UINode.From(Find(root, "InventoryView/Viewport/Content"));
@@ -57,9 +97,27 @@ public class ShopUIData : UIData
         InventoryView_Viewport_Content_InventoryItem_IconBG_Mask_Icon = UINode.From(Find(root, "InventoryView/Viewport/Content/InventoryItem/IconBG/Mask/Icon"));
         InventoryView_Viewport_Content_InventoryItem_Count = UINode.From(Find(root, "InventoryView/Viewport/Content/InventoryItem/Count"));
         InventoryView_Viewport_Content_InventoryItem_Name = UINode.From(Find(root, "InventoryView/Viewport/Content/InventoryItem/Name"));
+        InventoryView_TitleLeft = UINode.From(Find(root, "InventoryView/TitleLeft"));
+        InventoryView_TitleRight = UINode.From(Find(root, "InventoryView/TitleRight"));
+        InventoryView_TitleStar = UINode.From(Find(root, "InventoryView/TitleStar"));
+        InventoryView_BalanceLabel = UINode.From(Find(root, "InventoryView/BalanceLabel"));
+        InventoryView_Hint = UINode.From(Find(root, "InventoryView/Hint"));
+        InventoryView_FooterStar = UINode.From(Find(root, "InventoryView/FooterStar"));
+        ShopHeader = UINode.From(Find(root, "ShopHeader"));
+        ShopHeader_Title = UINode.From(Find(root, "ShopHeader/Title"));
+        InventoryHeader = UINode.From(Find(root, "InventoryHeader"));
+        InventoryHeader_Title = UINode.From(Find(root, "InventoryHeader/Title"));
         Coin = UINode.From(Find(root, "Coin"));
         Coin_Money = UINode.From(Find(root, "Coin/Money"));
         Coin_MoneyText = UINode.From(Find(root, "Coin/MoneyText"));
+        Back = UINode.From(Find(root, "Back"));
+        Back_Default = UINode.From(Find(root, "Back/Default"));
+        Back_Click = UINode.From(Find(root, "Back/Click"));
+        Back_Title = UINode.From(Find(root, "Back/Title"));
+        InventorySort = UINode.From(Find(root, "InventorySort"));
+        InventorySort_Default = UINode.From(Find(root, "InventorySort/Default"));
+        InventorySort_Click = UINode.From(Find(root, "InventorySort/Click"));
+        InventorySort_Title = UINode.From(Find(root, "InventorySort/Title"));
         Drag = UINode.From(Find(root, "Drag"));
         Drag_Mask = UINode.From(Find(root, "Drag/Mask"));
         Drag_Mask_Icon = UINode.From(Find(root, "Drag/Mask/Icon"));

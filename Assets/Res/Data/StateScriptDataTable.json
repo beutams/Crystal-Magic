@@ -1,4 +1,4 @@
-﻿{
+{
   "Rows": [
     {
       "Graphs": [
@@ -2305,6 +2305,7 @@
           "Nodes": [
             {
               "Type": "Entry",
+              "ExecutionTargets": 7,
               "Guid": "98cce61a1a104d39b6e60a85066754aa",
               "EditorPosition": {
                 "x": 80,
@@ -2372,6 +2373,7 @@
                 }
               ],
               "Type": "SetValue",
+              "ExecutionTargets": 7,
               "Guid": "6b0aaf74e96e4b6498e965b2eb80f998",
               "EditorPosition": {
                 "x": 11580,
@@ -2439,6 +2441,7 @@
                 }
               ],
               "Type": "SetValue",
+              "ExecutionTargets": 7,
               "Guid": "d54ce0ba9b0a43bdb49f68fe25dadc97",
               "EditorPosition": {
                 "x": 580,
@@ -2506,6 +2509,7 @@
                 }
               ],
               "Type": "SetValue",
+              "ExecutionTargets": 7,
               "Guid": "a439c8ad09ea4c23a7d29a278a2f51d8",
               "EditorPosition": {
                 "x": 1080,
@@ -2573,6 +2577,7 @@
                 }
               ],
               "Type": "SetValue",
+              "ExecutionTargets": 7,
               "Guid": "d208e12d2cca4b899124d5dfe1a3a909",
               "EditorPosition": {
                 "x": 1580,
@@ -2584,6 +2589,7 @@
               "RepeatWhileHeld": true,
               "TickOrder": 0,
               "Type": "PlayerInputEvent",
+              "ExecutionTargets": 7,
               "Guid": "79e975ab68c34db195c675eab876aef6",
               "EditorPosition": {
                 "x": 2080,
@@ -2653,6 +2659,7 @@
                 ]
               },
               "Type": "Compare",
+              "ExecutionTargets": 7,
               "Guid": "59b2058254c84bd99e3ecdff8f84421d",
               "EditorPosition": {
                 "x": 3080,
@@ -2720,6 +2727,7 @@
                 }
               ],
               "Type": "SetValue",
+              "ExecutionTargets": 7,
               "Guid": "c25a5f0de2b64a8eaf0536591f5e6366",
               "EditorPosition": {
                 "x": 5580,
@@ -2790,6 +2798,7 @@
               },
               "TickOrder": -10,
               "Type": "Monitor",
+              "ExecutionTargets": 7,
               "Guid": "013437695ee946a780043d9e2af0e68f",
               "EditorPosition": {
                 "x": 2080,
@@ -2831,6 +2840,7 @@
                 ]
               },
               "Type": "Compare",
+              "ExecutionTargets": 7,
               "Guid": "7aa301ef3adc4b34b8fbe56f4a210ca1",
               "EditorPosition": {
                 "x": 2580,
@@ -3033,6 +3043,7 @@
               },
               "TickOrder": 0,
               "Type": "Timer",
+              "ExecutionTargets": 7,
               "Guid": "8c7c2c43f1ed42dc8b3d06fd3619cacc",
               "EditorPosition": {
                 "x": 5580,
@@ -3069,6 +3080,7 @@
               },
               "TickOrder": 0,
               "Type": "NumberMonitor",
+              "ExecutionTargets": 7,
               "Guid": "b13b0bbf83e9442c9b42ed2411c8c375",
               "EditorPosition": {
                 "x": 3080,
@@ -3163,6 +3175,7 @@
                 }
               ],
               "Type": "SetValue",
+              "ExecutionTargets": 7,
               "Guid": "cbac06d94bde419999fec5d558d31d18",
               "EditorPosition": {
                 "x": 2580,
@@ -3254,6 +3267,7 @@
                 }
               },
               "Type": "RequestSkillWithAddition",
+              "ExecutionTargets": 7,
               "Guid": "7c8a9665ce7c45f191a0d5e5c4b521d0",
               "EditorPosition": {
                 "x": 7580,
@@ -3345,6 +3359,7 @@
                 }
               },
               "Type": "RequestSkillWithAddition",
+              "ExecutionTargets": 7,
               "Guid": "f9c8822bf7b1424dbcb37b570b1d2a99",
               "EditorPosition": {
                 "x": 7080,
@@ -3413,6 +3428,7 @@
                 ]
               },
               "Type": "Compare",
+              "ExecutionTargets": 7,
               "Guid": "a3f17db81df644b7a3a8a7aaf2e43210",
               "EditorPosition": {
                 "x": 6080,
@@ -3481,6 +3497,7 @@
                 ]
               },
               "Type": "Compare",
+              "ExecutionTargets": 7,
               "Guid": "d7ae4f9f0dc144b4b7bcbe9b9af779c2",
               "EditorPosition": {
                 "x": 6580,
@@ -3630,6 +3647,7 @@
                 }
               ],
               "Type": "SetValue",
+              "ExecutionTargets": 7,
               "Guid": "6f88f1092b5a403fa7c5e159bdd768e6",
               "EditorPosition": {
                 "x": 10080,
@@ -3781,6 +3799,7 @@
                 ]
               },
               "Type": "Compare",
+              "ExecutionTargets": 7,
               "Guid": "a75bb15a3efd47a1afd0717cf8092c92",
               "EditorPosition": {
                 "x": 9580,
@@ -3822,6 +3841,7 @@
                 ]
               },
               "Type": "Compare",
+              "ExecutionTargets": 7,
               "Guid": "4421b6b78d1345148ae0c6bdd0090dd0",
               "EditorPosition": {
                 "x": 5080,
@@ -3889,6 +3909,7 @@
               },
               "Values": [],
               "Type": "SetValue",
+              "ExecutionTargets": 7,
               "Guid": "2ad24c3ce3d54d6c99ad7bd7c3b6f8e1",
               "EditorPosition": {
                 "x": 3580,
@@ -3956,6 +3977,7 @@
                 }
               ],
               "Type": "SetValue",
+              "ExecutionTargets": 7,
               "Guid": "d9c5135bd2b146cebf91b34859c80164",
               "EditorPosition": {
                 "x": 10580,
@@ -4023,6 +4045,7 @@
                 }
               ],
               "Type": "SetValue",
+              "ExecutionTargets": 7,
               "Guid": "8ade1650842a4e2784c90b6ffd75a441",
               "EditorPosition": {
                 "x": 10080,
@@ -4090,6 +4113,7 @@
                 }
               ],
               "Type": "SetValue",
+              "ExecutionTargets": 7,
               "Guid": "70ec76c749d84d3fb0e21f7454c798f7",
               "EditorPosition": {
                 "x": 13580,
@@ -4186,6 +4210,7 @@
                 ]
               },
               "Type": "Compare",
+              "ExecutionTargets": 7,
               "Guid": "6242611392b04e54bdc35a28ad8f5c92",
               "EditorPosition": {
                 "x": 4080,
@@ -4309,6 +4334,7 @@
                 }
               ],
               "Type": "SetValue",
+              "ExecutionTargets": 7,
               "Guid": "c782a7f4f83a4e848baa7f9c849af0d2",
               "EditorPosition": {
                 "x": 4580,
@@ -4351,6 +4377,7 @@
               },
               "TickOrder": 0,
               "Type": "Monitor",
+              "ExecutionTargets": 7,
               "Guid": "339387cbfc64496c8820fb1e214a9158",
               "EditorPosition": {
                 "x": 2080,
@@ -4420,6 +4447,7 @@
                 ]
               },
               "Type": "Compare",
+              "ExecutionTargets": 7,
               "Guid": "05b666a487b8448db838a84b6d9a2ea2",
               "EditorPosition": {
                 "x": 2580,
@@ -4461,6 +4489,7 @@
                 ]
               },
               "Type": "Compare",
+              "ExecutionTargets": 7,
               "Guid": "0798beea61a3475f9910dc61b8bb543d",
               "EditorPosition": {
                 "x": 3580,
@@ -4584,6 +4613,7 @@
                 }
               ],
               "Type": "SetValue",
+              "ExecutionTargets": 7,
               "Guid": "28bae935fbf449adb454b96ff890adc6",
               "EditorPosition": {
                 "x": 2080,
@@ -4594,6 +4624,7 @@
               "EventName": "skill.afterRequest",
               "TickOrder": 0,
               "Type": "Addition",
+              "ExecutionTargets": 7,
               "Guid": "1ecaf766372b47c98f7d188ccb04ce71",
               "EditorPosition": {
                 "x": 8080,
@@ -4663,6 +4694,7 @@
                 ]
               },
               "Type": "Compare",
+              "ExecutionTargets": 7,
               "Guid": "ae7dfd1376dc459f867fab373373c18d",
               "EditorPosition": {
                 "x": 8580,
@@ -4733,6 +4765,7 @@
               },
               "TickOrder": 0,
               "Type": "Monitor",
+              "ExecutionTargets": 7,
               "Guid": "2ba1eecf523f4f3db2af683203a2d409",
               "EditorPosition": {
                 "x": 9080,
@@ -4827,6 +4860,7 @@
                 }
               ],
               "Type": "SetValue",
+              "ExecutionTargets": 7,
               "Guid": "c6e4eb2746794d359897129af6f461b6",
               "EditorPosition": {
                 "x": 4080,
@@ -4923,6 +4957,7 @@
                 ]
               },
               "Type": "Compare",
+              "ExecutionTargets": 7,
               "Guid": "c0c01666d8d54e11a3e5b28b10b49e76",
               "EditorPosition": {
                 "x": 5080,
@@ -4933,6 +4968,7 @@
               "EventName": "skill.beforeCast",
               "TickOrder": 0,
               "Type": "Addition",
+              "ExecutionTargets": 7,
               "Guid": "901dca3961534b64a376bd2ee099a50e",
               "EditorPosition": {
                 "x": 4580,
@@ -4943,6 +4979,7 @@
               "EventName": "skill.afterChain",
               "TickOrder": 0,
               "Type": "Addition",
+              "ExecutionTargets": 7,
               "Guid": "f8417cc3a0e8467ea5c6a0ff3cc1c280",
               "EditorPosition": {
                 "x": 11080,
@@ -5010,6 +5047,7 @@
                 }
               ],
               "Type": "SetValue",
+              "ExecutionTargets": 7,
               "Guid": "8a09e4d9a3bc4012a16f66d194efbd81",
               "EditorPosition": {
                 "x": 12080,
@@ -5077,6 +5115,7 @@
                 }
               ],
               "Type": "SetValue",
+              "ExecutionTargets": 7,
               "Guid": "a1def9e98b934bb2b1cd7b6d3d9f749a",
               "EditorPosition": {
                 "x": 12580,
@@ -5144,6 +5183,7 @@
                 }
               ],
               "Type": "SetValue",
+              "ExecutionTargets": 7,
               "Guid": "54cc70616d37420e88e5f03d116bcbd7",
               "EditorPosition": {
                 "x": 13080,
@@ -5154,6 +5194,7 @@
               "EventName": "skill.beforeRequest",
               "TickOrder": 0,
               "Type": "Addition",
+              "ExecutionTargets": 7,
               "Guid": "47280a179d7b4a63804658a5e2058124",
               "EditorPosition": {
                 "x": 6580,
@@ -5164,11 +5205,46 @@
               "EventName": "skill.beforeRequest",
               "TickOrder": 0,
               "Type": "Addition",
+              "ExecutionTargets": 7,
               "Guid": "39fda60ef3364b77bd3e1261227b36ec",
               "EditorPosition": {
                 "x": 7080,
                 "y": 2130
               }
+            },
+            {
+              "Type": "ExecuteEffect",
+              "Guid": "combat_audio_common_cast_start",
+              "ExecutionTargets": 5,
+              "EditorPosition": {
+                "x": 5580,
+                "y": 2160
+              },
+              "OriginSource": 1,
+              "Position": {
+                "Kind": 1,
+                "GetterKey": "unit.transform.position",
+                "Inputs": []
+              },
+              "SourceSkillId": {
+                "Kind": 1,
+                "GetterKey": "player.skill.currentSkillId",
+                "Inputs": []
+              },
+              "RepeatCount": 1,
+              "Effects": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+                  "AudioPath": "Combat/cast_common.wav",
+                  "Channel": 1,
+                  "Volume": 0.7,
+                  "Pitch": 1,
+                  "SpatialBlend": 0.85,
+                  "DelaySeconds": 0.0,
+                  "FollowCaster": true,
+                  "Conditions": []
+                }
+              ]
             }
           ],
           "Edges": [
@@ -5477,6 +5553,12 @@
               "OutputPortName": "Out",
               "InputNodeGuid": "28bae935fbf449adb454b96ff890adc6",
               "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "4421b6b78d1345148ae0c6bdd0090dd0",
+              "OutputPortName": "True",
+              "InputNodeGuid": "combat_audio_common_cast_start",
+              "InputPortName": "In"
             }
           ],
           "ViewPosition": {
@@ -5515,6 +5597,7 @@
           "Nodes": [
             {
               "Type": "Entry",
+              "ExecutionTargets": 7,
               "Guid": "2f30fef31c424c99a7a0b7890df0b660",
               "EditorPosition": {
                 "x": 80,
@@ -5582,6 +5665,7 @@
                 }
               ],
               "Type": "SetValue",
+              "ExecutionTargets": 7,
               "Guid": "886b10f6ce794eb1a37499a8a31ba29f",
               "EditorPosition": {
                 "x": 580,
@@ -5649,6 +5733,7 @@
                 }
               ],
               "Type": "SetValue",
+              "ExecutionTargets": 7,
               "Guid": "b2c4f8433b70468f834fa6c5b93f9474",
               "EditorPosition": {
                 "x": 1080,
@@ -5719,6 +5804,7 @@
               },
               "TickOrder": 0,
               "Type": "Monitor",
+              "ExecutionTargets": 7,
               "Guid": "1e103eb1ac174ccaad407a057f15fba9",
               "EditorPosition": {
                 "x": 1580,
@@ -5755,6 +5841,7 @@
               },
               "TickOrder": 0,
               "Type": "Timer",
+              "ExecutionTargets": 7,
               "Guid": "4f7ef8171ee54cb8a3de5bbef0a3f54e",
               "EditorPosition": {
                 "x": 2080,
@@ -5765,6 +5852,7 @@
               "EventName": "skill.extraCast",
               "TickOrder": 0,
               "Type": "Addition",
+              "ExecutionTargets": 7,
               "Guid": "4eef735cdca24f2e9f355adfd3c47d1a",
               "EditorPosition": {
                 "x": 2580,
@@ -5889,6 +5977,7 @@
                 ]
               },
               "Type": "Compare",
+              "ExecutionTargets": 7,
               "Guid": "855a0eaf62f948f7b93c067ccfaa2f31",
               "EditorPosition": {
                 "x": 3080,
@@ -6013,6 +6102,7 @@
                 ]
               },
               "Type": "Compare",
+              "ExecutionTargets": 7,
               "Guid": "bf72912e855f41caa2782448f5a4ca6c",
               "EditorPosition": {
                 "x": 3580,
@@ -6132,6 +6222,7 @@
                 }
               },
               "Type": "RequestSkillWithAddition",
+              "ExecutionTargets": 7,
               "Guid": "c3efb7a954ee48d49779c65ca3ec9ee8",
               "EditorPosition": {
                 "x": 3580,
@@ -6251,6 +6342,7 @@
                 }
               },
               "Type": "RequestSkillWithAddition",
+              "ExecutionTargets": 7,
               "Guid": "85bdd7e6f8f544099baa866a5d1cc3cf",
               "EditorPosition": {
                 "x": 4080,
@@ -6318,6 +6410,7 @@
                 }
               ],
               "Type": "SetValue",
+              "ExecutionTargets": 7,
               "Guid": "7f1c4fe7245d4e14919420f0f941f944",
               "EditorPosition": {
                 "x": 4580,
@@ -6385,6 +6478,7 @@
                 }
               ],
               "Type": "SetValue",
+              "ExecutionTargets": 7,
               "Guid": "a95a6b9a04a64e6e87a549e4cc4ecc04",
               "EditorPosition": {
                 "x": 5080,
@@ -6526,7 +6620,7 @@
               "RequireAvailableInteraction": true,
               "MaxCount": 1,
               "SortMode": 1,
-              "ResultKey": "game.interaction.candidates",
+              "ResultKey": "game.interaction.exitCandidates",
               "Type": "QueryUnits",
               "Guid": "8887ea79cf8f4f45943ba1ab192192a1_client",
               "EditorPosition": {
@@ -6544,7 +6638,7 @@
                     "Kind": 0,
                     "Literal": {
                       "Type": 7,
-                      "String": "game.interaction.candidates"
+                      "String": "game.interaction.exitCandidates"
                     },
                     "Inputs": []
                   },
@@ -6649,6 +6743,7 @@
           "Nodes": [
             {
               "Type": "Entry",
+              "ExecutionTargets": 7,
               "Guid": "149e6a412bca443c8de3adf715a21a3a",
               "EditorPosition": {
                 "x": 80,
@@ -6660,6 +6755,7 @@
               "RepeatWhileHeld": false,
               "TickOrder": 0,
               "Type": "PlayerInputEvent",
+              "ExecutionTargets": 7,
               "Guid": "e17763e4cc344b8ba012afedbcacd46d",
               "EditorPosition": {
                 "x": 580,
@@ -6679,6 +6775,7 @@
               "SortMode": 1,
               "ResultKey": "game.interaction.candidates",
               "Type": "QueryUnits",
+              "ExecutionTargets": 7,
               "Guid": "8887ea79cf8f4f45943ba1ab192192a1",
               "EditorPosition": {
                 "x": 1080,
@@ -33582,6 +33679,77 @@
           "EntryNodeGuid": "armored_orc_block_reaction_entry",
           "Nodes": [
             {
+              "Type": "SetValue",
+              "Guid": "armored_orc_block_cooldown_start",
+              "SetterKey": "unit.variables.set",
+              "Key": "ai.block.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": true
+                },
+                "Inputs": []
+              },
+              "EditorPosition": {
+                "x": 830,
+                "y": -180
+              }
+            },
+            {
+              "Type": "SetValue",
+              "Guid": "armored_orc_block_consume_guard",
+              "SetterKey": "unit.buffs.remove",
+              "Key": "",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 2,
+                  "Int": 12
+                },
+                "Inputs": []
+              },
+              "EditorPosition": {
+                "x": 1080,
+                "y": -180
+              }
+            },
+            {
+              "Type": "Timer",
+              "Guid": "armored_orc_block_cooldown_timer",
+              "Duration": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 3,
+                  "Float": 8
+                },
+                "Inputs": []
+              },
+              "TickOrder": 1,
+              "EditorPosition": {
+                "x": 1330,
+                "y": -385
+              }
+            },
+            {
+              "Type": "SetValue",
+              "Guid": "armored_orc_block_cooldown_ready",
+              "SetterKey": "unit.variables.set",
+              "Key": "ai.block.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "EditorPosition": {
+                "x": 1830,
+                "y": -385
+              }
+            },
+            {
               "Type": "Entry",
               "Guid": "armored_orc_block_reaction_entry",
               "EditorPosition": {
@@ -34141,7 +34309,31 @@
             {
               "OutputNodeGuid": "armored_orc_block_reaction_monitor",
               "OutputPortName": "OnChangeTrue",
+              "InputNodeGuid": "armored_orc_block_cooldown_start",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "armored_orc_block_cooldown_start",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "armored_orc_block_cooldown_timer",
+              "InputPortName": "Start"
+            },
+            {
+              "OutputNodeGuid": "armored_orc_block_cooldown_start",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "armored_orc_block_consume_guard",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "armored_orc_block_consume_guard",
+              "OutputPortName": "Out",
               "InputNodeGuid": "armored_orc_block_reaction_lock",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "armored_orc_block_cooldown_timer",
+              "OutputPortName": "OnComplete",
+              "InputNodeGuid": "armored_orc_block_cooldown_ready",
               "InputPortName": "In"
             },
             {
@@ -34211,6 +34403,140 @@
           "ExecutionConditions": [],
           "EntryNodeGuid": "armored_orc_shield_guard_entry",
           "Nodes": [
+            {
+              "Type": "SetValue",
+              "Guid": "armored_orc_block_cooldown_init",
+              "SetterKey": "unit.variables.set",
+              "Key": "ai.block.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "EditorPosition": {
+                "x": 330,
+                "y": 285
+              }
+            },
+            {
+              "Type": "Compare",
+              "Guid": "armored_orc_shield_guard_idle_ready",
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "IsFalse",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "SourceTarget": 0,
+                    "GetterKey": "unit.variables.getBool",
+                    "Inputs": [
+                      {
+                        "Kind": 0,
+                        "Literal": {
+                          "Type": 7,
+                          "String": "ai.block.coolingDown"
+                        },
+                        "Inputs": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              "EditorPosition": {
+                "x": 1330,
+                "y": 80
+              }
+            },
+            {
+              "Type": "Compare",
+              "Guid": "armored_orc_shield_guard_idle_not_reacting",
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "IsFalse",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "SourceTarget": 0,
+                    "GetterKey": "unit.buffs.has",
+                    "Inputs": [
+                      {
+                        "Kind": 0,
+                        "Literal": {
+                          "Type": 2,
+                          "Int": 13
+                        },
+                        "Inputs": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              "EditorPosition": {
+                "x": 1580,
+                "y": 80
+              }
+            },
+            {
+              "Type": "Compare",
+              "Guid": "armored_orc_shield_guard_chase_ready",
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "IsFalse",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "SourceTarget": 0,
+                    "GetterKey": "unit.variables.getBool",
+                    "Inputs": [
+                      {
+                        "Kind": 0,
+                        "Literal": {
+                          "Type": 7,
+                          "String": "ai.block.coolingDown"
+                        },
+                        "Inputs": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              "EditorPosition": {
+                "x": 1330,
+                "y": 490
+              }
+            },
+            {
+              "Type": "Compare",
+              "Guid": "armored_orc_shield_guard_chase_not_reacting",
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "IsFalse",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "SourceTarget": 0,
+                    "GetterKey": "unit.buffs.has",
+                    "Inputs": [
+                      {
+                        "Kind": 0,
+                        "Literal": {
+                          "Type": 2,
+                          "Int": 13
+                        },
+                        "Inputs": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              "EditorPosition": {
+                "x": 1580,
+                "y": 490
+              }
+            },
             {
               "Type": "Entry",
               "Guid": "armored_orc_shield_guard_entry",
@@ -34499,7 +34825,7 @@
               "Type": "RequestSkill",
               "Guid": "armored_orc_shield_guard_idle_request",
               "EditorPosition": {
-                "x": 1580,
+                "x": 1830,
                 "y": 80
               }
             },
@@ -34783,20 +35109,26 @@
               "Type": "RequestSkill",
               "Guid": "armored_orc_shield_guard_chase_request",
               "EditorPosition": {
-                "x": 1580,
+                "x": 1830,
                 "y": 490
               }
             }
           ],
           "Edges": [
             {
-              "OutputNodeGuid": "armored_orc_shield_guard_entry",
+              "OutputNodeGuid": "armored_orc_block_cooldown_init",
               "OutputPortName": "Out",
               "InputNodeGuid": "armored_orc_shield_guard_idle_monitor",
               "InputPortName": "Start"
             },
             {
               "OutputNodeGuid": "armored_orc_shield_guard_entry",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "armored_orc_block_cooldown_init",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "armored_orc_block_cooldown_init",
               "OutputPortName": "Out",
               "InputNodeGuid": "armored_orc_shield_guard_chase_monitor",
               "InputPortName": "Start"
@@ -34810,8 +35142,8 @@
             {
               "OutputNodeGuid": "armored_orc_shield_guard_idle_missing",
               "OutputPortName": "True",
-              "InputNodeGuid": "armored_orc_shield_guard_idle_request",
-              "InputPortName": "In"
+              "InputNodeGuid": "armored_orc_shield_guard_idle_ready",
+              "InputPortName": "Check"
             },
             {
               "OutputNodeGuid": "armored_orc_shield_guard_chase_monitor",
@@ -34820,10 +35152,34 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "armored_orc_shield_guard_chase_missing",
+              "OutputNodeGuid": "armored_orc_shield_guard_idle_ready",
+              "OutputPortName": "True",
+              "InputNodeGuid": "armored_orc_shield_guard_idle_not_reacting",
+              "InputPortName": "Check"
+            },
+            {
+              "OutputNodeGuid": "armored_orc_shield_guard_idle_not_reacting",
+              "OutputPortName": "True",
+              "InputNodeGuid": "armored_orc_shield_guard_idle_request",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "armored_orc_shield_guard_chase_ready",
+              "OutputPortName": "True",
+              "InputNodeGuid": "armored_orc_shield_guard_chase_not_reacting",
+              "InputPortName": "Check"
+            },
+            {
+              "OutputNodeGuid": "armored_orc_shield_guard_chase_not_reacting",
               "OutputPortName": "True",
               "InputNodeGuid": "armored_orc_shield_guard_chase_request",
               "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "armored_orc_shield_guard_chase_missing",
+              "OutputPortName": "True",
+              "InputNodeGuid": "armored_orc_shield_guard_chase_ready",
+              "InputPortName": "Check"
             }
           ],
           "ViewPosition": {
@@ -58953,6 +59309,77 @@
           "EntryNodeGuid": "knight_block_reaction_entry",
           "Nodes": [
             {
+              "Type": "SetValue",
+              "Guid": "knight_block_cooldown_start",
+              "SetterKey": "unit.variables.set",
+              "Key": "ai.block.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": true
+                },
+                "Inputs": []
+              },
+              "EditorPosition": {
+                "x": 830,
+                "y": -180
+              }
+            },
+            {
+              "Type": "SetValue",
+              "Guid": "knight_block_consume_guard",
+              "SetterKey": "unit.buffs.remove",
+              "Key": "",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 2,
+                  "Int": 12
+                },
+                "Inputs": []
+              },
+              "EditorPosition": {
+                "x": 1080,
+                "y": -180
+              }
+            },
+            {
+              "Type": "Timer",
+              "Guid": "knight_block_cooldown_timer",
+              "Duration": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 3,
+                  "Float": 6
+                },
+                "Inputs": []
+              },
+              "TickOrder": 1,
+              "EditorPosition": {
+                "x": 1330,
+                "y": -385
+              }
+            },
+            {
+              "Type": "SetValue",
+              "Guid": "knight_block_cooldown_ready",
+              "SetterKey": "unit.variables.set",
+              "Key": "ai.block.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "EditorPosition": {
+                "x": 1830,
+                "y": -385
+              }
+            },
+            {
               "Type": "Entry",
               "Guid": "knight_block_reaction_entry",
               "EditorPosition": {
@@ -59512,7 +59939,31 @@
             {
               "OutputNodeGuid": "knight_block_reaction_monitor",
               "OutputPortName": "OnChangeTrue",
+              "InputNodeGuid": "knight_block_cooldown_start",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "knight_block_cooldown_start",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "knight_block_cooldown_timer",
+              "InputPortName": "Start"
+            },
+            {
+              "OutputNodeGuid": "knight_block_cooldown_start",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "knight_block_consume_guard",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "knight_block_consume_guard",
+              "OutputPortName": "Out",
               "InputNodeGuid": "knight_block_reaction_lock",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "knight_block_cooldown_timer",
+              "OutputPortName": "OnComplete",
+              "InputNodeGuid": "knight_block_cooldown_ready",
               "InputPortName": "In"
             },
             {
@@ -59582,6 +60033,140 @@
           "ExecutionConditions": [],
           "EntryNodeGuid": "knight_shield_guard_entry",
           "Nodes": [
+            {
+              "Type": "SetValue",
+              "Guid": "knight_block_cooldown_init",
+              "SetterKey": "unit.variables.set",
+              "Key": "ai.block.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "EditorPosition": {
+                "x": 330,
+                "y": 285
+              }
+            },
+            {
+              "Type": "Compare",
+              "Guid": "knight_shield_guard_idle_ready",
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "IsFalse",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "SourceTarget": 0,
+                    "GetterKey": "unit.variables.getBool",
+                    "Inputs": [
+                      {
+                        "Kind": 0,
+                        "Literal": {
+                          "Type": 7,
+                          "String": "ai.block.coolingDown"
+                        },
+                        "Inputs": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              "EditorPosition": {
+                "x": 1330,
+                "y": 80
+              }
+            },
+            {
+              "Type": "Compare",
+              "Guid": "knight_shield_guard_idle_not_reacting",
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "IsFalse",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "SourceTarget": 0,
+                    "GetterKey": "unit.buffs.has",
+                    "Inputs": [
+                      {
+                        "Kind": 0,
+                        "Literal": {
+                          "Type": 2,
+                          "Int": 13
+                        },
+                        "Inputs": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              "EditorPosition": {
+                "x": 1580,
+                "y": 80
+              }
+            },
+            {
+              "Type": "Compare",
+              "Guid": "knight_shield_guard_chase_ready",
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "IsFalse",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "SourceTarget": 0,
+                    "GetterKey": "unit.variables.getBool",
+                    "Inputs": [
+                      {
+                        "Kind": 0,
+                        "Literal": {
+                          "Type": 7,
+                          "String": "ai.block.coolingDown"
+                        },
+                        "Inputs": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              "EditorPosition": {
+                "x": 1330,
+                "y": 490
+              }
+            },
+            {
+              "Type": "Compare",
+              "Guid": "knight_shield_guard_chase_not_reacting",
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "IsFalse",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "SourceTarget": 0,
+                    "GetterKey": "unit.buffs.has",
+                    "Inputs": [
+                      {
+                        "Kind": 0,
+                        "Literal": {
+                          "Type": 2,
+                          "Int": 13
+                        },
+                        "Inputs": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              "EditorPosition": {
+                "x": 1580,
+                "y": 490
+              }
+            },
             {
               "Type": "Entry",
               "Guid": "knight_shield_guard_entry",
@@ -59870,7 +60455,7 @@
               "Type": "RequestSkill",
               "Guid": "knight_shield_guard_idle_request",
               "EditorPosition": {
-                "x": 1580,
+                "x": 1830,
                 "y": 80
               }
             },
@@ -60154,20 +60739,26 @@
               "Type": "RequestSkill",
               "Guid": "knight_shield_guard_chase_request",
               "EditorPosition": {
-                "x": 1580,
+                "x": 1830,
                 "y": 490
               }
             }
           ],
           "Edges": [
             {
-              "OutputNodeGuid": "knight_shield_guard_entry",
+              "OutputNodeGuid": "knight_block_cooldown_init",
               "OutputPortName": "Out",
               "InputNodeGuid": "knight_shield_guard_idle_monitor",
               "InputPortName": "Start"
             },
             {
               "OutputNodeGuid": "knight_shield_guard_entry",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "knight_block_cooldown_init",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "knight_block_cooldown_init",
               "OutputPortName": "Out",
               "InputNodeGuid": "knight_shield_guard_chase_monitor",
               "InputPortName": "Start"
@@ -60181,8 +60772,8 @@
             {
               "OutputNodeGuid": "knight_shield_guard_idle_missing",
               "OutputPortName": "True",
-              "InputNodeGuid": "knight_shield_guard_idle_request",
-              "InputPortName": "In"
+              "InputNodeGuid": "knight_shield_guard_idle_ready",
+              "InputPortName": "Check"
             },
             {
               "OutputNodeGuid": "knight_shield_guard_chase_monitor",
@@ -60191,10 +60782,34 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "knight_shield_guard_chase_missing",
+              "OutputNodeGuid": "knight_shield_guard_idle_ready",
+              "OutputPortName": "True",
+              "InputNodeGuid": "knight_shield_guard_idle_not_reacting",
+              "InputPortName": "Check"
+            },
+            {
+              "OutputNodeGuid": "knight_shield_guard_idle_not_reacting",
+              "OutputPortName": "True",
+              "InputNodeGuid": "knight_shield_guard_idle_request",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "knight_shield_guard_chase_ready",
+              "OutputPortName": "True",
+              "InputNodeGuid": "knight_shield_guard_chase_not_reacting",
+              "InputPortName": "Check"
+            },
+            {
+              "OutputNodeGuid": "knight_shield_guard_chase_not_reacting",
               "OutputPortName": "True",
               "InputNodeGuid": "knight_shield_guard_chase_request",
               "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "knight_shield_guard_chase_missing",
+              "OutputPortName": "True",
+              "InputNodeGuid": "knight_shield_guard_chase_ready",
+              "InputPortName": "Check"
             }
           ],
           "ViewPosition": {
@@ -82632,6 +83247,77 @@
           "EntryNodeGuid": "orc_rider_block_reaction_entry",
           "Nodes": [
             {
+              "Type": "SetValue",
+              "Guid": "orc_rider_block_cooldown_start",
+              "SetterKey": "unit.variables.set",
+              "Key": "ai.block.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": true
+                },
+                "Inputs": []
+              },
+              "EditorPosition": {
+                "x": 830,
+                "y": -180
+              }
+            },
+            {
+              "Type": "SetValue",
+              "Guid": "orc_rider_block_consume_guard",
+              "SetterKey": "unit.buffs.remove",
+              "Key": "",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 2,
+                  "Int": 12
+                },
+                "Inputs": []
+              },
+              "EditorPosition": {
+                "x": 1080,
+                "y": -180
+              }
+            },
+            {
+              "Type": "Timer",
+              "Guid": "orc_rider_block_cooldown_timer",
+              "Duration": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 3,
+                  "Float": 5
+                },
+                "Inputs": []
+              },
+              "TickOrder": 1,
+              "EditorPosition": {
+                "x": 1330,
+                "y": -385
+              }
+            },
+            {
+              "Type": "SetValue",
+              "Guid": "orc_rider_block_cooldown_ready",
+              "SetterKey": "unit.variables.set",
+              "Key": "ai.block.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "EditorPosition": {
+                "x": 1830,
+                "y": -385
+              }
+            },
+            {
               "Type": "Entry",
               "Guid": "orc_rider_block_reaction_entry",
               "EditorPosition": {
@@ -83191,7 +83877,31 @@
             {
               "OutputNodeGuid": "orc_rider_block_reaction_monitor",
               "OutputPortName": "OnChangeTrue",
+              "InputNodeGuid": "orc_rider_block_cooldown_start",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "orc_rider_block_cooldown_start",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "orc_rider_block_cooldown_timer",
+              "InputPortName": "Start"
+            },
+            {
+              "OutputNodeGuid": "orc_rider_block_cooldown_start",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "orc_rider_block_consume_guard",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "orc_rider_block_consume_guard",
+              "OutputPortName": "Out",
               "InputNodeGuid": "orc_rider_block_reaction_lock",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "orc_rider_block_cooldown_timer",
+              "OutputPortName": "OnComplete",
+              "InputNodeGuid": "orc_rider_block_cooldown_ready",
               "InputPortName": "In"
             },
             {
@@ -83261,6 +83971,140 @@
           "ExecutionConditions": [],
           "EntryNodeGuid": "orc_rider_shield_guard_entry",
           "Nodes": [
+            {
+              "Type": "SetValue",
+              "Guid": "orc_rider_block_cooldown_init",
+              "SetterKey": "unit.variables.set",
+              "Key": "ai.block.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "EditorPosition": {
+                "x": 330,
+                "y": 285
+              }
+            },
+            {
+              "Type": "Compare",
+              "Guid": "orc_rider_shield_guard_idle_ready",
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "IsFalse",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "SourceTarget": 0,
+                    "GetterKey": "unit.variables.getBool",
+                    "Inputs": [
+                      {
+                        "Kind": 0,
+                        "Literal": {
+                          "Type": 7,
+                          "String": "ai.block.coolingDown"
+                        },
+                        "Inputs": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              "EditorPosition": {
+                "x": 1330,
+                "y": 80
+              }
+            },
+            {
+              "Type": "Compare",
+              "Guid": "orc_rider_shield_guard_idle_not_reacting",
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "IsFalse",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "SourceTarget": 0,
+                    "GetterKey": "unit.buffs.has",
+                    "Inputs": [
+                      {
+                        "Kind": 0,
+                        "Literal": {
+                          "Type": 2,
+                          "Int": 13
+                        },
+                        "Inputs": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              "EditorPosition": {
+                "x": 1580,
+                "y": 80
+              }
+            },
+            {
+              "Type": "Compare",
+              "Guid": "orc_rider_shield_guard_chase_ready",
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "IsFalse",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "SourceTarget": 0,
+                    "GetterKey": "unit.variables.getBool",
+                    "Inputs": [
+                      {
+                        "Kind": 0,
+                        "Literal": {
+                          "Type": 7,
+                          "String": "ai.block.coolingDown"
+                        },
+                        "Inputs": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              "EditorPosition": {
+                "x": 1330,
+                "y": 490
+              }
+            },
+            {
+              "Type": "Compare",
+              "Guid": "orc_rider_shield_guard_chase_not_reacting",
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "IsFalse",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "SourceTarget": 0,
+                    "GetterKey": "unit.buffs.has",
+                    "Inputs": [
+                      {
+                        "Kind": 0,
+                        "Literal": {
+                          "Type": 2,
+                          "Int": 13
+                        },
+                        "Inputs": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              "EditorPosition": {
+                "x": 1580,
+                "y": 490
+              }
+            },
             {
               "Type": "Entry",
               "Guid": "orc_rider_shield_guard_entry",
@@ -83549,7 +84393,7 @@
               "Type": "RequestSkill",
               "Guid": "orc_rider_shield_guard_idle_request",
               "EditorPosition": {
-                "x": 1580,
+                "x": 1830,
                 "y": 80
               }
             },
@@ -83833,20 +84677,26 @@
               "Type": "RequestSkill",
               "Guid": "orc_rider_shield_guard_chase_request",
               "EditorPosition": {
-                "x": 1580,
+                "x": 1830,
                 "y": 490
               }
             }
           ],
           "Edges": [
             {
-              "OutputNodeGuid": "orc_rider_shield_guard_entry",
+              "OutputNodeGuid": "orc_rider_block_cooldown_init",
               "OutputPortName": "Out",
               "InputNodeGuid": "orc_rider_shield_guard_idle_monitor",
               "InputPortName": "Start"
             },
             {
               "OutputNodeGuid": "orc_rider_shield_guard_entry",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "orc_rider_block_cooldown_init",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "orc_rider_block_cooldown_init",
               "OutputPortName": "Out",
               "InputNodeGuid": "orc_rider_shield_guard_chase_monitor",
               "InputPortName": "Start"
@@ -83860,8 +84710,8 @@
             {
               "OutputNodeGuid": "orc_rider_shield_guard_idle_missing",
               "OutputPortName": "True",
-              "InputNodeGuid": "orc_rider_shield_guard_idle_request",
-              "InputPortName": "In"
+              "InputNodeGuid": "orc_rider_shield_guard_idle_ready",
+              "InputPortName": "Check"
             },
             {
               "OutputNodeGuid": "orc_rider_shield_guard_chase_monitor",
@@ -83870,10 +84720,34 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "orc_rider_shield_guard_chase_missing",
+              "OutputNodeGuid": "orc_rider_shield_guard_idle_ready",
+              "OutputPortName": "True",
+              "InputNodeGuid": "orc_rider_shield_guard_idle_not_reacting",
+              "InputPortName": "Check"
+            },
+            {
+              "OutputNodeGuid": "orc_rider_shield_guard_idle_not_reacting",
+              "OutputPortName": "True",
+              "InputNodeGuid": "orc_rider_shield_guard_idle_request",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "orc_rider_shield_guard_chase_ready",
+              "OutputPortName": "True",
+              "InputNodeGuid": "orc_rider_shield_guard_chase_not_reacting",
+              "InputPortName": "Check"
+            },
+            {
+              "OutputNodeGuid": "orc_rider_shield_guard_chase_not_reacting",
               "OutputPortName": "True",
               "InputNodeGuid": "orc_rider_shield_guard_chase_request",
               "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "orc_rider_shield_guard_chase_missing",
+              "OutputPortName": "True",
+              "InputNodeGuid": "orc_rider_shield_guard_chase_ready",
+              "InputPortName": "Check"
             }
           ],
           "ViewPosition": {
@@ -91323,6 +92197,77 @@
           "EntryNodeGuid": "skeleton_block_reaction_entry",
           "Nodes": [
             {
+              "Type": "SetValue",
+              "Guid": "skeleton_block_cooldown_start",
+              "SetterKey": "unit.variables.set",
+              "Key": "ai.block.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": true
+                },
+                "Inputs": []
+              },
+              "EditorPosition": {
+                "x": 830,
+                "y": -180
+              }
+            },
+            {
+              "Type": "SetValue",
+              "Guid": "skeleton_block_consume_guard",
+              "SetterKey": "unit.buffs.remove",
+              "Key": "",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 2,
+                  "Int": 12
+                },
+                "Inputs": []
+              },
+              "EditorPosition": {
+                "x": 1080,
+                "y": -180
+              }
+            },
+            {
+              "Type": "Timer",
+              "Guid": "skeleton_block_cooldown_timer",
+              "Duration": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 3,
+                  "Float": 10
+                },
+                "Inputs": []
+              },
+              "TickOrder": 1,
+              "EditorPosition": {
+                "x": 1330,
+                "y": -385
+              }
+            },
+            {
+              "Type": "SetValue",
+              "Guid": "skeleton_block_cooldown_ready",
+              "SetterKey": "unit.variables.set",
+              "Key": "ai.block.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "EditorPosition": {
+                "x": 1830,
+                "y": -385
+              }
+            },
+            {
               "Type": "Entry",
               "Guid": "skeleton_block_reaction_entry",
               "EditorPosition": {
@@ -91882,7 +92827,31 @@
             {
               "OutputNodeGuid": "skeleton_block_reaction_monitor",
               "OutputPortName": "OnChangeTrue",
+              "InputNodeGuid": "skeleton_block_cooldown_start",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "skeleton_block_cooldown_start",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "skeleton_block_cooldown_timer",
+              "InputPortName": "Start"
+            },
+            {
+              "OutputNodeGuid": "skeleton_block_cooldown_start",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "skeleton_block_consume_guard",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "skeleton_block_consume_guard",
+              "OutputPortName": "Out",
               "InputNodeGuid": "skeleton_block_reaction_lock",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "skeleton_block_cooldown_timer",
+              "OutputPortName": "OnComplete",
+              "InputNodeGuid": "skeleton_block_cooldown_ready",
               "InputPortName": "In"
             },
             {
@@ -91952,6 +92921,140 @@
           "ExecutionConditions": [{"ConditionType":0,"CompareType":"Equal","Inputs":[{"Kind":1,"GetterKey":"unit.variables.has","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"boss.summoned"},"Inputs":[]}]},{"Kind":1,"GetterKey":"unit.variables.has","Inputs":[{"Kind":0,"Literal":{"Type":7,"String":"boss.summon.ready"},"Inputs":[]}]}]}],
           "EntryNodeGuid": "skeleton_shield_guard_entry",
           "Nodes": [
+            {
+              "Type": "SetValue",
+              "Guid": "skeleton_block_cooldown_init",
+              "SetterKey": "unit.variables.set",
+              "Key": "ai.block.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "EditorPosition": {
+                "x": 330,
+                "y": 285
+              }
+            },
+            {
+              "Type": "Compare",
+              "Guid": "skeleton_shield_guard_idle_ready",
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "IsFalse",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "SourceTarget": 0,
+                    "GetterKey": "unit.variables.getBool",
+                    "Inputs": [
+                      {
+                        "Kind": 0,
+                        "Literal": {
+                          "Type": 7,
+                          "String": "ai.block.coolingDown"
+                        },
+                        "Inputs": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              "EditorPosition": {
+                "x": 1330,
+                "y": 80
+              }
+            },
+            {
+              "Type": "Compare",
+              "Guid": "skeleton_shield_guard_idle_not_reacting",
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "IsFalse",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "SourceTarget": 0,
+                    "GetterKey": "unit.buffs.has",
+                    "Inputs": [
+                      {
+                        "Kind": 0,
+                        "Literal": {
+                          "Type": 2,
+                          "Int": 13
+                        },
+                        "Inputs": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              "EditorPosition": {
+                "x": 1580,
+                "y": 80
+              }
+            },
+            {
+              "Type": "Compare",
+              "Guid": "skeleton_shield_guard_chase_ready",
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "IsFalse",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "SourceTarget": 0,
+                    "GetterKey": "unit.variables.getBool",
+                    "Inputs": [
+                      {
+                        "Kind": 0,
+                        "Literal": {
+                          "Type": 7,
+                          "String": "ai.block.coolingDown"
+                        },
+                        "Inputs": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              "EditorPosition": {
+                "x": 1330,
+                "y": 490
+              }
+            },
+            {
+              "Type": "Compare",
+              "Guid": "skeleton_shield_guard_chase_not_reacting",
+              "Condition": {
+                "ConditionType": 0,
+                "CompareType": "IsFalse",
+                "Inputs": [
+                  {
+                    "Kind": 1,
+                    "SourceTarget": 0,
+                    "GetterKey": "unit.buffs.has",
+                    "Inputs": [
+                      {
+                        "Kind": 0,
+                        "Literal": {
+                          "Type": 2,
+                          "Int": 13
+                        },
+                        "Inputs": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              "EditorPosition": {
+                "x": 1580,
+                "y": 490
+              }
+            },
             {
               "Type": "Entry",
               "Guid": "skeleton_shield_guard_entry",
@@ -92240,7 +93343,7 @@
               "Type": "RequestSkill",
               "Guid": "skeleton_shield_guard_idle_request",
               "EditorPosition": {
-                "x": 1580,
+                "x": 1830,
                 "y": 80
               }
             },
@@ -92524,20 +93627,26 @@
               "Type": "RequestSkill",
               "Guid": "skeleton_shield_guard_chase_request",
               "EditorPosition": {
-                "x": 1580,
+                "x": 1830,
                 "y": 490
               }
             }
           ],
           "Edges": [
             {
-              "OutputNodeGuid": "skeleton_shield_guard_entry",
+              "OutputNodeGuid": "skeleton_block_cooldown_init",
               "OutputPortName": "Out",
               "InputNodeGuid": "skeleton_shield_guard_idle_monitor",
               "InputPortName": "Start"
             },
             {
               "OutputNodeGuid": "skeleton_shield_guard_entry",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "skeleton_block_cooldown_init",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "skeleton_block_cooldown_init",
               "OutputPortName": "Out",
               "InputNodeGuid": "skeleton_shield_guard_chase_monitor",
               "InputPortName": "Start"
@@ -92551,8 +93660,8 @@
             {
               "OutputNodeGuid": "skeleton_shield_guard_idle_missing",
               "OutputPortName": "True",
-              "InputNodeGuid": "skeleton_shield_guard_idle_request",
-              "InputPortName": "In"
+              "InputNodeGuid": "skeleton_shield_guard_idle_ready",
+              "InputPortName": "Check"
             },
             {
               "OutputNodeGuid": "skeleton_shield_guard_chase_monitor",
@@ -92561,10 +93670,34 @@
               "InputPortName": "Check"
             },
             {
-              "OutputNodeGuid": "skeleton_shield_guard_chase_missing",
+              "OutputNodeGuid": "skeleton_shield_guard_idle_ready",
+              "OutputPortName": "True",
+              "InputNodeGuid": "skeleton_shield_guard_idle_not_reacting",
+              "InputPortName": "Check"
+            },
+            {
+              "OutputNodeGuid": "skeleton_shield_guard_idle_not_reacting",
+              "OutputPortName": "True",
+              "InputNodeGuid": "skeleton_shield_guard_idle_request",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "skeleton_shield_guard_chase_ready",
+              "OutputPortName": "True",
+              "InputNodeGuid": "skeleton_shield_guard_chase_not_reacting",
+              "InputPortName": "Check"
+            },
+            {
+              "OutputNodeGuid": "skeleton_shield_guard_chase_not_reacting",
               "OutputPortName": "True",
               "InputNodeGuid": "skeleton_shield_guard_chase_request",
               "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "skeleton_shield_guard_chase_missing",
+              "OutputPortName": "True",
+              "InputNodeGuid": "skeleton_shield_guard_chase_ready",
+              "InputPortName": "Check"
             }
           ],
           "ViewPosition": {

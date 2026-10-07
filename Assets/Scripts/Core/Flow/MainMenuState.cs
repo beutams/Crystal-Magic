@@ -12,11 +12,12 @@ namespace CrystalMagic.Core {
         public override void OnEnter()
         {
             Server.NetworkComponent.Instance.clientBattleManager?.StopBattle();
-            GameWorldManager.ShutdownGameWorld();
+            GameWorldManager.ReleaseGameWorld();
             Debug.Log("[MainMenuState] Entered MainMenu");
             // 从对象池加载并显示 MainMenu UI
             BindEvents();
             _mainMenuUI = UIComponent.Instance.Open<MainMenuUI>();
+            SceneComponent.Instance.PreloadStandaloneWorld();
         }
 
         public override void OnExit()

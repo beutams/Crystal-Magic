@@ -16,6 +16,7 @@ public class InteractionSelectUI_OptionView : UISubView<InteractionSelectUI_Opti
         _data = data;
         string displayName = data?.DisplayName ?? string.Empty;
         UI.Default_TextTMP.TextMeshProUGUI.text = displayName;
+        UI.Enter_TextTMP.TextMeshProUGUI.text = displayName;
         UI.Click_TextTMP.TextMeshProUGUI.text = displayName;
     }
 

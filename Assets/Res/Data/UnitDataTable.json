@@ -46,8 +46,8 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 100.0,
-          "BaseHealthRegenPerSecond": 5.0,
+          "BaseMaxHealth": 200.0,
+          "BaseHealthRegenPerSecond": 1.0,
           "BaseDefense": 0.0
         },
         {
@@ -59,7 +59,7 @@
         {
           "$type": "CrystalMagic.Game.Data.UnitManaModuleData, Assembly-CSharp",
           "BaseMaxMp": 100.0,
-          "BaseMpRegenPerSecond": 10.0
+          "BaseMpRegenPerSecond": 16.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitFactionModuleData, Assembly-CSharp",

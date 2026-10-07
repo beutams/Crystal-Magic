@@ -10,5 +10,6 @@ namespace Server
     public sealed class NetworkEntitySpawnQueueComponent : IComponentData
     {
         public readonly List<NetworkEntitySpawnInfo> entityInfos = new();
+        public readonly List<System.Guid> sleepingEntityIds = new();
     }
 }

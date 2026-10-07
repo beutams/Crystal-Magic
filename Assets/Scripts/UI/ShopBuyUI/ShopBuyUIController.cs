@@ -71,6 +71,8 @@ namespace CrystalMagic.UI
                 return;
 
             SaveDataComponent.Instance.AddStashMoney(-totalCost);
+            if (GameWorldManager.TryGetEntityManager(out Unity.Entities.EntityManager manager))
+                DungeonSettlementUtility.RecordItemAcquired(manager, Model.ItemId, addedCount);
             SaveDataComponent.Instance.NotifyBackpackDataChanged();
             View.Close();
         }

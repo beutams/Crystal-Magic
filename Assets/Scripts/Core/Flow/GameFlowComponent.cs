@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace CrystalMagic.Core
 {
+    [DefaultExecutionOrder(100)]
     public class GameFlowComponent : GameComponent<GameFlowComponent>
     {
         #region State Flow Fields
@@ -32,6 +33,12 @@ namespace CrystalMagic.Core
                 return;
 
             _currentState?.OnUpdate();
+        }
+
+        private void LateUpdate()
+        {
+            if (!_isTransitioning)
+                _currentState?.OnLateUpdate();
         }
 
         public void SetState<T>(object data = null) where T : GameState, new()
@@ -163,6 +170,7 @@ namespace CrystalMagic.Core
 
             _currentState = newState;
             _currentState.SetData(data);
+            SceneComponent.Instance.SynchronizeMapPresentation(newState);
             using (SceneLoadTiming.Measure($"State.Enter {newState.GetType().Name} (includes synchronous nested loading)"))
                 _currentState.OnEnter();
 

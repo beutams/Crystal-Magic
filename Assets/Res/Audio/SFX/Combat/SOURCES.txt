@@ -1,0 +1,42 @@
+Crystal Magic combat audio palette
+
+EXPLOSION TEMPLATE (CC BY 3.0, attribution required):
+"2 High Quality Explosions" by Michel Baradari (apollo-music.de), submitted by qubodup.
+https://opengameart.org/content/2-high-quality-explosions
+https://creativecommons.org/licenses/by/3.0/
+Selected original: explodemini.wav (explicitly chosen by the user).
+Adaptations: mono downmix, 48 kHz resampling, level adjustment, short edge fades;
+medium and large versions use 0.93x and 0.85x playback speed, respectively.
+Used in explosion_small.wav, explosion_medium.wav, explosion_large.wav and
+as a layer in thunder_release.wav. No explosive recipe or real-world device data.
+Credit in the distributed game's credits/notices, including author, source,
+license link and an indication that the audio was modified.
+
+CC0 SOURCE MATERIAL:
+Kenney: RPG Audio and Impact Sounds
+https://kenney.nl/assets/rpg-audio
+https://kenney.nl/assets/impact-sounds
+
+Julien Matthey: Fireball (uploaded by diligentcircle)
+https://opengameart.org/content/fireball-1
+
+AntumDeluge: Fire Crackling
+https://opengameart.org/content/fire-crackling
+
+themightyglider / qubodup: Catching fire
+https://opengameart.org/content/catching-fire
+
+rubberduck: 40 CC0 water / splash / slime SFX
+https://opengameart.org/content/40-cc0-water-splash-slime-sfx
+
+bart, source recording by Stephan / pdsounds: Ice spells
+https://opengameart.org/content/ice-spells
+
+CC0 license: https://creativecommons.org/publicdomain/zero/1.0/
+
+Other layers: deterministic filtered-noise air gestures/electrical discharges.
+This pack is edited/layered stock audio and procedural sound design, not the
+output of a text-to-audio model. No commercial demo audio was sampled.
+Reproducible recipes: Tools/Audio/build_combat_full.py and its imported helpers.
+Source hashes and output hashes: output/audio/combat-full-v1/manifest.json.
+Previous prototypes and the selected original source remain unchanged.

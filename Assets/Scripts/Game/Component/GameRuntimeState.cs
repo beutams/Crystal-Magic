@@ -30,6 +30,9 @@ namespace CrystalMagic.Core
         public int Seed;
         public List<UnitRuntimeData> Units = new();
         public List<ItemDropData> ItemDrops = new();
+        public bool HasAcquisitionHistory;
+        public List<InventoryItemData> AcquiredItems = new();
+        public long AcquiredMoney;
     }
 
     /// <summary>
@@ -52,6 +55,20 @@ namespace CrystalMagic.Core
             if (revision != Revision || data?.Backpack == null || data.Equipment == null ||
                 data.Skills == null || data.Props == null)
                 return false;
+
+            // Enforce the same limit on local and server edits. Legacy oversized chains may
+            // still be rearranged/shortened so their stones can be recovered without deletion.
+            if (data.Skills.Chains != null)
+            {
+                for (int i = 0; i < data.Skills.Chains.Length; i++)
+                {
+                    int length = data.Skills.Chains[i]?.Slots?.Count ?? 0;
+                    int previousLength = Data?.Skills?.Chains != null && i < Data.Skills.Chains.Length
+                        ? Data.Skills.Chains[i]?.Slots?.Count ?? 0 : 0;
+                    if (length > SkillChainData.MaxLength && length > previousLength)
+                        return false;
+                }
+            }
 
             Data = PlayerCharacterUtility.Clone(data);
             MarkChanged();
@@ -195,6 +212,9 @@ namespace CrystalMagic.Core
                 Seed = run.Seed,
                 Units = run.Units,
                 ItemDrops = run.ItemDrops,
+                HasAcquisitionHistory = run.HasAcquisitionHistory,
+                AcquiredItems = run.AcquiredItems,
+                AcquiredMoney = run.AcquiredMoney,
             };
         }
 
@@ -215,6 +235,9 @@ namespace CrystalMagic.Core
                 Seed = data.Seed,
                 Units = data.Units ?? new List<UnitRuntimeData>(),
                 ItemDrops = data.ItemDrops ?? new List<ItemDropData>(),
+                HasAcquisitionHistory = data.HasAcquisitionHistory,
+                AcquiredItems = data.AcquiredItems ?? new List<InventoryItemData>(),
+                AcquiredMoney = data.AcquiredMoney,
             });
         }
 
@@ -355,7 +378,7 @@ namespace CrystalMagic.Core
                 for (int x = 0; x < layout.Width; x++)
                 {
                     if (!layout.IsWalkable(x, y))
-                        SetNavigationCollision(collisionWords, y * layout.Width + x);
+                        SetNavigationCollision(collisionWords, y * layout.Width + x, layout.BlocksLineOfSight(x, y));
                 }
             }
 
@@ -374,18 +397,21 @@ namespace CrystalMagic.Core
                     if (cell.x < 0 || cell.x >= layout.Width || cell.y < 0 || cell.y >= layout.Height)
                         continue;
 
-                    SetNavigationCollision(collisionWords, cell.y * layout.Width + cell.x);
+                    SetNavigationCollision(collisionWords, cell.y * layout.Width + cell.x, true);
                 }
             }
         }
 
         private static void SetNavigationCollision(
             DynamicBuffer<DungeonNavigationCollisionWord> collisionWords,
-            int cellIndex)
+            int cellIndex,
+            bool blocksProjectiles)
         {
             int wordIndex = cellIndex >> 6;
             DungeonNavigationCollisionWord word = collisionWords[wordIndex];
             word.Value |= 1UL << (cellIndex & 63);
+            if (blocksProjectiles)
+                word.ProjectileValue |= 1UL << (cellIndex & 63);
             collisionWords[wordIndex] = word;
         }
 
@@ -522,7 +548,11 @@ namespace CrystalMagic.Core
         private static void CaptureDungeonRuntimeState(EntityManager entityManager, DungeonRunData run)
         {
             run.Units = new List<UnitRuntimeData>();
-            EntityQuery unitQuery = entityManager.CreateEntityQuery(ComponentType.ReadOnly<UnitFactionComponent>());
+            using EntityQuery unitQuery = entityManager.CreateEntityQuery(new EntityQueryDesc
+            {
+                All = new[] { ComponentType.ReadOnly<UnitFactionComponent>() },
+                Options = EntityQueryOptions.IncludeDisabledEntities,
+            });
             using Unity.Collections.NativeArray<Entity> units = unitQuery.ToEntityArray(Unity.Collections.Allocator.Temp);
             for (int index = 0; index < units.Length; index++)
             {

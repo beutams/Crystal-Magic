@@ -18,8 +18,7 @@ namespace CrystalMagic.Core
                 return;
 
             fogData.CreateVisualAssets();
-            GameObject fogObject = new("FogOfWar");
-            fogObject.transform.SetParent(runtimeRoot.transform, false);
+            GameObject fogObject = PoolComponent.Instance.CreateTransient("FogOfWar", runtimeRoot.transform);
             fogObject.transform.position = new Vector3(
                 fogData.WorldOrigin.x + fogData.Width * fogData.CellWorldSize * 0.5f,
                 fogData.WorldOrigin.y + fogData.Height * fogData.CellWorldSize * 0.5f,

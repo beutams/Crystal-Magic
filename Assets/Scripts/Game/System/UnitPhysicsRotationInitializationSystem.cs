@@ -6,7 +6,8 @@ using Unity.Physics;
 using Unity.Physics.Systems;
 
 [BurstCompile]
-[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation |
+                   WorldSystemFilterFlags.ClientSimulation)]
 [UpdateInGroup(typeof(BeforePhysicsSystemGroup))]
 partial struct UnitPhysicsRotationInitializationSystem : ISystem
 {

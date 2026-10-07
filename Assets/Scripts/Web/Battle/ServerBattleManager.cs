@@ -1384,8 +1384,7 @@ namespace Server
                 return;
             }
 
-            EntityQuery registryQuery = entityManager.CreateEntityQuery(ComponentType.ReadOnly<EntitySpawnRegistrySingleton>());
-            if (registryQuery.IsEmptyIgnoreFilter)
+            if (!EntitySpawnRegistryUtility.HasRegistry(entityManager))
             {
                 return;
             }
@@ -1632,7 +1631,7 @@ namespace Server
 
         private static bool MatchesSessionPeer(BattleRoom room, BattlePlayer player, Connect connect, string sessionId) =>
             room != null && room.sessionId == sessionId &&
-            (connect.RemoteEndpoint is not SteamEndpoint steam || steam.SteamId == player.accountId);
+            HostedBattlePolicy.MatchesPeer(room.connection, player.accountId, connect.RemoteEndpoint);
 
         private void OnSettlementAck(IMessage message, Connect connect)
         {

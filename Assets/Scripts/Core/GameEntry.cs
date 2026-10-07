@@ -90,8 +90,8 @@ namespace CrystalMagic.Core
                 _components.Add(SteamComponent);
             }
 
-            // Lobby 不会创建游戏世界，只保留网络与日志即可。Battle Server 仍需初始化
-            // Config、Data、Scene 等完整组件，才能和客户端走同一套地图/实体生成流程。
+            // Lobby 不会创建游戏世界，只保留网络与日志即可。
+            // 房主战斗由客户端的完整组件支持，复用地图和实体生成流程。
             if (NetworkComponent.Role == NetworkRole.LobbyServer)
             {
                 InitializeRegisteredComponents();

@@ -1,0 +1,1723 @@
+{
+  "version": "2-full",
+  "source": "Edited/layered Kenney CC0 assets; approved magic_socket retains its procedural air layer",
+  "integration": "Assets only; no UI playback bindings changed",
+  "new_count": 18,
+  "approved_preserved_count": 6,
+  "sounds": [
+    {
+      "number": 1,
+      "id": "ui_select",
+      "name": "选中 / 聚焦",
+      "group": "通用",
+      "file": "ui_v2_select.wav",
+      "approved_unchanged": false,
+      "description": "短而轻的木质触点，不加音阶。",
+      "usage": "主菜单、书签、技能链切换；不用于背包逐格悬停",
+      "seconds": 0.075,
+      "sample_rate": 48000,
+      "channels": 1,
+      "bits": 16,
+      "peak_dbfs": -20.0,
+      "rms_dbfs": -35.25,
+      "preview_start_seconds": 0.0,
+      "sha256": "0dda81f5d14a5638f1002d29a07b4dfa3d11a05c20a386725816359b140b4b2e",
+      "layers": [
+        {
+          "pack": "impact-sounds",
+          "source": "Audio/impactWood_light_003.ogg",
+          "trim_seconds": [
+            0,
+            0.08
+          ],
+          "playback_speed": 1.22,
+          "lowpass_hz": 5600,
+          "reverse": false,
+          "at_seconds": 0,
+          "gain": 1
+        },
+        {
+          "master_processing": "soft transient saturation",
+          "drive": 1.3
+        }
+      ],
+      "new18_preview_start_seconds": 0.0
+    },
+    {
+      "number": 2,
+      "id": "ui_confirm",
+      "name": "点击 / 确认",
+      "group": "通用",
+      "file": "ui_v2_click.wav",
+      "approved_unchanged": true,
+      "description": "轻木碰撞压成一次短扣，无音阶、无混响。",
+      "usage": "普通按钮、选择存档、确认交互",
+      "seconds": 0.105,
+      "sample_rate": 48000,
+      "channels": 1,
+      "bits": 16,
+      "peak_dbfs": -14.0,
+      "rms_dbfs": -29.6,
+      "preview_start_seconds": 0.575,
+      "sha256": "3ca6dd2f352fafabca31ee249e89ee64f8a1d8838bf3c15363b3c3ba3add447b",
+      "layers": [
+        {
+          "pack": "impact-sounds",
+          "source": "Audio/impactWood_light_000.ogg",
+          "trim_seconds": [
+            0,
+            0.11
+          ],
+          "playback_speed": 1.08,
+          "lowpass_hz": 6500,
+          "reverse": false,
+          "at_seconds": 0,
+          "gain": 1
+        },
+        {
+          "master_processing": "soft transient saturation",
+          "drive": 1.3
+        }
+      ],
+      "approved_preview_number": 1
+    },
+    {
+      "number": 3,
+      "id": "ui_back",
+      "name": "返回 / 取消",
+      "group": "通用",
+      "file": "ui_v2_cancel.wav",
+      "approved_unchanged": true,
+      "description": "短布料滑动与稍闷的木扣，表现收回操作。",
+      "usage": "返回、Esc、取消拖拽；合书时用专用音",
+      "seconds": 0.1669,
+      "sample_rate": 48000,
+      "channels": 1,
+      "bits": 16,
+      "peak_dbfs": -16.0,
+      "rms_dbfs": -31.35,
+      "preview_start_seconds": 1.18,
+      "sha256": "a470236baa5e1ed415939465ce2a274c445985a5bb3dd13334e91da618264f4b",
+      "layers": [
+        {
+          "pack": "rpg-audio",
+          "source": "Audio/cloth3.ogg",
+          "trim_seconds": [
+            0.1,
+            0.25
+          ],
+          "playback_speed": 1.4,
+          "lowpass_hz": 4200,
+          "reverse": false,
+          "at_seconds": 0,
+          "gain": 0.25
+        },
+        {
+          "pack": "impact-sounds",
+          "source": "Audio/impactWood_light_001.ogg",
+          "trim_seconds": [
+            0,
+            0.12
+          ],
+          "playback_speed": 0.86,
+          "lowpass_hz": 4200,
+          "reverse": false,
+          "at_seconds": 0.026,
+          "gain": 0.8
+        },
+        {
+          "master_processing": "soft transient saturation",
+          "drive": 1.8
+        }
+      ],
+      "approved_preview_number": 2
+    },
+    {
+      "number": 4,
+      "id": "ui_panel_open",
+      "name": "面板打开",
+      "group": "通用",
+      "file": "ui_v2_panel_open.wav",
+      "approved_unchanged": false,
+      "description": "布料展开、皮带移动和轻木扣，表现拉开面板。",
+      "usage": "商店、仓库、设置、存档、确认框、增幅选择面板",
+      "seconds": 0.1969,
+      "sample_rate": 48000,
+      "channels": 1,
+      "bits": 16,
+      "peak_dbfs": -16.0,
+      "rms_dbfs": -30.74,
+      "preview_start_seconds": 1.8469,
+      "sha256": "239b673bbdbe48a8baf78c046a6af533634bdd34666b895bd9fd9e6dfd337fe4",
+      "layers": [
+        {
+          "pack": "rpg-audio",
+          "source": "Audio/cloth1.ogg",
+          "trim_seconds": [
+            0.07,
+            0.27
+          ],
+          "playback_speed": 1.15,
+          "lowpass_hz": 5600,
+          "reverse": false,
+          "at_seconds": 0,
+          "gain": 0.35
+        },
+        {
+          "pack": "rpg-audio",
+          "source": "Audio/beltHandle1.ogg",
+          "trim_seconds": [
+            0.08,
+            0.2
+          ],
+          "playback_speed": 1.1,
+          "lowpass_hz": 4800,
+          "reverse": false,
+          "at_seconds": 0.035,
+          "gain": 0.15
+        },
+        {
+          "pack": "impact-sounds",
+          "source": "Audio/impactWood_light_003.ogg",
+          "trim_seconds": [
+            0,
+            0.1
+          ],
+          "playback_speed": 0.92,
+          "lowpass_hz": 4800,
+          "reverse": false,
+          "at_seconds": 0.015,
+          "gain": 0.65
+        },
+        {
+          "master_processing": "soft transient saturation",
+          "drive": 2.2
+        }
+      ],
+      "new18_preview_start_seconds": 0.575
+    },
+    {
+      "number": 5,
+      "id": "ui_adjust",
+      "name": "数值调整",
+      "group": "通用",
+      "file": "ui_v2_adjust.wav",
+      "approved_unchanged": false,
+      "description": "极短木质刻度声，音量低于普通点击。",
+      "usage": "数量加减、滑杆离散步进或松开；不逐帧播放",
+      "seconds": 0.06,
+      "sample_rate": 48000,
+      "channels": 1,
+      "bits": 16,
+      "peak_dbfs": -21.0,
+      "rms_dbfs": -36.29,
+      "preview_start_seconds": 2.5437,
+      "sha256": "1e857b31df6a6425c98e382795068768e6dea9418ff72f455986a731c6ba94cf",
+      "layers": [
+        {
+          "pack": "impact-sounds",
+          "source": "Audio/impactWood_light_004.ogg",
+          "trim_seconds": [
+            0,
+            0.065
+          ],
+          "playback_speed": 1.4,
+          "lowpass_hz": 5000,
+          "reverse": false,
+          "at_seconds": 0,
+          "gain": 1
+        },
+        {
+          "master_processing": "soft transient saturation",
+          "drive": 1.5
+        }
+      ],
+      "new18_preview_start_seconds": 1.2719
+    },
+    {
+      "number": 6,
+      "id": "ui_denied",
+      "name": "操作无效",
+      "group": "通用",
+      "file": "ui_v2_denied.wav",
+      "approved_unchanged": false,
+      "description": "软闷击接阻挡木扣，表示操作受阻，不用报错音阶。",
+      "usage": "钱不足、背包满、槽位不符、联机操作失败",
+      "seconds": 0.2068,
+      "sample_rate": 48000,
+      "channels": 1,
+      "bits": 16,
+      "peak_dbfs": -16.0,
+      "rms_dbfs": -27.12,
+      "preview_start_seconds": 3.1037,
+      "sha256": "a8c311e66a8eac1a304579808e1061b77dc7cf7a43ca0140d742cc0d79ae08d3",
+      "layers": [
+        {
+          "pack": "impact-sounds",
+          "source": "Audio/impactSoft_medium_000.ogg",
+          "trim_seconds": [
+            0,
+            0.1
+          ],
+          "playback_speed": 0.8,
+          "lowpass_hz": 3400,
+          "reverse": false,
+          "at_seconds": 0,
+          "gain": 1
+        },
+        {
+          "pack": "impact-sounds",
+          "source": "Audio/impactWood_heavy_000.ogg",
+          "trim_seconds": [
+            0,
+            0.1
+          ],
+          "playback_speed": 0.9,
+          "lowpass_hz": 3600,
+          "reverse": false,
+          "at_seconds": 0.075,
+          "gain": 0.4
+        },
+        {
+          "master_processing": "soft transient saturation",
+          "drive": 2.4
+        }
+      ],
+      "new18_preview_start_seconds": 1.8319
+    },
+    {
+      "number": 7,
+      "id": "ui_success",
+      "name": "操作完成",
+      "group": "通用",
+      "file": "ui_v2_success.wav",
+      "approved_unchanged": false,
+      "description": "轻落物与锁扣确认，尾部仅一点玻璃颗粒。",
+      "usage": "明确的保存成功、设置保存、删除完成",
+      "seconds": 0.207,
+      "sample_rate": 48000,
+      "channels": 1,
+      "bits": 16,
+      "peak_dbfs": -14.0,
+      "rms_dbfs": -26.38,
+      "preview_start_seconds": 3.8106,
+      "sha256": "11e1d6985890386997b64667f4b0460d84336b750d6961670131345615f67a7d",
+      "layers": [
+        {
+          "pack": "rpg-audio",
+          "source": "Audio/bookPlace1.ogg",
+          "trim_seconds": [
+            0.04,
+            0.17
+          ],
+          "playback_speed": 1.2,
+          "lowpass_hz": 4700,
+          "reverse": false,
+          "at_seconds": 0,
+          "gain": 0.55
+        },
+        {
+          "pack": "rpg-audio",
+          "source": "Audio/metalLatch.ogg",
+          "trim_seconds": [
+            0.035,
+            0.18
+          ],
+          "playback_speed": 1.15,
+          "lowpass_hz": 6000,
+          "reverse": false,
+          "at_seconds": 0.038,
+          "gain": 0.4
+        },
+        {
+          "pack": "impact-sounds",
+          "source": "Audio/impactGlass_light_002.ogg",
+          "trim_seconds": [
+            0,
+            0.12
+          ],
+          "playback_speed": 1.15,
+          "lowpass_hz": 7000,
+          "reverse": false,
+          "at_seconds": 0.085,
+          "gain": 0.15
+        },
+        {
+          "master_processing": "soft transient saturation",
+          "drive": 3.0
+        }
+      ],
+      "new18_preview_start_seconds": 2.5387
+    },
+    {
+      "number": 8,
+      "id": "ui_book_open",
+      "name": "打开书本",
+      "group": "书本",
+      "file": "ui_v2_book_open.wav",
+      "approved_unchanged": false,
+      "description": "翻开封面，书脊轻响后接纸张展开。",
+      "usage": "CharacterUI 打开",
+      "seconds": 0.31,
+      "sample_rate": 48000,
+      "channels": 1,
+      "bits": 16,
+      "peak_dbfs": -14.0,
+      "rms_dbfs": -25.29,
+      "preview_start_seconds": 4.5176,
+      "sha256": "0e19a34832a4885ffdaefe82be71f6ac0f13ca772302c2531e23a77ca5536400",
+      "layers": [
+        {
+          "pack": "rpg-audio",
+          "source": "Audio/bookOpen.ogg",
+          "trim_seconds": [
+            0.01,
+            0.15
+          ],
+          "playback_speed": 0.93,
+          "lowpass_hz": 6500,
+          "reverse": false,
+          "at_seconds": 0,
+          "gain": 0.75
+        },
+        {
+          "pack": "rpg-audio",
+          "source": "Audio/creak1.ogg",
+          "trim_seconds": [
+            0.3,
+            0.52
+          ],
+          "playback_speed": 1.3,
+          "lowpass_hz": 3800,
+          "reverse": false,
+          "at_seconds": 0.018,
+          "gain": 0.15
+        },
+        {
+          "pack": "rpg-audio",
+          "source": "Audio/bookFlip3.ogg",
+          "trim_seconds": [
+            0.025,
+            0.215
+          ],
+          "playback_speed": 1.1,
+          "lowpass_hz": 7400,
+          "reverse": false,
+          "at_seconds": 0.12,
+          "gain": 0.34
+        },
+        {
+          "master_processing": "soft transient saturation",
+          "drive": 5.0
+        }
+      ],
+      "new18_preview_start_seconds": 3.2457
+    },
+    {
+      "number": 9,
+      "id": "ui_book_close",
+      "name": "合上书本",
+      "group": "书本",
+      "file": "ui_v2_book_close.wav",
+      "approved_unchanged": false,
+      "description": "纸页收拢后封面落下，有厚度但不轰响。",
+      "usage": "CharacterUI 关闭",
+      "seconds": 0.2627,
+      "sample_rate": 48000,
+      "channels": 1,
+      "bits": 16,
+      "peak_dbfs": -13.0,
+      "rms_dbfs": -29.47,
+      "preview_start_seconds": 5.3275,
+      "sha256": "19004a9ab6f143df5a934b92749ee1ef7e51c9a923f71d66c8ae62948ceb603e",
+      "layers": [
+        {
+          "pack": "rpg-audio",
+          "source": "Audio/cloth3.ogg",
+          "trim_seconds": [
+            0.08,
+            0.23
+          ],
+          "playback_speed": 1.1,
+          "lowpass_hz": 4600,
+          "reverse": false,
+          "at_seconds": 0,
+          "gain": 0.14
+        },
+        {
+          "pack": "rpg-audio",
+          "source": "Audio/bookClose.ogg",
+          "trim_seconds": [
+            0.052,
+            0.23
+          ],
+          "playback_speed": 0.95,
+          "lowpass_hz": 5900,
+          "reverse": false,
+          "at_seconds": 0.055,
+          "gain": 0.9
+        },
+        {
+          "pack": "impact-sounds",
+          "source": "Audio/impactSoft_medium_000.ogg",
+          "trim_seconds": [
+            0,
+            0.11
+          ],
+          "playback_speed": 0.9,
+          "lowpass_hz": 2900,
+          "reverse": false,
+          "at_seconds": 0.055,
+          "gain": 0.15
+        },
+        {
+          "master_processing": "soft transient saturation",
+          "drive": 2.3
+        }
+      ],
+      "new18_preview_start_seconds": 4.0557
+    },
+    {
+      "number": 10,
+      "id": "ui_page_turn",
+      "name": "翻页",
+      "group": "书本",
+      "file": "ui_v2_page_turn.wav",
+      "approved_unchanged": true,
+      "description": "来自 bookFlip2 的纸页声，去前静音、略加快并收尾，不加电子音。",
+      "usage": "装备、技能、图鉴、设置书签切页；重复点击不播放",
+      "seconds": 0.347,
+      "sample_rate": 48000,
+      "channels": 1,
+      "bits": 16,
+      "peak_dbfs": -14.0,
+      "rms_dbfs": -28.48,
+      "preview_start_seconds": 6.0903,
+      "sha256": "6ab53d738093eed13a54bf1e9aa6cb110bfe45052ea6201b37b9e29758a5f95e",
+      "layers": [
+        {
+          "pack": "rpg-audio",
+          "source": "Audio/bookFlip2.ogg",
+          "trim_seconds": [
+            0.028,
+            0.415
+          ],
+          "playback_speed": 1.1,
+          "lowpass_hz": 7600,
+          "reverse": false,
+          "at_seconds": 0,
+          "gain": 1
+        },
+        {
+          "master_processing": "soft transient saturation",
+          "drive": 9.0
+        }
+      ],
+      "approved_preview_number": 3
+    },
+    {
+      "number": 11,
+      "id": "ui_item_grab",
+      "name": "拿起物品",
+      "group": "物品",
+      "file": "ui_v2_item_grab.wav",
+      "approved_unchanged": false,
+      "description": "轻皮革提起与触点，区别于较重的落槽。",
+      "usage": "实际开始拖动物品",
+      "seconds": 0.145,
+      "sample_rate": 48000,
+      "channels": 1,
+      "bits": 16,
+      "peak_dbfs": -17.0,
+      "rms_dbfs": -29.58,
+      "preview_start_seconds": 6.9373,
+      "sha256": "8d54620ec17dbc2b45010d166d59d5d7ab5bac8c8af6fbc16d92f2922209ab49",
+      "layers": [
+        {
+          "pack": "rpg-audio",
+          "source": "Audio/handleSmallLeather2.ogg",
+          "trim_seconds": [
+            0.075,
+            0.245
+          ],
+          "playback_speed": 1.3,
+          "lowpass_hz": 5600,
+          "reverse": false,
+          "at_seconds": 0,
+          "gain": 0.85
+        },
+        {
+          "pack": "impact-sounds",
+          "source": "Audio/impactWood_light_003.ogg",
+          "trim_seconds": [
+            0,
+            0.04
+          ],
+          "playback_speed": 1,
+          "lowpass_hz": 5100,
+          "reverse": false,
+          "at_seconds": 0,
+          "gain": 0.2
+        },
+        {
+          "master_processing": "soft transient saturation",
+          "drive": 3.0
+        }
+      ],
+      "new18_preview_start_seconds": 4.8184
+    },
+    {
+      "number": 12,
+      "id": "ui_item_place",
+      "name": "放下物品",
+      "group": "物品",
+      "file": "ui_v2_item_place.wav",
+      "approved_unchanged": true,
+      "description": "皮革落下叠加轻落物，保留触碰和摩擦，不做奖励提示。",
+      "usage": "移动、合并、卸下、仓库存取、道具配置、技能排序",
+      "seconds": 0.1753,
+      "sample_rate": 48000,
+      "channels": 1,
+      "bits": 16,
+      "peak_dbfs": -14.0,
+      "rms_dbfs": -27.62,
+      "preview_start_seconds": 7.5823,
+      "sha256": "6fb8cfc949faa310af21420fa7469adbafad8fe5993783e7abac447bc8e4a060",
+      "layers": [
+        {
+          "pack": "rpg-audio",
+          "source": "Audio/dropLeather.ogg",
+          "trim_seconds": [
+            0.085,
+            0.29
+          ],
+          "playback_speed": 1.3,
+          "lowpass_hz": 5200,
+          "reverse": false,
+          "at_seconds": 0,
+          "gain": 0.8
+        },
+        {
+          "pack": "rpg-audio",
+          "source": "Audio/bookPlace1.ogg",
+          "trim_seconds": [
+            0.053,
+            0.17
+          ],
+          "playback_speed": 1.25,
+          "lowpass_hz": 4300,
+          "reverse": false,
+          "at_seconds": 0.01,
+          "gain": 0.26
+        },
+        {
+          "master_processing": "soft transient saturation",
+          "drive": 1.2
+        }
+      ],
+      "approved_preview_number": 4
+    },
+    {
+      "number": 13,
+      "id": "ui_equip",
+      "name": "装备扣合",
+      "group": "物品",
+      "file": "ui_v2_equip.wav",
+      "approved_unchanged": true,
+      "description": "皮带操作声作底，金属锁扣作为确认瞬间。",
+      "usage": "武器、饰品装备或替换成功",
+      "seconds": 0.2356,
+      "sample_rate": 48000,
+      "channels": 1,
+      "bits": 16,
+      "peak_dbfs": -12.0,
+      "rms_dbfs": -30.14,
+      "preview_start_seconds": 8.2576,
+      "sha256": "a83f2e6ac653f94228834e2e5d9a9c98f7e53ee321fe1c48756022f23062766f",
+      "layers": [
+        {
+          "pack": "rpg-audio",
+          "source": "Audio/beltHandle2.ogg",
+          "trim_seconds": [
+            0.09,
+            0.35
+          ],
+          "playback_speed": 1.2,
+          "lowpass_hz": 5700,
+          "reverse": false,
+          "at_seconds": 0,
+          "gain": 0.27
+        },
+        {
+          "pack": "rpg-audio",
+          "source": "Audio/metalLatch.ogg",
+          "trim_seconds": [
+            0.035,
+            0.235
+          ],
+          "playback_speed": 1.04,
+          "lowpass_hz": 6900,
+          "reverse": false,
+          "at_seconds": 0.035,
+          "gain": 0.85
+        },
+        {
+          "master_processing": "soft transient saturation",
+          "drive": 3.2
+        }
+      ],
+      "approved_preview_number": 5
+    },
+    {
+      "number": 14,
+      "id": "ui_magic_socket",
+      "name": "魔法嵌入",
+      "group": "物品",
+      "file": "ui_v2_magic_socket.wav",
+      "approved_unchanged": true,
+      "description": "先扣入，再带极短玻璃颗粒和无固定音高的气流，取消铃声音阶。",
+      "usage": "技能石装入、增幅选择成功",
+      "seconds": 0.1911,
+      "sample_rate": 48000,
+      "channels": 1,
+      "bits": 16,
+      "peak_dbfs": -13.0,
+      "rms_dbfs": -26.82,
+      "preview_start_seconds": 8.9932,
+      "sha256": "da2b92215cb0dbbb63355d6c74026c27f421bf0e8370e48dbcf86c8bbf853862",
+      "layers": [
+        {
+          "pack": "impact-sounds",
+          "source": "Audio/impactWood_light_002.ogg",
+          "trim_seconds": [
+            0,
+            0.1
+          ],
+          "playback_speed": 0.95,
+          "lowpass_hz": 5000,
+          "reverse": false,
+          "at_seconds": 0,
+          "gain": 0.55
+        },
+        {
+          "pack": "impact-sounds",
+          "source": "Audio/impactGlass_light_000.ogg",
+          "trim_seconds": [
+            0,
+            0.18
+          ],
+          "playback_speed": 0.92,
+          "lowpass_hz": 8000,
+          "reverse": false,
+          "at_seconds": 0.019,
+          "gain": 0.5
+        },
+        {
+          "pack": "impact-sounds",
+          "source": "Audio/impactGlass_light_001.ogg",
+          "trim_seconds": [
+            0,
+            0.12
+          ],
+          "playback_speed": 1.21,
+          "lowpass_hz": 7200,
+          "reverse": false,
+          "at_seconds": 0.061,
+          "gain": 0.17
+        },
+        {
+          "synth": "nonpitched filtered air snap",
+          "seed": 600602,
+          "at_seconds": 0.011,
+          "gain": 0.15
+        },
+        {
+          "master_processing": "soft transient saturation",
+          "drive": 1.0
+        }
+      ],
+      "approved_preview_number": 6
+    },
+    {
+      "number": 15,
+      "id": "ui_organize",
+      "name": "整理背包",
+      "group": "物品",
+      "file": "ui_v2_organize.wav",
+      "approved_unchanged": false,
+      "description": "纸页滑动和三个快速落槽，最后一次收稳。",
+      "usage": "背包、仓库、商店背包整理完成",
+      "seconds": 0.3238,
+      "sample_rate": 48000,
+      "channels": 1,
+      "bits": 16,
+      "peak_dbfs": -16.0,
+      "rms_dbfs": -30.3,
+      "preview_start_seconds": 9.6843,
+      "sha256": "3d110ef67f41e9ae9d1dcb4d2383313842c651f21105d5a67ad39693ec9ccc23",
+      "layers": [
+        {
+          "pack": "rpg-audio",
+          "source": "Audio/bookFlip3.ogg",
+          "trim_seconds": [
+            0.028,
+            0.205
+          ],
+          "playback_speed": 1.3,
+          "lowpass_hz": 6200,
+          "reverse": false,
+          "at_seconds": 0,
+          "gain": 0.3
+        },
+        {
+          "pack": "impact-sounds",
+          "source": "Audio/impactWood_light_003.ogg",
+          "trim_seconds": [
+            0,
+            0.08
+          ],
+          "playback_speed": 1.08,
+          "lowpass_hz": 6000,
+          "reverse": false,
+          "at_seconds": 0.015,
+          "gain": 0.42
+        },
+        {
+          "pack": "impact-sounds",
+          "source": "Audio/impactWood_light_004.ogg",
+          "trim_seconds": [
+            0,
+            0.08
+          ],
+          "playback_speed": 0.96,
+          "lowpass_hz": 6000,
+          "reverse": false,
+          "at_seconds": 0.09,
+          "gain": 0.55
+        },
+        {
+          "pack": "impact-sounds",
+          "source": "Audio/impactWood_light_002.ogg",
+          "trim_seconds": [
+            0,
+            0.08
+          ],
+          "playback_speed": 1.02,
+          "lowpass_hz": 6000,
+          "reverse": false,
+          "at_seconds": 0.168,
+          "gain": 0.65
+        },
+        {
+          "pack": "rpg-audio",
+          "source": "Audio/bookPlace2.ogg",
+          "trim_seconds": [
+            0.07,
+            0.19
+          ],
+          "playback_speed": 1.3,
+          "lowpass_hz": 4600,
+          "reverse": false,
+          "at_seconds": 0.21,
+          "gain": 0.3
+        },
+        {
+          "master_processing": "soft transient saturation",
+          "drive": 2.2
+        }
+      ],
+      "new18_preview_start_seconds": 5.4634
+    },
+    {
+      "number": 16,
+      "id": "ui_coins",
+      "name": "金币",
+      "group": "物品",
+      "file": "ui_v2_coins.wav",
+      "approved_unchanged": false,
+      "description": "硬币滚动与碰撞，收短尾部，不用合成叮咚。",
+      "usage": "买卖成功、拾取金币；批量合并触发",
+      "seconds": 0.3187,
+      "sample_rate": 48000,
+      "channels": 1,
+      "bits": 16,
+      "peak_dbfs": -14.0,
+      "rms_dbfs": -28.23,
+      "preview_start_seconds": 10.5081,
+      "sha256": "b8dfb050efd6987bf5992184a5ae4112f401c4aa360a81f48d15d3ca33f46269",
+      "layers": [
+        {
+          "pack": "rpg-audio",
+          "source": "Audio/handleCoins2.ogg",
+          "trim_seconds": [
+            0.014,
+            0.32
+          ],
+          "playback_speed": 1.02,
+          "lowpass_hz": 8000,
+          "reverse": false,
+          "at_seconds": 0,
+          "gain": 0.9
+        },
+        {
+          "pack": "rpg-audio",
+          "source": "Audio/handleCoins.ogg",
+          "trim_seconds": [
+            0.12,
+            0.23
+          ],
+          "playback_speed": 1.22,
+          "lowpass_hz": 7000,
+          "reverse": false,
+          "at_seconds": 0.1,
+          "gain": 0.14
+        },
+        {
+          "master_processing": "soft transient saturation",
+          "drive": 4.0
+        }
+      ],
+      "new18_preview_start_seconds": 6.2873
+    },
+    {
+      "number": 17,
+      "id": "ui_pickup",
+      "name": "获得物品",
+      "group": "通知",
+      "file": "ui_v2_pickup.wav",
+      "approved_unchanged": false,
+      "description": "小物件收入袋中，带一次短而细的拾取亮点。",
+      "usage": "物品获得提示；连续拾取需限频",
+      "seconds": 0.2042,
+      "sample_rate": 48000,
+      "channels": 1,
+      "bits": 16,
+      "peak_dbfs": -16.0,
+      "rms_dbfs": -31.46,
+      "preview_start_seconds": 11.3269,
+      "sha256": "113f33e9ae169079df218f6d5a4f7343ce5576d3a6fd186ebcc7f0f7d8b21770",
+      "layers": [
+        {
+          "pack": "rpg-audio",
+          "source": "Audio/handleSmallLeather.ogg",
+          "trim_seconds": [
+            0.052,
+            0.225
+          ],
+          "playback_speed": 1.25,
+          "lowpass_hz": 5600,
+          "reverse": false,
+          "at_seconds": 0,
+          "gain": 0.5
+        },
+        {
+          "pack": "impact-sounds",
+          "source": "Audio/impactGlass_light_002.ogg",
+          "trim_seconds": [
+            0,
+            0.17
+          ],
+          "playback_speed": 1.06,
+          "lowpass_hz": 7200,
+          "reverse": false,
+          "at_seconds": 0.05,
+          "gain": 0.5
+        },
+        {
+          "master_processing": "soft transient saturation",
+          "drive": 1.7
+        }
+      ],
+      "new18_preview_start_seconds": 7.106
+    },
+    {
+      "number": 18,
+      "id": "ui_threat",
+      "name": "威胁提示",
+      "group": "通知",
+      "file": "ui_v2_threat.wav",
+      "approved_unchanged": false,
+      "description": "低沉软击叠少量钝金属压力感，只响一次。",
+      "usage": "威胁出现或跨过关键阈值；不用于进度每次更新",
+      "seconds": 0.4035,
+      "sample_rate": 48000,
+      "channels": 1,
+      "bits": 16,
+      "peak_dbfs": -16.0,
+      "rms_dbfs": -26.56,
+      "preview_start_seconds": 12.0311,
+      "sha256": "a6964af902f3f60978bd5184639f5e63be606b35d2eadab801913045b96453d3",
+      "layers": [
+        {
+          "pack": "impact-sounds",
+          "source": "Audio/impactPlate_heavy_000.ogg",
+          "trim_seconds": [
+            0,
+            0.29
+          ],
+          "playback_speed": 0.72,
+          "lowpass_hz": 2400,
+          "reverse": false,
+          "at_seconds": 0,
+          "gain": 0.24
+        },
+        {
+          "pack": "impact-sounds",
+          "source": "Audio/impactSoft_heavy_000.ogg",
+          "trim_seconds": [
+            0,
+            0.3
+          ],
+          "playback_speed": 0.85,
+          "lowpass_hz": 2800,
+          "reverse": false,
+          "at_seconds": 0,
+          "gain": 0.85
+        },
+        {
+          "master_processing": "soft transient saturation",
+          "drive": 1.7
+        }
+      ],
+      "new18_preview_start_seconds": 7.8102
+    },
+    {
+      "number": 19,
+      "id": "ui_warning",
+      "name": "重要警告",
+      "group": "通知",
+      "file": "ui_v2_warning.wav",
+      "approved_unchanged": false,
+      "description": "较清楚的锁扣与第二下钝击，区别于普通无效操作。",
+      "usage": "复仇通知、意外断线等重要提示",
+      "seconds": 0.4504,
+      "sample_rate": 48000,
+      "channels": 1,
+      "bits": 16,
+      "peak_dbfs": -14.0,
+      "rms_dbfs": -29.86,
+      "preview_start_seconds": 12.9346,
+      "sha256": "64cc26bde8b449c29d27bde0b4794db13ebe0d0ea3f0609cb1db45ed1611bb28",
+      "layers": [
+        {
+          "pack": "rpg-audio",
+          "source": "Audio/metalLatch.ogg",
+          "trim_seconds": [
+            0.038,
+            0.22
+          ],
+          "playback_speed": 0.78,
+          "lowpass_hz": 4700,
+          "reverse": false,
+          "at_seconds": 0,
+          "gain": 0.8
+        },
+        {
+          "pack": "impact-sounds",
+          "source": "Audio/impactSoft_medium_000.ogg",
+          "trim_seconds": [
+            0,
+            0.1
+          ],
+          "playback_speed": 0.75,
+          "lowpass_hz": 2800,
+          "reverse": false,
+          "at_seconds": 0.13,
+          "gain": 0.48
+        },
+        {
+          "pack": "impact-sounds",
+          "source": "Audio/impactPlate_light_000.ogg",
+          "trim_seconds": [
+            0,
+            0.22
+          ],
+          "playback_speed": 0.68,
+          "lowpass_hz": 3500,
+          "reverse": false,
+          "at_seconds": 0.14,
+          "gain": 0.25
+        },
+        {
+          "master_processing": "soft transient saturation",
+          "drive": 2.3
+        }
+      ],
+      "new18_preview_start_seconds": 8.7137
+    },
+    {
+      "number": 20,
+      "id": "ui_victory",
+      "name": "成功结算",
+      "group": "结算",
+      "file": "ui_v2_victory.wav",
+      "approved_unchanged": false,
+      "description": "封盖开启、木质落点与战利品硬币展开，不播放庆祝旋律。",
+      "usage": "DungeonSettlementUI 成功时一次",
+      "seconds": 0.7973,
+      "sample_rate": 48000,
+      "channels": 1,
+      "bits": 16,
+      "peak_dbfs": -12.0,
+      "rms_dbfs": -30.15,
+      "preview_start_seconds": 13.885,
+      "sha256": "6c225eb4ee1baf4979ca5c60e9856e0e4d5d9c43e7624e337773348801367841",
+      "layers": [
+        {
+          "pack": "rpg-audio",
+          "source": "Audio/bookOpen.ogg",
+          "trim_seconds": [
+            0.015,
+            0.15
+          ],
+          "playback_speed": 1,
+          "lowpass_hz": 6500,
+          "reverse": false,
+          "at_seconds": 0,
+          "gain": 0.24
+        },
+        {
+          "pack": "rpg-audio",
+          "source": "Audio/creak2.ogg",
+          "trim_seconds": [
+            0.07,
+            0.27
+          ],
+          "playback_speed": 1,
+          "lowpass_hz": 4200,
+          "reverse": false,
+          "at_seconds": 0.02,
+          "gain": 0.12
+        },
+        {
+          "pack": "impact-sounds",
+          "source": "Audio/impactWood_medium_000.ogg",
+          "trim_seconds": [
+            0,
+            0.19
+          ],
+          "playback_speed": 0.9,
+          "lowpass_hz": 5600,
+          "reverse": false,
+          "at_seconds": 0.17,
+          "gain": 0.55
+        },
+        {
+          "pack": "rpg-audio",
+          "source": "Audio/handleCoins.ogg",
+          "trim_seconds": [
+            0.05,
+            0.7
+          ],
+          "playback_speed": 1.12,
+          "lowpass_hz": 7800,
+          "reverse": false,
+          "at_seconds": 0.2,
+          "gain": 0.8
+        },
+        {
+          "pack": "impact-sounds",
+          "source": "Audio/impactGlass_light_002.ogg",
+          "trim_seconds": [
+            0,
+            0.2
+          ],
+          "playback_speed": 1.08,
+          "lowpass_hz": 7500,
+          "reverse": false,
+          "at_seconds": 0.33,
+          "gain": 0.22
+        },
+        {
+          "pack": "impact-sounds",
+          "source": "Audio/impactGlass_light_001.ogg",
+          "trim_seconds": [
+            0,
+            0.14
+          ],
+          "playback_speed": 0.95,
+          "lowpass_hz": 6800,
+          "reverse": false,
+          "at_seconds": 0.52,
+          "gain": 0.13
+        },
+        {
+          "master_processing": "soft transient saturation",
+          "drive": 2.5
+        }
+      ],
+      "new18_preview_start_seconds": 9.6641
+    },
+    {
+      "number": 21,
+      "id": "ui_defeat",
+      "name": "失败结算",
+      "group": "结算",
+      "file": "ui_v2_defeat.wav",
+      "approved_unchanged": false,
+      "description": "布料收落、较沉的合盖与物品落下，不用警报和下降音阶。",
+      "usage": "DungeonSettlementUI 失败时一次",
+      "seconds": 0.6426,
+      "sample_rate": 48000,
+      "channels": 1,
+      "bits": 16,
+      "peak_dbfs": -15.0,
+      "rms_dbfs": -30.96,
+      "preview_start_seconds": 15.1822,
+      "sha256": "fe3ad7edf28bc57778c20cc3fee359aff94648e065b104594894bccf9805a14f",
+      "layers": [
+        {
+          "pack": "rpg-audio",
+          "source": "Audio/clothBelt2.ogg",
+          "trim_seconds": [
+            0.07,
+            0.48
+          ],
+          "playback_speed": 0.85,
+          "lowpass_hz": 4200,
+          "reverse": false,
+          "at_seconds": 0,
+          "gain": 0.28
+        },
+        {
+          "pack": "rpg-audio",
+          "source": "Audio/bookClose.ogg",
+          "trim_seconds": [
+            0.055,
+            0.23
+          ],
+          "playback_speed": 0.8,
+          "lowpass_hz": 3900,
+          "reverse": false,
+          "at_seconds": 0.1,
+          "gain": 0.8
+        },
+        {
+          "pack": "impact-sounds",
+          "source": "Audio/impactSoft_heavy_000.ogg",
+          "trim_seconds": [
+            0,
+            0.35
+          ],
+          "playback_speed": 0.68,
+          "lowpass_hz": 2000,
+          "reverse": false,
+          "at_seconds": 0.11,
+          "gain": 0.6
+        },
+        {
+          "pack": "rpg-audio",
+          "source": "Audio/dropLeather.ogg",
+          "trim_seconds": [
+            0.09,
+            0.29
+          ],
+          "playback_speed": 0.9,
+          "lowpass_hz": 3400,
+          "reverse": false,
+          "at_seconds": 0.25,
+          "gain": 0.24
+        },
+        {
+          "master_processing": "soft transient saturation",
+          "drive": 2.0
+        }
+      ],
+      "new18_preview_start_seconds": 10.9613
+    },
+    {
+      "number": 22,
+      "id": "ui_member_join",
+      "name": "成员加入",
+      "group": "联机",
+      "file": "ui_v2_member_join.wav",
+      "approved_unchanged": false,
+      "description": "布料短动和清楚入槽，微量玻璃触点表示加入。",
+      "usage": "创建或加入成功、新队友进入；不在列表刷新时播放",
+      "seconds": 0.1925,
+      "sample_rate": 48000,
+      "channels": 1,
+      "bits": 16,
+      "peak_dbfs": -16.0,
+      "rms_dbfs": -31.91,
+      "preview_start_seconds": 16.3248,
+      "sha256": "66a309c416b004bd02f53922f5ae73a6323741f382104b156074bebb1ae5632a",
+      "layers": [
+        {
+          "pack": "rpg-audio",
+          "source": "Audio/cloth1.ogg",
+          "trim_seconds": [
+            0.075,
+            0.18
+          ],
+          "playback_speed": 1.2,
+          "lowpass_hz": 5400,
+          "reverse": false,
+          "at_seconds": 0,
+          "gain": 0.18
+        },
+        {
+          "pack": "impact-sounds",
+          "source": "Audio/impactWood_light_004.ogg",
+          "trim_seconds": [
+            0,
+            0.12
+          ],
+          "playback_speed": 1,
+          "lowpass_hz": 6300,
+          "reverse": false,
+          "at_seconds": 0.024,
+          "gain": 0.8
+        },
+        {
+          "pack": "impact-sounds",
+          "source": "Audio/impactGlass_light_001.ogg",
+          "trim_seconds": [
+            0,
+            0.12
+          ],
+          "playback_speed": 1.05,
+          "lowpass_hz": 6800,
+          "reverse": false,
+          "at_seconds": 0.066,
+          "gain": 0.22
+        },
+        {
+          "master_processing": "soft transient saturation",
+          "drive": 2.0
+        }
+      ],
+      "new18_preview_start_seconds": 12.1039
+    },
+    {
+      "number": 23,
+      "id": "ui_member_leave",
+      "name": "成员离开",
+      "group": "联机",
+      "file": "ui_v2_member_leave.wav",
+      "approved_unchanged": false,
+      "description": "短皮革抽出与闷木扣，不带玻璃亮点。",
+      "usage": "成员实际离开",
+      "seconds": 0.1823,
+      "sample_rate": 48000,
+      "channels": 1,
+      "bits": 16,
+      "peak_dbfs": -18.0,
+      "rms_dbfs": -32.36,
+      "preview_start_seconds": 17.0174,
+      "sha256": "ffd6e09b10cff4eb0bc3816be0d6fca5611c601528fae3a48629282afc3c922e",
+      "layers": [
+        {
+          "pack": "rpg-audio",
+          "source": "Audio/handleSmallLeather.ogg",
+          "trim_seconds": [
+            0.06,
+            0.25
+          ],
+          "playback_speed": 1.2,
+          "lowpass_hz": 4600,
+          "reverse": true,
+          "at_seconds": 0,
+          "gain": 0.55
+        },
+        {
+          "pack": "impact-sounds",
+          "source": "Audio/impactWood_light_003.ogg",
+          "trim_seconds": [
+            0,
+            0.115
+          ],
+          "playback_speed": 0.84,
+          "lowpass_hz": 4100,
+          "reverse": false,
+          "at_seconds": 0.035,
+          "gain": 0.45
+        },
+        {
+          "master_processing": "soft transient saturation",
+          "drive": 2.2
+        }
+      ],
+      "new18_preview_start_seconds": 12.7965
+    },
+    {
+      "number": 24,
+      "id": "ui_depart",
+      "name": "准备出发",
+      "group": "联机",
+      "file": "ui_v2_depart.wav",
+      "approved_unchanged": false,
+      "description": "收紧行装、木质落点和锁扣，接一个短滑动表示出发。",
+      "usage": "确认进入战斗或地牢成功时一次",
+      "seconds": 0.4754,
+      "sample_rate": 48000,
+      "channels": 1,
+      "bits": 16,
+      "peak_dbfs": -13.0,
+      "rms_dbfs": -29.38,
+      "preview_start_seconds": 17.6997,
+      "sha256": "1a693f5eb545f09b95245ace343d561c2e45414268070c330a982bb14dbc0469",
+      "layers": [
+        {
+          "pack": "rpg-audio",
+          "source": "Audio/clothBelt2.ogg",
+          "trim_seconds": [
+            0.07,
+            0.43
+          ],
+          "playback_speed": 1.25,
+          "lowpass_hz": 6400,
+          "reverse": true,
+          "at_seconds": 0,
+          "gain": 0.25
+        },
+        {
+          "pack": "impact-sounds",
+          "source": "Audio/impactWood_medium_000.ogg",
+          "trim_seconds": [
+            0,
+            0.19
+          ],
+          "playback_speed": 0.9,
+          "lowpass_hz": 5700,
+          "reverse": false,
+          "at_seconds": 0.15,
+          "gain": 0.6
+        },
+        {
+          "pack": "rpg-audio",
+          "source": "Audio/metalLatch.ogg",
+          "trim_seconds": [
+            0.035,
+            0.21
+          ],
+          "playback_speed": 1,
+          "lowpass_hz": 6700,
+          "reverse": false,
+          "at_seconds": 0.165,
+          "gain": 0.5
+        },
+        {
+          "pack": "rpg-audio",
+          "source": "Audio/cloth1.ogg",
+          "trim_seconds": [
+            0.075,
+            0.4
+          ],
+          "playback_speed": 1.6,
+          "lowpass_hz": 6300,
+          "reverse": false,
+          "at_seconds": 0.25,
+          "gain": 0.18
+        },
+        {
+          "pack": "impact-sounds",
+          "source": "Audio/impactGlass_light_002.ogg",
+          "trim_seconds": [
+            0,
+            0.15
+          ],
+          "playback_speed": 0.95,
+          "lowpass_hz": 7200,
+          "reverse": false,
+          "at_seconds": 0.225,
+          "gain": 0.1
+        },
+        {
+          "master_processing": "soft transient saturation",
+          "drive": 2.2
+        }
+      ],
+      "new18_preview_start_seconds": 13.4788
+    }
+  ],
+  "grouped_new_previews": [
+    {
+      "group": "通用",
+      "file": "preview-new-general.wav",
+      "numbers": [
+        1,
+        4,
+        5,
+        6,
+        7
+      ]
+    },
+    {
+      "group": "书本",
+      "file": "preview-new-book.wav",
+      "numbers": [
+        8,
+        9
+      ]
+    },
+    {
+      "group": "物品",
+      "file": "preview-new-items.wav",
+      "numbers": [
+        11,
+        15,
+        16
+      ]
+    },
+    {
+      "group": "通知",
+      "file": "preview-new-alerts.wav",
+      "numbers": [
+        17,
+        18,
+        19
+      ]
+    },
+    {
+      "group": "结算",
+      "file": "preview-new-settlement.wav",
+      "numbers": [
+        20,
+        21
+      ]
+    },
+    {
+      "group": "联机",
+      "file": "preview-new-lobby.wav",
+      "numbers": [
+        22,
+        23,
+        24
+      ]
+    }
+  ],
+  "source_files": [
+    {
+      "pack": "rpg-audio",
+      "source_page": "https://kenney.nl/assets/rpg-audio",
+      "archive_member": "Audio/bookFlip2.ogg",
+      "source_sha256": "3409042acbfaebc24c1a6327dc073e36f9250841712e96c5040da566a97df73c",
+      "local_file": "output/audio/ui-v2/sources/selected/rpg-audio/bookFlip2.ogg"
+    },
+    {
+      "pack": "rpg-audio",
+      "source_page": "https://kenney.nl/assets/rpg-audio",
+      "archive_member": "Audio/bookFlip3.ogg",
+      "source_sha256": "c85db5dceb3f1df073e960630277eaa88a5afda0477c1ddd68dad707621767be",
+      "local_file": "output/audio/ui-v2/sources/selected/rpg-audio/bookFlip3.ogg"
+    },
+    {
+      "pack": "rpg-audio",
+      "source_page": "https://kenney.nl/assets/rpg-audio",
+      "archive_member": "Audio/bookPlace1.ogg",
+      "source_sha256": "26f3ce60fbde85b678b0ad7f6624d80535fe540d88232ad1e38e47a96662d977",
+      "local_file": "output/audio/ui-v2/sources/selected/rpg-audio/bookPlace1.ogg"
+    },
+    {
+      "pack": "rpg-audio",
+      "source_page": "https://kenney.nl/assets/rpg-audio",
+      "archive_member": "Audio/bookPlace2.ogg",
+      "source_sha256": "831874e8fd142d4d0a03ff009f1f83966338a7878c0f6f38c613ae5b80dd731e",
+      "local_file": "output/audio/ui-v2/sources/selected/rpg-audio/bookPlace2.ogg"
+    },
+    {
+      "pack": "rpg-audio",
+      "source_page": "https://kenney.nl/assets/rpg-audio",
+      "archive_member": "Audio/cloth1.ogg",
+      "source_sha256": "ddb93a3671233f95da0e0b10367f082f7eb42fa6caaddcf776410aa8833c747d",
+      "local_file": "output/audio/ui-v2/sources/selected/rpg-audio/cloth1.ogg"
+    },
+    {
+      "pack": "rpg-audio",
+      "source_page": "https://kenney.nl/assets/rpg-audio",
+      "archive_member": "Audio/cloth3.ogg",
+      "source_sha256": "a48632d17a4f1416541d261a32a31612e01267144c407fa3ecab3ff410f0085b",
+      "local_file": "output/audio/ui-v2/sources/selected/rpg-audio/cloth3.ogg"
+    },
+    {
+      "pack": "rpg-audio",
+      "source_page": "https://kenney.nl/assets/rpg-audio",
+      "archive_member": "Audio/dropLeather.ogg",
+      "source_sha256": "097e1d3b74949b0145fda0519d40b7e0773ab82ec4858727f95be830927e1a45",
+      "local_file": "output/audio/ui-v2/sources/selected/rpg-audio/dropLeather.ogg"
+    },
+    {
+      "pack": "rpg-audio",
+      "source_page": "https://kenney.nl/assets/rpg-audio",
+      "archive_member": "Audio/handleSmallLeather.ogg",
+      "source_sha256": "ae3cbf695aa0a8b98b5a80a835be5a3ccbd5446a24db2235cd4c3cd6fc92ed96",
+      "local_file": "output/audio/ui-v2/sources/selected/rpg-audio/handleSmallLeather.ogg"
+    },
+    {
+      "pack": "rpg-audio",
+      "source_page": "https://kenney.nl/assets/rpg-audio",
+      "archive_member": "Audio/beltHandle2.ogg",
+      "source_sha256": "f3b692d5c83263c25bce779805b212dbab515d18a603c695fc6a1e8650cf5366",
+      "local_file": "output/audio/ui-v2/sources/selected/rpg-audio/beltHandle2.ogg"
+    },
+    {
+      "pack": "rpg-audio",
+      "source_page": "https://kenney.nl/assets/rpg-audio",
+      "archive_member": "Audio/metalLatch.ogg",
+      "source_sha256": "ba9ba60b172b3ebc131a940f25793cd2e207aca7af73dc80d637277f060f1708",
+      "local_file": "output/audio/ui-v2/sources/selected/rpg-audio/metalLatch.ogg"
+    },
+    {
+      "pack": "rpg-audio",
+      "source_page": "https://kenney.nl/assets/rpg-audio",
+      "archive_member": "Audio/bookOpen.ogg",
+      "source_sha256": "953390534377222bee89ac8cd9e60a58fdc037c71a4d7c18c43cd647c7f34ba8",
+      "local_file": "output/audio/ui-v2/sources/selected/rpg-audio/bookOpen.ogg"
+    },
+    {
+      "pack": "rpg-audio",
+      "source_page": "https://kenney.nl/assets/rpg-audio",
+      "archive_member": "Audio/bookClose.ogg",
+      "source_sha256": "81e976532565f4372abd14e83d2684195fa548d0a28d345de221e56052454f32",
+      "local_file": "output/audio/ui-v2/sources/selected/rpg-audio/bookClose.ogg"
+    },
+    {
+      "pack": "rpg-audio",
+      "source_page": "https://kenney.nl/assets/rpg-audio",
+      "archive_member": "Audio/creak1.ogg",
+      "source_sha256": "8a346186fd297254248cab8e8117060a52a5cf2a84f603153a762108550ea95e",
+      "local_file": "output/audio/ui-v2/sources/selected/rpg-audio/creak1.ogg"
+    },
+    {
+      "pack": "rpg-audio",
+      "source_page": "https://kenney.nl/assets/rpg-audio",
+      "archive_member": "Audio/creak2.ogg",
+      "source_sha256": "8a990afdc03aebb91d528f5385e2f95582dbfa8e2c12c71098ab01be9142294a",
+      "local_file": "output/audio/ui-v2/sources/selected/rpg-audio/creak2.ogg"
+    },
+    {
+      "pack": "rpg-audio",
+      "source_page": "https://kenney.nl/assets/rpg-audio",
+      "archive_member": "Audio/handleCoins.ogg",
+      "source_sha256": "8a91f969e932df709df80ee124d86a51389eed9b67f22e5e716bc2bbf60d8dab",
+      "local_file": "output/audio/ui-v2/sources/selected/rpg-audio/handleCoins.ogg"
+    },
+    {
+      "pack": "rpg-audio",
+      "source_page": "https://kenney.nl/assets/rpg-audio",
+      "archive_member": "Audio/handleCoins2.ogg",
+      "source_sha256": "4b857968d64f9ac9336a10ffac6694d7547e1f01566ad6857b30bc8db3ee6c32",
+      "local_file": "output/audio/ui-v2/sources/selected/rpg-audio/handleCoins2.ogg"
+    },
+    {
+      "pack": "rpg-audio",
+      "source_page": "https://kenney.nl/assets/rpg-audio",
+      "archive_member": "Audio/handleSmallLeather2.ogg",
+      "source_sha256": "a66f6db5918ad016c28a9f2768f127a7f39b5fa04481e5a3b4e78ebe2a1c282d",
+      "local_file": "output/audio/ui-v2/sources/selected/rpg-audio/handleSmallLeather2.ogg"
+    },
+    {
+      "pack": "rpg-audio",
+      "source_page": "https://kenney.nl/assets/rpg-audio",
+      "archive_member": "Audio/beltHandle1.ogg",
+      "source_sha256": "2ef665bd8b65dbe669f4560be38a6d8f04a162e618b15a49e3e71b58e558aab0",
+      "local_file": "output/audio/ui-v2/sources/selected/rpg-audio/beltHandle1.ogg"
+    },
+    {
+      "pack": "rpg-audio",
+      "source_page": "https://kenney.nl/assets/rpg-audio",
+      "archive_member": "Audio/clothBelt2.ogg",
+      "source_sha256": "d545b1d9f20e6188140aaf551a96f1e82fe0d15f7ca066fac8b065e1231e0038",
+      "local_file": "output/audio/ui-v2/sources/selected/rpg-audio/clothBelt2.ogg"
+    },
+    {
+      "pack": "impact-sounds",
+      "source_page": "https://kenney.nl/assets/impact-sounds",
+      "archive_member": "Audio/impactWood_light_000.ogg",
+      "source_sha256": "eb45e35b4bed784d3f120de4afec4b0d6ac09d9e143cce8cfcb7d739e1b1f3c3",
+      "local_file": "output/audio/ui-v2/sources/selected/impact-sounds/impactWood_light_000.ogg"
+    },
+    {
+      "pack": "impact-sounds",
+      "source_page": "https://kenney.nl/assets/impact-sounds",
+      "archive_member": "Audio/impactWood_light_001.ogg",
+      "source_sha256": "4b76bf3ccc8e60d19188f3165b778a7817786faa6887c55d9049bcbeef3b425f",
+      "local_file": "output/audio/ui-v2/sources/selected/impact-sounds/impactWood_light_001.ogg"
+    },
+    {
+      "pack": "impact-sounds",
+      "source_page": "https://kenney.nl/assets/impact-sounds",
+      "archive_member": "Audio/impactWood_light_002.ogg",
+      "source_sha256": "b183cf7a5bd783817e0e4b82af34ac6658fa1927049089dadc8b15c2ecc771dc",
+      "local_file": "output/audio/ui-v2/sources/selected/impact-sounds/impactWood_light_002.ogg"
+    },
+    {
+      "pack": "impact-sounds",
+      "source_page": "https://kenney.nl/assets/impact-sounds",
+      "archive_member": "Audio/impactGlass_light_000.ogg",
+      "source_sha256": "d750cf88097d0c3e69920e6e14496e1444e1a9da01aa4cca8f5ec8cb44c57b4f",
+      "local_file": "output/audio/ui-v2/sources/selected/impact-sounds/impactGlass_light_000.ogg"
+    },
+    {
+      "pack": "impact-sounds",
+      "source_page": "https://kenney.nl/assets/impact-sounds",
+      "archive_member": "Audio/impactGlass_light_001.ogg",
+      "source_sha256": "05e513fbd42829060eb37855f8c3866722ec5c39a8937c9bfde518cc609effa2",
+      "local_file": "output/audio/ui-v2/sources/selected/impact-sounds/impactGlass_light_001.ogg"
+    },
+    {
+      "pack": "impact-sounds",
+      "source_page": "https://kenney.nl/assets/impact-sounds",
+      "archive_member": "Audio/impactWood_light_003.ogg",
+      "source_sha256": "cdfbe8af2fe7ff9ee28f337a0a989deee0f327620da456c8413644880e9d0004",
+      "local_file": "output/audio/ui-v2/sources/selected/impact-sounds/impactWood_light_003.ogg"
+    },
+    {
+      "pack": "impact-sounds",
+      "source_page": "https://kenney.nl/assets/impact-sounds",
+      "archive_member": "Audio/impactWood_light_004.ogg",
+      "source_sha256": "e10009f67ddaeb3a59a3e1129cfc1615d84ba60ab578eae07e7092ac223f099c",
+      "local_file": "output/audio/ui-v2/sources/selected/impact-sounds/impactWood_light_004.ogg"
+    },
+    {
+      "pack": "impact-sounds",
+      "source_page": "https://kenney.nl/assets/impact-sounds",
+      "archive_member": "Audio/impactWood_medium_000.ogg",
+      "source_sha256": "1723a9fd25103ed41af06054814e84e65f4a772bac86ab2dc927da93d9592ff5",
+      "local_file": "output/audio/ui-v2/sources/selected/impact-sounds/impactWood_medium_000.ogg"
+    },
+    {
+      "pack": "impact-sounds",
+      "source_page": "https://kenney.nl/assets/impact-sounds",
+      "archive_member": "Audio/impactWood_heavy_000.ogg",
+      "source_sha256": "15ff82332f342c30e469215539e1cc57e11b221aa2cf7e11e811d313a9927f3d",
+      "local_file": "output/audio/ui-v2/sources/selected/impact-sounds/impactWood_heavy_000.ogg"
+    },
+    {
+      "pack": "impact-sounds",
+      "source_page": "https://kenney.nl/assets/impact-sounds",
+      "archive_member": "Audio/impactSoft_medium_000.ogg",
+      "source_sha256": "7d3ba0bb5e60a11b5d3e558c141303dcf494256675fbf753c0d252d2cf0481e3",
+      "local_file": "output/audio/ui-v2/sources/selected/impact-sounds/impactSoft_medium_000.ogg"
+    },
+    {
+      "pack": "impact-sounds",
+      "source_page": "https://kenney.nl/assets/impact-sounds",
+      "archive_member": "Audio/impactSoft_heavy_000.ogg",
+      "source_sha256": "49e7ca88743fca974bb8676ea138b751cfd8f9033b5e7af8736c2a215d6edbc1",
+      "local_file": "output/audio/ui-v2/sources/selected/impact-sounds/impactSoft_heavy_000.ogg"
+    },
+    {
+      "pack": "impact-sounds",
+      "source_page": "https://kenney.nl/assets/impact-sounds",
+      "archive_member": "Audio/impactPlate_light_000.ogg",
+      "source_sha256": "6e797cf8a5bfc52d7ed5eb47c227974c1cf2a674954fec5b539cea7d62c7282c",
+      "local_file": "output/audio/ui-v2/sources/selected/impact-sounds/impactPlate_light_000.ogg"
+    },
+    {
+      "pack": "impact-sounds",
+      "source_page": "https://kenney.nl/assets/impact-sounds",
+      "archive_member": "Audio/impactPlate_heavy_000.ogg",
+      "source_sha256": "112d4f93ddcc370b410630f971c0f5d991856102da9c76bc5c5540d388e75aaa",
+      "local_file": "output/audio/ui-v2/sources/selected/impact-sounds/impactPlate_heavy_000.ogg"
+    },
+    {
+      "pack": "impact-sounds",
+      "source_page": "https://kenney.nl/assets/impact-sounds",
+      "archive_member": "Audio/impactGlass_light_002.ogg",
+      "source_sha256": "710db7451bb7857b9140dfe6afe4621ea2188ad65eda3919c569d1bb285b933d",
+      "local_file": "output/audio/ui-v2/sources/selected/impact-sounds/impactGlass_light_002.ogg"
+    }
+  ]
+}

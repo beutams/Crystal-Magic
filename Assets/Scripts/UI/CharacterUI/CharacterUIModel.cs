@@ -2,6 +2,10 @@ using CrystalMagic.Game.Skill;
 
 namespace CrystalMagic.UI
 {
+    public enum CharacterPage { Equip, Skill, Handbook, Setting }
+    public enum CharacterSettingsSection { Audio, Language }
+    public enum CharacterSettingValue { MasterVolume, BgmVolume, SfxVolume }
+
     public sealed class CharacterUIModel : UIModelBase
     {
         public const string DataChangedEventName = "CharacterUIModel.DataChanged";
@@ -17,6 +21,53 @@ namespace CrystalMagic.UI
         public CharacterEquipDisplayData[] EquipItems => _equipItems;
         public CharacterPropDisplayData[] PropItems => _propItems;
         public int InventorySlotCount => _inventoryItems.Count;
+        public CharacterPage SelectedPage { get; private set; } = CharacterPage.Equip;
+        public int SelectedChainIndex { get; private set; }
+        public CharacterSettingsSection SelectedSettingsSection { get; private set; }
+        public CrystalMagic.Core.GameSettingsData Settings { get; private set; } = CrystalMagic.Core.GameSettingsData.CreateDefault();
+
+        public void SetSettings(CrystalMagic.Core.GameSettingsData settings)
+        {
+            Settings = settings.Clone();
+            PublishSettingsChanged();
+        }
+
+        public void SelectSettingsSection(CharacterSettingsSection section)
+        {
+            if (section < CharacterSettingsSection.Audio || section > CharacterSettingsSection.Language || SelectedSettingsSection == section)
+                return;
+            SelectedSettingsSection = section;
+            PublishSettingsChanged();
+        }
+
+        private void PublishSettingsChanged()
+        {
+            CrystalMagic.Core.EventComponent.Instance.Publish(new CrystalMagic.Core.CommonGameEvent(DataChangedEventName, this));
+        }
+
+        public void ResetNavigation(CharacterPage initialPage = CharacterPage.Equip)
+        {
+            SelectedPage = initialPage == CharacterPage.Setting ? CharacterPage.Setting : CharacterPage.Equip;
+            SelectedChainIndex = 0;
+            SelectedSettingsSection = CharacterSettingsSection.Audio;
+            CrystalMagic.Core.EventComponent.Instance.Publish(new CrystalMagic.Core.CommonGameEvent(DataChangedEventName, this));
+        }
+
+        public void SelectPage(CharacterPage page)
+        {
+            if (page < CharacterPage.Equip || page > CharacterPage.Setting || SelectedPage == page)
+                return;
+            SelectedPage = page;
+            CrystalMagic.Core.EventComponent.Instance.Publish(new CrystalMagic.Core.CommonGameEvent(DataChangedEventName, this));
+        }
+
+        public void SelectChain(int index)
+        {
+            if (index < 0 || index >= 5 || SelectedChainIndex == index)
+                return;
+            SelectedChainIndex = index;
+            Refresh();
+        }
 
         public void Refresh()
         {
@@ -35,7 +86,7 @@ namespace CrystalMagic.UI
             if (skillConfig?.Chains == null || skillConfig.Chains.Length == 0)
                 return;
 
-            int selectedIndex = UnityEngine.Mathf.Clamp(PlayerInputUtility.GetSkillChainIndex(), 0, skillConfig.Chains.Length - 1);
+            int selectedIndex = UnityEngine.Mathf.Clamp(SelectedChainIndex, 0, skillConfig.Chains.Length - 1);
             CrystalMagic.Core.SkillChainData chain = skillConfig.Chains[selectedIndex];
             chain?.EnsureSlots();
             if (chain?.Slots == null)
@@ -57,6 +108,9 @@ namespace CrystalMagic.UI
                     DisplayIndex = i + 1,
                     SkillIndex = i,
                     SkillId = skillData != null ? skillData.Id : -1,
+                    Name = skillData != null ? skillData.DisplayName : string.Empty,
+                    MpCost = skillData != null ? skillData.MpCost : 0,
+                    ChantDuration = skillData != null ? skillData.ChantDuration : 0,
                     SkillIconPath = skillIconPath,
                     AdditionIconPath = additionIconPath,
                     CanSelectAddition = i > 0,
@@ -179,6 +233,9 @@ namespace CrystalMagic.UI
         public int DisplayIndex;
         public int SkillIndex;
         public int SkillId;
+        public string Name;
+        public int MpCost;
+        public float ChantDuration;
         public string SkillIconPath;
         public string AdditionIconPath;
         public bool CanSelectAddition;

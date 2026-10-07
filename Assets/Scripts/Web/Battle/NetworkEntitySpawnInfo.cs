@@ -1,5 +1,6 @@
 using System;
 using CrystalMagic.Core;
+using CrystalMagic.Game.Data;
 
 namespace Server
 {
@@ -72,6 +73,7 @@ namespace Server
         public int treasureRegionId;
         public uint treasureRandomSeed;
         public byte treasureInterestSize;
+        public DungeonTreasureQuality treasureQuality;
         public bool treasureIsOpened;
         public int[] treasureCandidateItemIds;
     }

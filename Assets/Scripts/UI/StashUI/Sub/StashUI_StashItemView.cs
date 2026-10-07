@@ -22,12 +22,14 @@ public class StashUI_StashItemView : UISubView<StashUI_StashItemData>, IBeginDra
         if (data == null)
         {
             UI.Mask_Icon.Image.sprite = null;
+            UI.Mask_Icon.GameObject.SetActive(false);
             UI.Count.TextMeshProUGUI.text = string.Empty;
             UI.Name.TextMeshProUGUI.text = string.Empty;
             return;
         }
 
         UI.Mask_Icon.Image.sprite = LoadIcon(data.IconPath);
+        UI.Mask_Icon.GameObject.SetActive(UI.Mask_Icon.Image.sprite != null);
         UI.Count.TextMeshProUGUI.text = data.Count.ToString();
         UI.Name.TextMeshProUGUI.text = data.Name;
     }

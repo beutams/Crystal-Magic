@@ -38,7 +38,7 @@ public partial class BehaviorTreeSystem : SystemBase
         int maxImmediateIterations = math.max(
             1,
             config?.BehaviorTreeMaxImmediateIterationsPerTick ?? 256);
-        bool captureDebug = DebugComponent.Instance != null && DebugComponent.Instance.IsEnabled;
+        bool captureDebug = DebugComponent.TryGetInstance(out DebugComponent debug) && debug.DrawQueryVisualization;
 
         Dependency = new BehaviorTreeEvaluationJob
         {

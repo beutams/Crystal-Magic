@@ -110,7 +110,8 @@ namespace CrystalMagic.UI
             if (chain?.Slots == null)
                 return items;
 
-            for (int i = 0; i < chain.Slots.Count; i++)
+            int skillCount = Mathf.Min(chain.Slots.Count, SkillChainData.MaxLength);
+            for (int i = 0; i < skillCount; i++)
             {
                 SkillChainSlotData slot = chain.Slots[i];
                 int skillStoneItemId = slot?.SkillStoneItemId ?? -1;
@@ -192,12 +193,18 @@ namespace CrystalMagic.UI
             if (entityManager.HasComponent<UnitVitalityComponent>(player))
             {
                 UnitVitalityComponent vitality = entityManager.GetComponentData<UnitVitalityComponent>(player);
+                float currentHealth = vitality.CurrentHealth;
+                if (entityManager.HasComponent<NetworkIdentityComponent>(player) &&
+                    Server.FrameManagerUtility.TryGet(entityManager, out Server.ClientFrameManager frame) &&
+                    frame.TryGetPresentedHealth(entityManager.GetComponentData<NetworkIdentityComponent>(player).id,
+                        out float presentedHealth))
+                    currentHealth = presentedHealth;
                 float resolvedMaxHealth = UnitModifierResolver.GetMaxHealth(entityManager, player);
                 float maxHealth = Mathf.Max(resolvedMaxHealth, 0.0001f);
                 snapshot.HasHealth = true;
-                snapshot.CurrentHealth = vitality.CurrentHealth;
+                snapshot.CurrentHealth = currentHealth;
                 snapshot.MaxHealth = resolvedMaxHealth;
-                snapshot.HpRatio = Mathf.Clamp01(vitality.CurrentHealth / maxHealth);
+                snapshot.HpRatio = Mathf.Clamp01(currentHealth / maxHealth);
             }
 
             if (entityManager.HasComponent<UnitManaComponent>(player))

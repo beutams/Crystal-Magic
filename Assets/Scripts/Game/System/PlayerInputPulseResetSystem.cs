@@ -18,7 +18,7 @@ public partial struct PlayerInputPulseResetSystem : ISystem
     [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        new PlayerInputPulseResetJob().ScheduleParallel();
+        state.Dependency = new PlayerInputPulseResetJob().ScheduleParallel(state.Dependency);
     }
 }
 

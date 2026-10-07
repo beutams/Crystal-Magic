@@ -7,7 +7,8 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 
-[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation |
+                   WorldSystemFilterFlags.ClientSimulation)]
 [UpdateInGroup(typeof(UnitInitializationSystemGroup), OrderFirst = true)]
 [UpdateBefore(typeof(UnitSourceDispatcherSystem))]
 public partial class PlayerSkillDefinitionRegistryInitializationSystem : SystemBase

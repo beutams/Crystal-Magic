@@ -36,6 +36,9 @@ namespace CrystalMagic.Game.Data.Effects
         [EditorLabel("可穿透")]
         public bool CanPierce;
 
+        [EditorLabel("重复命中间隔（0 为每目标仅一次）")]
+        public float RepeatHitIntervalSeconds;
+
         [EditorLabel("碰撞目标条件")]
         public List<ConditionConfig> CollisionTargetConditions = new();
 
@@ -60,6 +63,9 @@ namespace CrystalMagic.Game.Data.Effects
             copy.MaxRange = ApplyModifierNonNegative(modifiers, SkillModifierChannel.ProjectileRange, MaxRange);
             copy.HitRadius = ApplyModifierNonNegative(modifiers, SkillModifierChannel.ProjectileScale, math.max(0.01f, HitRadius));
             copy.VisualScale = ApplyModifierNonNegative(modifiers, SkillModifierChannel.VfxScale, VisualScale);
+            copy.RepeatHitIntervalSeconds = RepeatHitIntervalSeconds > 0f
+                ? math.max(0.05f, ApplyModifierNonNegative(modifiers, SkillModifierChannel.TickInterval, RepeatHitIntervalSeconds))
+                : 0f;
             copy.CollisionTargetConditions = CollisionTargetConditions == null
                 ? new List<ConditionConfig>()
                 : new List<ConditionConfig>(CollisionTargetConditions);

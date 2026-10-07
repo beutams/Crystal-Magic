@@ -88,6 +88,25 @@ namespace CrystalMagic.Game.Skill.Effects
             return false;
         }
 
+        public static bool TryGetOriginPosition(SkillContent context, out float3 position)
+        {
+            if (context.HasOriginPositionSnapshot)
+            {
+                position = new float3(context.OriginPositionSnapshot.x,
+                    context.OriginPositionSnapshot.y, context.OriginPositionSnapshot.z);
+                return true;
+            }
+
+            if (TryGetEntityTransform(context, context.HasOriginEntity, context.OriginEntity, out LocalTransform origin))
+            {
+                position = origin.Position;
+                return true;
+            }
+
+            position = float3.zero;
+            return false;
+        }
+
         public static bool TryGetFollowTarget(
             SkillContent context,
             bool useTarget,

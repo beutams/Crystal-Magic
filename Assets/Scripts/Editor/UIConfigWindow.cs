@@ -250,8 +250,6 @@ namespace CrystalMagic.Editor
                     "LoadUI",
                     "SaveUI",
                     "ConfirmUI",
-                    "GameMenuUI",
-                    "GameSaveUI",
                 }
             });
             _config.groups.Add(new UIGroupEntry

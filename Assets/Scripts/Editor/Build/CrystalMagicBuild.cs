@@ -20,7 +20,6 @@ public static class CrystalMagicBuild
         BuildRuntimeAssetBundles();
         Build("Client", "CrystalMagicClient", "CRYSTAL_MAGIC_CLIENT", false);
         Build("LobbyServer", "CrystalMagicLobbyServer", "CRYSTAL_MAGIC_LOBBY_SERVER", true);
-        Build("BattleServer", "CrystalMagicBattleServer", "CRYSTAL_MAGIC_BATTLE_SERVER", true);
     }
 
     [MenuItem("Crystal Magic/Build/Build Client")]
@@ -30,18 +29,18 @@ public static class CrystalMagicBuild
         Build("Client", "CrystalMagicClient", "CRYSTAL_MAGIC_CLIENT", false);
     }
 
+    [MenuItem("Crystal Magic/Build/Build Test Client (Development)")]
+    public static void BuildTestClient()
+    {
+        BuildRuntimeAssetBundles();
+        Build("TestClient", "CrystalMagicTestClient", "CRYSTAL_MAGIC_CLIENT", false, true);
+    }
+
     [MenuItem("Crystal Magic/Build/Build Lobby Server")]
     public static void BuildLobbyServer()
     {
         BuildRuntimeAssetBundles();
         Build("LobbyServer", "CrystalMagicLobbyServer", "CRYSTAL_MAGIC_LOBBY_SERVER", true);
-    }
-
-    [MenuItem("Crystal Magic/Build/Build Battle Server")]
-    public static void BuildBattleServer()
-    {
-        BuildRuntimeAssetBundles();
-        Build("BattleServer", "CrystalMagicBattleServer", "CRYSTAL_MAGIC_BATTLE_SERVER", true);
     }
 
     private static void BuildRuntimeAssetBundles()
@@ -154,7 +153,7 @@ public static class CrystalMagicBuild
         return false;
     }
 
-    private static void Build(string folderName, string fileName, string define, bool dedicatedServer)
+    private static void Build(string folderName, string fileName, string define, bool dedicatedServer, bool development = false)
     {
         string outputFolder = Path.Combine(BuildRoot, folderName);
         Directory.CreateDirectory(outputFolder);
@@ -169,6 +168,7 @@ public static class CrystalMagicBuild
                 ? (int)StandaloneBuildSubtarget.Server
                 : (int)StandaloneBuildSubtarget.Player,
             extraScriptingDefines = string.IsNullOrEmpty(define) ? Array.Empty<string>() : new[] { define },
+            options = development ? BuildOptions.Development : BuildOptions.None,
         };
 
         BuildReport report = BuildPipeline.BuildPlayer(options);

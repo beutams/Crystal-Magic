@@ -68,6 +68,10 @@ namespace CrystalMagic.UI
         public DebugPage? SelectedPage { get; private set; }
         public string PlayerAttributesText { get; private set; } = string.Empty;
         public string TrainingGroundText { get; private set; } = string.Empty;
+        public string MonsterCountsText { get; private set; } = string.Empty;
+        public bool HasMonsterCounts => !string.IsNullOrEmpty(MonsterCountsText);
+        public bool HasMonsterDiagnostics { get; private set; }
+
         public string SelectedSpawnUnitName => _selectedSpawnUnitIndex >= 0 && _selectedSpawnUnitIndex < _spawnableUnitNames.Count
             ? _spawnableUnitNames[_selectedSpawnUnitIndex]
             : string.Empty;
@@ -87,6 +91,29 @@ namespace CrystalMagic.UI
         public string UnitInspectorStatusText { get; private set; } = string.Empty;
         public int UnitInspectorEditorRevision { get; private set; }
         public int SelectedInspectorBuffIndex => _selectedInspectorBuffIndex;
+
+        public void SetMonsterCounts(int active, int? sleeping, bool isHost, string diagnostics = null)
+        {
+            HasMonsterDiagnostics = !string.IsNullOrEmpty(diagnostics);
+            string text = sleeping.HasValue
+                ? $"DBG | 怪物 {(isHost ? "房主" : "单机")}\n活跃 {active}   休眠 {sleeping.Value}   总数 {active + sleeping.Value}"
+                : $"DBG | 怪物 客机\n本机已加载 {active}（全图数量未知）";
+            if (!string.IsNullOrEmpty(diagnostics)) text += "\n<size=18>" + diagnostics + "</size>";
+            SetMonsterCountsText(text);
+        }
+
+        public void ClearMonsterCounts()
+        {
+            HasMonsterDiagnostics = false;
+            SetMonsterCountsText(string.Empty);
+        }
+
+        private void SetMonsterCountsText(string text)
+        {
+            if (MonsterCountsText == text) return;
+            MonsterCountsText = text;
+            PublishChanged();
+        }
 
         public void SetContentVisible(bool visible)
         {

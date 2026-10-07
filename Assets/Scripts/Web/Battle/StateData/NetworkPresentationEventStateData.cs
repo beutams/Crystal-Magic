@@ -1,3 +1,4 @@
+using CrystalMagic.Game.Skill;
 using System;
 using Unity.Collections;
 using Unity.Entities;
@@ -5,6 +6,7 @@ using Unity.Entities;
 [Serializable]
 public sealed class NetworkPresentationEventStateData : NetworkStateData
 {
+    public SkillEffectIdentity identity;
     public uint sequence;
     public ClientPresentationEventType eventType;
     public Guid sourceUnitId;
@@ -45,6 +47,7 @@ public sealed class NetworkPresentationEventStateData : NetworkStateData
             context.EntityManager.GetBuffer<ClientPresentationEventElement>(presentationEntity);
         events.Add(new ClientPresentationEventElement
         {
+            Identity = identity,
             Frame = context.Frame,
             Sequence = sequence,
             Type = eventType,

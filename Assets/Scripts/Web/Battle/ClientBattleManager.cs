@@ -408,7 +408,10 @@ namespace Server
                 $"[BattleTrace][Client] Battle socket disconnected: reason={connect.LastDisconnectInfo?.Reason}, " +
                 $"phase={connect.LastDisconnectInfo?.Phase}, detail={connect.LastDisconnectInfo?.Detail}, " +
                 $"preparationStage={preparationStage}, battleStarted={battleStarted}");
+            if (connect.LastDisconnectInfo?.Exception != null)
+                Debug.LogException(connect.LastDisconnectInfo.Exception);
 
+            BattlePreparationStage interruptedStage = preparationStage;
             bool shouldRestore = !cleaningUp && HasPreBattleSnapshot;
             bool transitionInProgress = shouldRestore &&
                 TransitionComponent.Instance != null &&
@@ -426,7 +429,7 @@ namespace Server
             restoreStandaloneRequested = true;
             if (transitionInProgress)
             {
-                FailPreparation("与战斗服务器的连接已断开。");
+                FailPreparation("与战斗服务器的连接已断开。", interruptedStage);
                 return;
             }
 
@@ -479,7 +482,7 @@ namespace Server
                 frame.CharacterEditsBlocked = false;
                 SetLocalExitWaiting(false);
                 UIComponent.Instance.Open<ConfirmSingleUI>(new CrystalMagic.UI.ConfirmUIOpenData(
-                    "操作失败", result.error, showCancelButton: false));
+                    "操作失败", result.error));
             }
         }
 
@@ -864,7 +867,7 @@ namespace Server
                 Debug.LogWarning(
                     $"[BattleTrace][Client] Preparation timeout fired: stage={stage}, " +
                     $"connect={expectedConnect?.RemoteEndpoint}, battleStarted={battleStarted}");
-                FailPreparation($"战斗准备阶段超时：{stage}。");
+                FailPreparation($"战斗准备阶段超时：{stage}。", stage);
                 if (expectedConnect != null)
                 {
                     battleServic.Disconnect(expectedConnect);
@@ -901,6 +904,11 @@ namespace Server
 
         public void FailPreparation(string error)
         {
+            FailPreparation(error, preparationStage);
+        }
+
+        private void FailPreparation(string error, BattlePreparationStage failedStage)
+        {
             if (preparationFailed)
             {
                 return;
@@ -909,15 +917,16 @@ namespace Server
             preparationFailed = true;
             preparationError = error;
             Debug.LogError(
-                $"[BattleTrace][Client] Preparation failed: stage={preparationStage}, error={error}");
+                $"[BattleTrace][Client] Preparation failed: stage={failedStage}, error={error}");
             onPreparationFailed?.Invoke(error);
         }
 
         public void AbortBattle(string error)
         {
+            BattlePreparationStage interruptedStage = preparationStage;
             frame.Stop();
             StopPreparationTimeout();
-            FailPreparation(error);
+            FailPreparation(error, interruptedStage);
             restoreStandaloneRequested = HasPreBattleSnapshot;
             if (battleConnect != null) battleServic?.Disconnect(battleConnect);
         }

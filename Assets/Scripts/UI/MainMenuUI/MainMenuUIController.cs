@@ -45,7 +45,10 @@ namespace CrystalMagic.UI
 
         private void OnExitRequested()
         {
-            EventComponent.Instance.Publish(new MainMenuExitRequestedEvent());
+            UIComponent.Instance.OpenChild<ConfirmUI>(View, new ConfirmUIOpenData(
+                LocalizationComponent.Instance.Get("ui.main_menu.exit_game"),
+                LocalizationComponent.Instance.Get("ui.confirm.exit_game.content"),
+                () => EventComponent.Instance.Publish(new MainMenuExitRequestedEvent())));
         }
     }
 }

@@ -291,6 +291,84 @@ public sealed class NetworkTransportTests
     }
 
     [Test]
+    public void LocalPeersSurviveMainThreadSilenceLongerThanTheNetworkHeartbeatTimeout()
+    {
+        MessageCodec.Init();
+        LoopbackTransport.CreatePair(42, out LoopbackTransport server, out LoopbackTransport client);
+        Connect accepted = null;
+        server.OnAccept += connection => accepted = connection;
+        try
+        {
+            server.Init(); client.Init();
+            client.Connect(server.LocalEndpoint, out Connect connect);
+            PumpUntil(server, client, () => accepted != null && connect.State == ConnectState.Connected);
+            long beforeLoading = NetworkTimer.Instance.TimeNow - ServerUtility.Timeout - 20_000;
+            accepted.LastReceiveTime = connect.LastReceiveTime = beforeLoading;
+            for (int index = 0; index < 3; index++) { server.Update(); client.Update(); }
+            Assert.That(accepted.State, Is.EqualTo(ConnectState.Connected));
+            Assert.That(connect.State, Is.EqualTo(ConnectState.Connected));
+            Assert.That(connect.LastDisconnectInfo, Is.Null);
+
+            int received = 0;
+            connect.RegisterCallback(MessageCodec.GetOpcode<S2C_Pong>(), (_, _) => received++);
+            accepted.Send(new S2C_Pong { Time = 42 });
+            PumpUntil(server, client, () => received > 0);
+        }
+        finally { client.Shutdown(); server.Shutdown(); }
+    }
+
+    [TestCase(false)]
+    [TestCase(true)]
+    public void LocalPeerClosureStillPropagatesAfterAStall(bool shutdown)
+    {
+        MessageCodec.Init();
+        LoopbackTransport.CreatePair(42, out LoopbackTransport server, out LoopbackTransport client);
+        Connect accepted = null;
+        int disconnected = 0;
+        server.OnAccept += connection => accepted = connection;
+        client.OnDisconnected += _ => disconnected++;
+        try
+        {
+            server.Init(); client.Init();
+            client.Connect(server.LocalEndpoint, out Connect connect);
+            PumpUntil(server, client, () => accepted != null && connect.State == ConnectState.Connected);
+            accepted.LastReceiveTime = connect.LastReceiveTime = NetworkTimer.Instance.TimeNow - ServerUtility.Timeout;
+            if (shutdown) server.Shutdown();
+            else { server.Disconnect(accepted); server.Update(); }
+            client.Update(); client.Update();
+            Assert.That(connect.State, Is.EqualTo(ConnectState.Close));
+            Assert.That(connect.LastDisconnectInfo.Reason, Is.EqualTo(DisconnectReason.RemoteClosed));
+            Assert.That(connect.LastDisconnectInfo.Phase, Is.EqualTo("LoopbackPeerClosed"));
+            Assert.That(disconnected, Is.EqualTo(1));
+        }
+        finally { client.Shutdown(); server.Shutdown(); }
+    }
+
+    [Test]
+    public void NetworkMessageTransportStillDisconnectsOnARealHeartbeatTimeout()
+    {
+        MessageCodec.Init();
+        StalledTransport transport = new();
+        int disconnected = 0;
+        try
+        {
+            transport.Init();
+            transport.OnDisconnected += _ => disconnected++;
+            transport.Connect(new TestEndpoint(), out Connect connect);
+            transport.MakeReady(connect);
+            transport.Update();
+            Assert.That(connect.State, Is.EqualTo(ConnectState.Connected));
+            connect.LastReceiveTime = NetworkTimer.Instance.TimeNow - ServerUtility.Timeout;
+            transport.Update();
+            Assert.That(connect.State, Is.EqualTo(ConnectState.Close));
+            Assert.That(connect.LastDisconnectInfo.Reason, Is.EqualTo(DisconnectReason.Timeout));
+            Assert.That(connect.LastDisconnectInfo.Phase, Is.EqualTo("HeartbeatTimeout"));
+            Assert.That(disconnected, Is.EqualTo(1));
+        }
+        finally { transport.Shutdown(); }
+    }
+
+    [Test]
     public void MessageTransportTimeoutAndQueueOverflowAlwaysRelease()
     {
         MessageCodec.Init();

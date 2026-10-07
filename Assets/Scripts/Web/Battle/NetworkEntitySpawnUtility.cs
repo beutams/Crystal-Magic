@@ -101,6 +101,7 @@ namespace Server
             if (TryGetSpawnQueue(entityManager, out NetworkEntitySpawnQueueComponent spawnQueue))
             {
                 spawnQueue.entityInfos.Clear();
+                spawnQueue.sleepingEntityIds.Clear();
             }
         }
 
@@ -119,135 +120,168 @@ namespace Server
 
         public static NetworkEntitySpawnInfo[] CreateSnapshotInfos(EntityManager entityManager)
         {
-            EntityQuery query = entityManager.CreateEntityQuery(
+            using EntityQuery query = entityManager.CreateEntityQuery(
                 ComponentType.ReadOnly<NetworkIdentityComponent>(),
                 ComponentType.ReadOnly<NetworkEntitySpawnInfoComponent>());
             using NativeArray<Entity> entities = query.ToEntityArray(Allocator.Temp);
             List<NetworkEntitySpawnInfo> entityInfos = new();
-            for (int index = 0; index < entities.Length; index++)
+            foreach (Entity entity in entities)
             {
-                Entity entity = entities[index];
-                if (entityManager.HasComponent<DestroyEntityFlag>(entity) &&
-                    entityManager.IsComponentEnabled<DestroyEntityFlag>(entity))
-                {
-                    continue;
-                }
+                NetworkEntitySpawnInfo info = CreateSnapshotInfo(entityManager, entity);
+                if (info != null) entityInfos.Add(info);
+            }
+            return entityInfos.ToArray();
+        }
 
-                NetworkEntitySpawnInfoComponent source = entityManager.GetComponentObject<NetworkEntitySpawnInfoComponent>(entity);
-                if (source?.entityInfo == null)
-                {
-                    continue;
-                }
-
-                NetworkEntitySpawnInfo entityInfo = CloneInfo(source.entityInfo);
-                entityInfo.unitId = entityManager.GetComponentData<NetworkIdentityComponent>(entity).id;
-                if (entityInfo.unitId == Guid.Empty)
-                {
-                    continue;
-                }
-
-                if (entityManager.HasComponent<LocalTransform>(entity))
-                {
-                    LocalTransform transform = entityManager.GetComponentData<LocalTransform>(entity);
-                    entityInfo.x = transform.Position.x;
-                    entityInfo.y = transform.Position.y;
-                    entityInfo.z = transform.Position.z;
-                }
-
-                if (entityManager.HasComponent<PlayerCharacterComponent>(entity))
-                {
-                    PlayerCharacterComponent character = entityManager.GetComponentObject<PlayerCharacterComponent>(entity);
-                    entityInfo.characterData = PlayerCharacterUtility.Clone(character.Data);
-                    entityInfo.characterRevision = character.Revision;
-                }
-
-                if (entityManager.HasComponent<BattlePlayerStatusComponent>(entity))
-                {
-                    BattlePlayerStatusComponent status =
-                        entityManager.GetComponentData<BattlePlayerStatusComponent>(entity);
-                    entityInfo.hasBattlePlayerStatus = true;
-                    entityInfo.battlePlayerLifeState = status.LifeState;
-                    entityInfo.battlePlayerConnectionState = status.ConnectionState;
-                    entityInfo.battlePlayerTransitionReady = status.IsWaitingForTransition;
-                }
-
-                if (entityManager.HasComponent<UnitFactionComponent>(entity))
-                {
-                    entityInfo.hasFaction = true;
-                    entityInfo.faction = entityManager.GetComponentData<UnitFactionComponent>(entity).Value;
-                }
-
-                if (entityManager.HasComponent<UnitVitalityComponent>(entity))
-                {
-                    entityInfo.hasHealth = true;
-                    entityInfo.health = entityManager.GetComponentData<UnitVitalityComponent>(entity).CurrentHealth;
-                }
-
-                if (entityManager.HasComponent<UnitManaComponent>(entity))
-                {
-                    entityInfo.hasMana = true;
-                    entityInfo.mana = entityManager.GetComponentData<UnitManaComponent>(entity).CurrentMana;
-                }
-
-                if (entityManager.HasComponent<UnitInteractableComponent>(entity))
-                {
-                    UnitInteractableComponent interactable = entityManager.GetComponentData<UnitInteractableComponent>(entity);
-                    entityInfo.hasInteractableData = true;
-                    entityInfo.interactionKind = interactable.Data.Kind;
-                    entityInfo.interactionDataId = interactable.Data.DataId;
-                    entityInfo.interactionAmount = interactable.Data.Amount;
-                    entityInfo.interactionVariant = interactable.Data.Variant;
-                    entityInfo.interactionRangeSq = interactable.RangeSq;
-                    entityInfo.interactionEnabled = interactable.IsEnabled != 0;
-                }
-
-                if (DungeonExitRuntimeUtility.TryGetDestination(entityManager, entity, out int exitThemeId, out int exitFloor))
-                {
-                    entityInfo.hasDungeonExitDestination = true;
-                    entityInfo.dungeonExitTargetThemeId = exitThemeId;
-                    entityInfo.dungeonExitTargetFloor = exitFloor;
-                }
-
-                if (entityManager.HasComponent<DropScatterComponent>(entity))
-                {
-                    DropScatterComponent scatter = entityManager.GetComponentData<DropScatterComponent>(entity);
-                    entityInfo.hasDropScatter = true;
-                    entityInfo.dropScatterStartX = scatter.StartPosition.x;
-                    entityInfo.dropScatterStartY = scatter.StartPosition.y;
-                    entityInfo.dropScatterStartZ = scatter.StartPosition.z;
-                    entityInfo.dropScatterTargetX = scatter.TargetPosition.x;
-                    entityInfo.dropScatterTargetY = scatter.TargetPosition.y;
-                    entityInfo.dropScatterTargetZ = scatter.TargetPosition.z;
-                    entityInfo.dropScatterDurationSeconds = scatter.DurationSeconds;
-                    entityInfo.dropScatterElapsedSeconds = scatter.ElapsedSeconds;
-                    entityInfo.dropScatterArcHeight = scatter.ArcHeight;
-                    entityInfo.dropScatterLanded = scatter.IsLanded != 0;
-                }
-
-                if (entityManager.HasComponent<TreasureComponent>(entity))
-                {
-                    TreasureComponent treasure = entityManager.GetComponentData<TreasureComponent>(entity);
-                    entityInfo.hasTreasureData = true;
-                    entityInfo.treasureRegionId = treasure.RegionId;
-                    entityInfo.treasureRandomSeed = treasure.RandomSeed;
-                    entityInfo.treasureInterestSize = treasure.InterestSize;
-                    entityInfo.treasureIsOpened = treasure.IsOpened != 0;
-                    if (entityManager.HasBuffer<DungeonTreasureCandidateItemElement>(entity))
-                    {
-                        DynamicBuffer<DungeonTreasureCandidateItemElement> candidateBuffer =
-                            entityManager.GetBuffer<DungeonTreasureCandidateItemElement>(entity);
-                        entityInfo.treasureCandidateItemIds = new int[candidateBuffer.Length];
-                        for (int itemIndex = 0; itemIndex < candidateBuffer.Length; itemIndex++)
-                        {
-                            entityInfo.treasureCandidateItemIds[itemIndex] = candidateBuffer[itemIndex].ItemId;
-                        }
-                    }
-                }
-
-                entityInfos.Add(entityInfo);
+        public static NetworkEntitySpawnInfo CreateSnapshotInfo(EntityManager entityManager, Entity entity)
+        {
+            if (!entityManager.Exists(entity) || !entityManager.HasComponent<NetworkIdentityComponent>(entity) ||
+                !entityManager.HasComponent<NetworkEntitySpawnInfoComponent>(entity))
+                return null;
+            if (entityManager.HasComponent<DestroyEntityFlag>(entity) &&
+                entityManager.IsComponentEnabled<DestroyEntityFlag>(entity))
+            {
+                return null;
             }
 
-            return entityInfos.ToArray();
+            NetworkEntitySpawnInfoComponent source = entityManager.GetComponentObject<NetworkEntitySpawnInfoComponent>(entity);
+            if (source?.entityInfo == null)
+            {
+                return null;
+            }
+
+            NetworkEntitySpawnInfo entityInfo = CloneInfo(source.entityInfo);
+            entityInfo.unitId = entityManager.GetComponentData<NetworkIdentityComponent>(entity).id;
+            if (entityInfo.unitId == Guid.Empty)
+            {
+                return null;
+            }
+
+            if (entityManager.HasComponent<LocalTransform>(entity))
+            {
+                LocalTransform transform = entityManager.GetComponentData<LocalTransform>(entity);
+                entityInfo.x = transform.Position.x;
+                entityInfo.y = transform.Position.y;
+                entityInfo.z = transform.Position.z;
+            }
+
+            if (entityManager.HasComponent<PlayerCharacterComponent>(entity))
+            {
+                PlayerCharacterComponent character = entityManager.GetComponentObject<PlayerCharacterComponent>(entity);
+                entityInfo.characterData = PlayerCharacterUtility.Clone(character.Data);
+                entityInfo.characterRevision = character.Revision;
+            }
+
+            if (entityManager.HasComponent<BattlePlayerStatusComponent>(entity))
+            {
+                BattlePlayerStatusComponent status =
+                    entityManager.GetComponentData<BattlePlayerStatusComponent>(entity);
+                entityInfo.hasBattlePlayerStatus = true;
+                entityInfo.battlePlayerLifeState = status.LifeState;
+                entityInfo.battlePlayerConnectionState = status.ConnectionState;
+                entityInfo.battlePlayerTransitionReady = status.IsWaitingForTransition;
+            }
+
+            if (entityManager.HasComponent<UnitFactionComponent>(entity))
+            {
+                entityInfo.hasFaction = true;
+                entityInfo.faction = entityManager.GetComponentData<UnitFactionComponent>(entity).Value;
+            }
+
+            if (entityManager.HasComponent<UnitVitalityComponent>(entity))
+            {
+                entityInfo.hasHealth = true;
+                entityInfo.health = entityManager.GetComponentData<UnitVitalityComponent>(entity).CurrentHealth;
+            }
+
+            if (entityManager.HasComponent<UnitManaComponent>(entity))
+            {
+                entityInfo.hasMana = true;
+                entityInfo.mana = entityManager.GetComponentData<UnitManaComponent>(entity).CurrentMana;
+            }
+
+            if (entityManager.HasComponent<UnitInteractableComponent>(entity))
+            {
+                UnitInteractableComponent interactable = entityManager.GetComponentData<UnitInteractableComponent>(entity);
+                entityInfo.hasInteractableData = true;
+                entityInfo.interactionKind = interactable.Data.Kind;
+                entityInfo.interactionDataId = interactable.Data.DataId;
+                entityInfo.interactionAmount = interactable.Data.Amount;
+                entityInfo.interactionVariant = interactable.Data.Variant;
+                entityInfo.interactionRangeSq = interactable.RangeSq;
+                entityInfo.interactionEnabled = interactable.IsEnabled != 0;
+            }
+
+            if (DungeonExitRuntimeUtility.TryGetDestination(entityManager, entity, out int exitThemeId, out int exitFloor))
+            {
+                entityInfo.hasDungeonExitDestination = true;
+                entityInfo.dungeonExitTargetThemeId = exitThemeId;
+                entityInfo.dungeonExitTargetFloor = exitFloor;
+            }
+
+            if (entityManager.HasComponent<DropScatterComponent>(entity))
+            {
+                DropScatterComponent scatter = entityManager.GetComponentData<DropScatterComponent>(entity);
+                entityInfo.hasDropScatter = true;
+                entityInfo.dropScatterStartX = scatter.StartPosition.x;
+                entityInfo.dropScatterStartY = scatter.StartPosition.y;
+                entityInfo.dropScatterStartZ = scatter.StartPosition.z;
+                entityInfo.dropScatterTargetX = scatter.TargetPosition.x;
+                entityInfo.dropScatterTargetY = scatter.TargetPosition.y;
+                entityInfo.dropScatterTargetZ = scatter.TargetPosition.z;
+                entityInfo.dropScatterDurationSeconds = scatter.DurationSeconds;
+                entityInfo.dropScatterElapsedSeconds = scatter.ElapsedSeconds;
+                entityInfo.dropScatterArcHeight = scatter.ArcHeight;
+                entityInfo.dropScatterLanded = scatter.IsLanded != 0;
+            }
+
+            if (entityManager.HasComponent<TreasureComponent>(entity))
+            {
+                TreasureComponent treasure = entityManager.GetComponentData<TreasureComponent>(entity);
+                entityInfo.hasTreasureData = true;
+                entityInfo.treasureRegionId = treasure.RegionId;
+                entityInfo.treasureRandomSeed = treasure.RandomSeed;
+                entityInfo.treasureInterestSize = treasure.InterestSize;
+                entityInfo.treasureQuality = treasure.Quality;
+                entityInfo.treasureIsOpened = treasure.IsOpened != 0;
+                if (entityManager.HasBuffer<DungeonTreasureCandidateItemElement>(entity))
+                {
+                    DynamicBuffer<DungeonTreasureCandidateItemElement> candidateBuffer =
+                        entityManager.GetBuffer<DungeonTreasureCandidateItemElement>(entity);
+                    entityInfo.treasureCandidateItemIds = new int[candidateBuffer.Length];
+                    for (int itemIndex = 0; itemIndex < candidateBuffer.Length; itemIndex++)
+                    {
+                        entityInfo.treasureCandidateItemIds[itemIndex] = candidateBuffer[itemIndex].ItemId;
+                    }
+                }
+            }
+
+            return entityInfo;
+        }
+
+        public static void SuspendEntity(EntityManager entityManager, Entity entity)
+        {
+            if (!entityManager.HasComponent<NetworkIdentityComponent>(entity) ||
+                !TryGetSpawnQueue(entityManager, out NetworkEntitySpawnQueueComponent queue))
+                return;
+            Guid id = entityManager.GetComponentData<NetworkIdentityComponent>(entity).id;
+            // A unit which has not left the spawn queue does not need a remote despawn.
+            if (queue.entityInfos.RemoveAll(info => info.unitId == id) == 0)
+                queue.sleepingEntityIds.Add(id);
+        }
+
+        public static void ResumeEntity(EntityManager entityManager, Entity entity)
+        {
+            NetworkEntitySpawnInfo info = CreateSnapshotInfo(entityManager, entity);
+            if (info == null) return;
+            // The retained server Entity/owner references stay stable; the new remote
+            // lifetime gets a fresh id so delayed despawns cannot remove the waking unit.
+            info.unitId = Guid.NewGuid();
+            NetworkIdentityComponent identity = entityManager.GetComponentData<NetworkIdentityComponent>(entity);
+            identity.id = info.unitId;
+            entityManager.SetComponentData(entity, identity);
+            SetOrAddSpawnInfo(entityManager, entity, info);
+            EnqueueSpawnInfo(entityManager, info);
         }
 
         public static bool TryFindEntity(EntityManager entityManager, Guid unitId, out Entity entity)
@@ -356,6 +390,7 @@ namespace Server
                     RegionId = entityInfo.treasureRegionId,
                     RandomSeed = entityInfo.treasureRandomSeed == 0 ? 1u : entityInfo.treasureRandomSeed,
                     InterestSize = entityInfo.treasureInterestSize,
+                    Quality = entityInfo.treasureQuality,
                     IsOpened = entityInfo.treasureIsOpened ? (byte)1 : (byte)0,
                 });
                 SetOrAddComponent(entityManager, entity, new UnitInteractableComponent
@@ -504,6 +539,7 @@ namespace Server
                 treasureRegionId = source.treasureRegionId,
                 treasureRandomSeed = source.treasureRandomSeed,
                 treasureInterestSize = source.treasureInterestSize,
+                treasureQuality = source.treasureQuality,
                 treasureIsOpened = source.treasureIsOpened,
                 treasureCandidateItemIds = source.treasureCandidateItemIds == null
                     ? null

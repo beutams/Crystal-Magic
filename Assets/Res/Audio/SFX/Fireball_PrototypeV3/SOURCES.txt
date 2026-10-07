@@ -1,0 +1,11 @@
+Fireball impact V3 — brighter/shorter explosion only.
+
+V2 release and old explosion files are unchanged; no Effect or skill graph was modified.
+Edited/layered CC0 audio with procedural noise; not a text-to-audio model.
+
+fireball — Julien Matthey — CC0-1.0
+https://opengameart.org/content/fireball-1
+crackle — AntumDeluge — CC0-1.0
+https://opengameart.org/content/fire-crackling
+
+CC0: https://creativecommons.org/publicdomain/zero/1.0/

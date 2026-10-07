@@ -132,6 +132,12 @@ namespace CrystalMagic.Game.Data
         }
     }
 
+    public enum NPCDialogueAnchor
+    {
+        Target = 0,
+        Actor = 1,
+    }
+
     [Serializable]
     [FactoryKey("Dialogue", 0, "Dialogue")]
     public sealed class NPCDialogueInteractionNodeData : NPCInteractionNodeData
@@ -139,6 +145,18 @@ namespace CrystalMagic.Game.Data
         public string Speaker;
 
         public string ContentKey;
+
+        public NPCDialogueAnchor SpeakerAnchor;
+        public float CharactersPerSecond = 20f;
+        public float WorldYOffset = 1.35f;
+        public float LingerSeconds = 1.2f;
+        public bool LockCamera = true;
+        public float CameraFollowSmooth = 8f;
+
+        public NPCDialogueInteractionNodeData()
+        {
+            ExecutionTargets = GameWorldExecutionTarget.All;
+        }
     }
 
     [Serializable]

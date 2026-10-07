@@ -17,18 +17,18 @@ namespace Server
         public Connect battleConnect;
         private long battleReconnectTimerId;
 
-        public void Initialize(IServerTransport lobbyTransport, IClientTransport battleLobbyTransport, bool useSteamHosting = false)
+        public void Initialize(IServerTransport lobbyTransport, IClientTransport battleLobbyTransport, bool useClientHosting = false)
         {
             MessageCodec.Init();
             lobbyService = lobbyTransport ?? throw new ArgumentNullException(nameof(lobbyTransport));
-            UseSteamHosting = useSteamHosting;
-            clientService = useSteamHosting ? null : battleLobbyTransport ?? throw new ArgumentNullException(nameof(battleLobbyTransport));
+            UseClientHosting = useClientHosting;
+            clientService = useClientHosting ? null : battleLobbyTransport ?? throw new ArgumentNullException(nameof(battleLobbyTransport));
             lobbyService.OnAccept += OnAccept;
             lobbyService.OnDisconnected += OnDisconnected;
 
             lobbyService.Init();
 
-            if (!useSteamHosting)
+            if (!useClientHosting)
             {
                 clientService.Init();
                 ConnectBattle();
@@ -175,6 +175,11 @@ namespace Server
             }
 
             if (loginMessage.accountId == 0UL ||
+                loginMessage.accountId == ClientAccountIdentity.LocalNamespace ||
+                loginMessage.protocolVersion != BattleConnectionInfo.CurrentProtocolVersion ||
+                (ClientAccountIdentity.IsLocalNetworkId(loginMessage.accountId) && loginMessage.steamP2PAvailable) ||
+                loginMessage.hostedTcpPort < 0 || loginMessage.hostedTcpPort > 65535 ||
+                (!string.IsNullOrEmpty(loginMessage.hostedTcpAddress) && !BattleConnectionInfo.IsConnectAddress(loginMessage.hostedTcpAddress)) ||
                 !Guid.TryParse(loginMessage.saveGuid, out Guid saveGuid) ||
                 connectAccountDic.ContainsKey(connect) ||
                 pendingConnectAccountDic.ContainsKey(connect) ||
@@ -195,12 +200,15 @@ namespace Server
                 connect = connect,
                 steamP2PAvailable = loginMessage.steamP2PAvailable &&
                     loginMessage.protocolVersion == BattleConnectionInfo.CurrentProtocolVersion,
+                hostedTcpAddress = string.IsNullOrEmpty(loginMessage.hostedTcpAddress)
+                    ? (connect.RemoteEndpoint as TcpEndpoint)?.Address.Address.ToString() : loginMessage.hostedTcpAddress,
+                hostedTcpPort = loginMessage.hostedTcpPort,
             };
             pendingConnectAccountDic.Add(connect, player.accountId);
             pendingPlayerList.Add(player.accountId, player);
             connect.UnRegisterCallback(MessageCodec.GetOpcode<C2L_LoginLobby>(), OnClientLogin);
 
-            if (UseSteamHosting)
+            if (UseClientHosting)
             {
                 BeginHostedLogin(player, loginMessage);
                 return;
@@ -238,7 +246,7 @@ namespace Server
             player.connect.RegisterCallback(MessageCodec.GetOpcode<C2L_Ready>(), OnClientReady);
             player.connect.RegisterCallback(MessageCodec.GetOpcode<C2L_SetDungeonTheme>(), OnClientSetDungeonTheme);
             player.connect.RegisterCallback(MessageCodec.GetOpcode<C2L_Start>(), OnClientStart);
-            if (UseSteamHosting) RegisterHostControl(player.connect);
+            if (UseClientHosting) RegisterHostControl(player.connect);
 
             player.connect.Send(new L2C_RefreshRoomList
             {
@@ -251,7 +259,7 @@ namespace Server
             if (!connectAccountDic.TryGetValue(connect, out var accountId)
                 || !playerList.TryGetValue(accountId, out Player player)
                 || !roomList.TryGetValue(player.roomId, out var room)
-                || (!UseSteamHosting && (battleConnect == null || battleConnect.State != ConnectState.Connected)))
+                || (!UseClientHosting && (battleConnect == null || battleConnect.State != ConnectState.Connected)))
             {
                 connect.Send(new L2C_StartReturn { type = LobbyRequestType.StartFail });
                 return;
@@ -275,7 +283,7 @@ namespace Server
                 return;
             }
 
-            if (UseSteamHosting)
+            if (UseClientHosting)
             {
                 StartHostedRoom(room, connect);
                 return;

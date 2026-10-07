@@ -3,10 +3,11 @@ using Unity.Entities;
 
 public sealed class NPCInteractionSession
 {
-    public NPCInteractionSession(Entity target, NPCData npcData, NPCInteractionData interaction, Entity actor = default)
+    public NPCInteractionSession(Entity target, NPCData npcData, NPCInteractionData interaction, Entity actor = default, World world = null)
     {
         Target = target;
         Actor = actor;
+        World = world ?? Unity.Entities.World.DefaultGameObjectInjectionWorld;
         NpcData = npcData;
         Interaction = interaction;
         CurrentNodeGuid = interaction?.EntryNodeGuid;
@@ -15,6 +16,7 @@ public sealed class NPCInteractionSession
 
     public Entity Target { get; }
     public Entity Actor { get; }
+    public World World { get; }
     public NPCData NpcData { get; }
     public NPCInteractionData Interaction { get; }
     public string CurrentNodeGuid { get; set; }

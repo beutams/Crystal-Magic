@@ -14,6 +14,8 @@ public sealed class DebugUI : UIBase<DebugUIData, DebugUIModel>
     private readonly List<DebugUI_NavigationItemView> _pageItemViews = new();
     private Vector2 _launcherPointerOffset;
     private int _lastUnitInspectorEditorRevision = -1;
+    private Vector2 _defaultLauncherSize;
+    private float _defaultLauncherFontSize;
 
     public event Action ContentToggleRequested;
     public event Action ContentHideRequested;
@@ -37,6 +39,8 @@ public sealed class DebugUI : UIBase<DebugUIData, DebugUIModel>
     protected override void OnInit()
     {
         base.OnInit();
+        _defaultLauncherSize = UI.Launcher.RectTransform.sizeDelta;
+        _defaultLauncherFontSize = UI.Launcher_Label.TextMeshProUGUI.fontSize;
         UI.Content_Navigation_Viewport_Content_DebugItem.GameObject.SetActive(false);
         UI.Content.GameObject.SetActive(false);
     }
@@ -101,6 +105,15 @@ public sealed class DebugUI : UIBase<DebugUIData, DebugUIModel>
 
     protected override void RefreshView()
     {
+        UI.Launcher_Label.TextMeshProUGUI.text = Model.HasMonsterCounts ? Model.MonsterCountsText : "DBG";
+        UI.Launcher_Label.TextMeshProUGUI.fontSize = Model.HasMonsterCounts ? 24f : _defaultLauncherFontSize;
+        bool hasDiagnostics = Model.HasMonsterDiagnostics;
+        Vector2 launcherSize = Model.HasMonsterCounts ? new Vector2(hasDiagnostics ? 560f : 440f, hasDiagnostics ? 196f : 86f) : _defaultLauncherSize;
+        if (UI.Launcher.RectTransform.sizeDelta != launcherSize)
+        {
+            UI.Launcher.RectTransform.sizeDelta = launcherSize;
+            SetLauncherPosition(UI.Launcher.RectTransform.anchoredPosition);
+        }
         SetContentVisible(Model.IsContentVisible);
         RenderPageItems(Model.Pages);
 
@@ -124,12 +137,13 @@ public sealed class DebugUI : UIBase<DebugUIData, DebugUIModel>
 
     private void SetContentVisible(bool visible)
     {
+        bool wasVisible = UI.Content.GameObject.activeSelf;
         UI.Content.GameObject.SetActive(visible);
         UI.Content.CanvasGroup.alpha = 1f;
         UI.Content.CanvasGroup.interactable = visible;
         UI.Content.CanvasGroup.blocksRaycasts = visible;
 
-        if (!visible)
+        if (!visible && wasVisible)
             EventSystem.current?.SetSelectedGameObject(null);
     }
 

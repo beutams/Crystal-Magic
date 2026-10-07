@@ -500,7 +500,16 @@ namespace CrystalMagic.Editor.Data
             {
                 case NPCDialogueInteractionNodeData dialogue:
                     dialogue.Speaker = EditorGUILayout.TextField("Speaker", dialogue.Speaker ?? string.Empty);
-                    dialogue.ContentKey = EditorGUILayout.TextField("Content Key", dialogue.ContentKey ?? string.Empty);
+                    EditorGUILayout.LabelField("Text / Localization Key");
+                    dialogue.ContentKey = EditorGUILayout.TextArea(dialogue.ContentKey ?? string.Empty, GUILayout.MinHeight(54f));
+                    dialogue.SpeakerAnchor = (NPCDialogueAnchor)EditorGUILayout.EnumPopup("Above Character", dialogue.SpeakerAnchor);
+                    dialogue.CharactersPerSecond = EditorGUILayout.Slider("Characters / Second", dialogue.CharactersPerSecond, 1f, 120f);
+                    dialogue.WorldYOffset = Mathf.Max(0f, EditorGUILayout.FloatField("Head Offset", dialogue.WorldYOffset));
+                    dialogue.LingerSeconds = EditorGUILayout.Slider("Wait After Typing", dialogue.LingerSeconds, 0f, 30f);
+                    dialogue.LockCamera = EditorGUILayout.Toggle("Lock Camera", dialogue.LockCamera);
+                    if (dialogue.LockCamera)
+                        dialogue.CameraFollowSmooth = EditorGUILayout.Slider("Camera Follow Smooth", dialogue.CameraFollowSmooth, 0f, 20f);
+                    EditorGUILayout.HelpBox("Target = NPC, Actor = interacting player. Camera follows the speaker during typing and waiting. The node completes only after Wait After Typing. Smooth = 0 snaps immediately.", MessageType.None);
                     DrawBranchList(interaction, node);
                     break;
                 case NPCSelectInteractionNodeData select:

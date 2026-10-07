@@ -5,50 +5,71 @@ using Server;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
+using Unity.Profiling;
 using Unity.Transforms;
 using UnityEngine;
 
 public sealed class NetworkStateApplyContext
 {
-    private readonly Dictionary<Guid, Entity> _entities = new();
+    private static readonly ProfilerMarker BuildEntityMapMarker = new("Network.Receive.BuildEntityMap");
+    private readonly Dictionary<Guid, Entity> _entities;
     private Entity _clientPresentationEntity;
 
     public EntityManager EntityManager { get; }
-    public uint Frame { get; }
-    public int FrameInterval { get; }
+    public uint Frame { get; private set; }
+    public int FrameInterval { get; private set; }
     public bool IsClient { get; }
-    public double ApplyRealtime { get; }
+    public double ApplyRealtime { get; private set; }
 
     public NetworkStateApplyContext(
         EntityManager entityManager,
         uint frame,
         int frameInterval,
         bool updateClientPresentationClock = true)
+        : this(entityManager, new Dictionary<Guid, Entity>())
+    {
+        BeginFrame(frame, frameInterval, updateClientPresentationClock);
+        using EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<NetworkIdentityComponent>());
+        RefreshEntityMap(query);
+    }
+
+    // FrameReceiveSystem owns this map and reuses its capacity across input frames.
+    internal NetworkStateApplyContext(EntityManager entityManager, Dictionary<Guid, Entity> entities)
     {
         EntityManager = entityManager;
+        _entities = entities;
+        IsClient = GameWorldContextUtility.Get(entityManager).Role == GameWorldRole.Client;
+    }
+
+    internal void BeginFrame(uint frame, int frameInterval, bool updateClientPresentationClock = true)
+    {
         Frame = frame;
         FrameInterval = Math.Max(1, frameInterval);
         ApplyRealtime = Time.realtimeSinceStartupAsDouble;
-        IsClient = GameWorldContextUtility.Get(entityManager).Role == GameWorldRole.Client;
 
         if (IsClient && updateClientPresentationClock)
             UpdateClientPresentationClock();
+    }
 
-        EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<NetworkIdentityComponent>());
+    internal void RefreshEntityMap(EntityQuery query)
+    {
+        using var profile = BuildEntityMapMarker.Auto();
+        _entities.Clear();
         using NativeArray<Entity> entities = query.ToEntityArray(Allocator.Temp);
         for (int index = 0; index < entities.Length; index++)
         {
             Entity entity = entities[index];
-            Guid id = entityManager.GetComponentData<NetworkIdentityComponent>(entity).id;
+            Guid id = EntityManager.GetComponentData<NetworkIdentityComponent>(entity).id;
             if (id != Guid.Empty)
                 _entities[id] = entity;
         }
-        query.Dispose();
     }
 
     public bool TryGetEntity(Guid unitId, out Entity entity)
     {
-        if (unitId != Guid.Empty && _entities.TryGetValue(unitId, out entity) && EntityManager.Exists(entity))
+        if (unitId != Guid.Empty && _entities.TryGetValue(unitId, out entity) && EntityManager.Exists(entity) &&
+            EntityManager.HasComponent<NetworkIdentityComponent>(entity) &&
+            EntityManager.GetComponentData<NetworkIdentityComponent>(entity).id == unitId)
             return true;
 
         entity = Entity.Null;
@@ -161,6 +182,43 @@ public sealed class NetworkStateApplyContext
         EntityManager.SetComponentData(entity, interpolation);
     }
 
+    public void ApplyProjectilePosition(Entity entity, float3 position, bool finalPosition = false)
+    {
+        if (!IsClient)
+        {
+            ApplyPosition(entity, position);
+            return;
+        }
+
+        if (!EntityManager.HasComponent<LocalTransform>(entity))
+            EntityManager.AddComponentData(entity, LocalTransform.FromPosition(position));
+        // A ballistic visual must not also interpolate to a historical network position.
+        if (EntityManager.HasComponent<ClientTransformInterpolationComponent>(entity))
+            EntityManager.RemoveComponent<ClientTransformInterpolationComponent>(entity);
+        LocalTransform transform = EntityManager.GetComponentData<LocalTransform>(entity);
+        bool hasPresentation = EntityManager.HasComponent<ClientProjectilePresentationComponent>(entity);
+        if (finalPosition)
+        {
+            transform.Position = position;
+            EntityManager.SetComponentData(entity, transform);
+            if (hasPresentation)
+                EntityManager.RemoveComponent<ClientProjectilePresentationComponent>(entity);
+            return;
+        }
+
+        ClientProjectilePresentationComponent presentation = hasPresentation
+            ? EntityManager.GetComponentData<ClientProjectilePresentationComponent>(entity) : default;
+        if (presentation.Initialized == 0)
+        {
+            transform.Position = position;
+            EntityManager.SetComponentData(entity, transform);
+        }
+        presentation.SnapshotPosition = position;
+        presentation.SnapshotRealtime = ApplyRealtime;
+        presentation.Initialized = 1;
+        SetOrAdd(entity, presentation);
+    }
+
     private void ApplyLocalPlayerPosition(Entity entity, float3 position)
     {
         LocalTransform transform = EntityManager.GetComponentData<LocalTransform>(entity);
@@ -171,6 +229,8 @@ public sealed class NetworkStateApplyContext
             EntityManager.AddComponentData(entity, new ClientPlayerMovePresentationComponent
             {
                 CurrentPosition = position,
+                PreviousPredictionPosition = position,
+                LatestPredictionPosition = position,
                 Initialized = 1,
             });
         }
@@ -183,7 +243,14 @@ public sealed class NetworkStateApplyContext
                 presentation.CurrentPosition = transform.Position;
                 presentation.Initialized = 1;
             }
-            presentation.ReconciliationPending = 1;
+            if (presentation.ReconciliationPending == 0)
+            {
+                UnitMoveComponent move = EntityManager.HasComponent<UnitMoveComponent>(entity)
+                    ? EntityManager.GetComponentData<UnitMoveComponent>(entity) : default;
+                presentation.ReconciliationFromPosition = move.HasPredictedPosition != 0
+                    ? move.PredictedPosition : transform.Position;
+                presentation.ReconciliationPending = 1;
+            }
             EntityManager.SetComponentData(entity, presentation);
         }
 

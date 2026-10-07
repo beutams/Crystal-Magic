@@ -6,24 +6,23 @@ namespace CrystalMagic.Core
 {
     internal sealed class DungeonSceneRuntimeRoot : MonoBehaviour
     {
-        private readonly List<Entity> _spawnedEntities = new();
+        private List<Entity> _spawnedEntities;
         private readonly List<Object> _runtimeAssets = new();
         private string _resourceOwnerKey;
         private bool _hasCameraWorldBounds;
         private World _owningWorld;
+        private bool _released;
 
-        public void Initialize(string resourceOwnerKey, IReadOnlyList<Entity> spawnedEntities, World owningWorld)
+        public void Initialize(string resourceOwnerKey, List<Entity> spawnedEntities, World owningWorld)
         {
+            _released = false;
             _owningWorld = owningWorld;
             _resourceOwnerKey = resourceOwnerKey;
-            _spawnedEntities.Clear();
-
-            if (spawnedEntities == null)
-                return;
-
-            for (int i = 0; i < spawnedEntities.Count; i++)
-                _spawnedEntities.Add(spawnedEntities[i]);
+            // Track partial builds before the first yield, not only on success.
+            _spawnedEntities = spawnedEntities;
         }
+
+        public void BindWorld(World world) => _owningWorld = world;
 
         public void TrackRuntimeAsset(Object runtimeAsset)
         {
@@ -51,12 +50,28 @@ namespace CrystalMagic.Core
 
         private void OnDestroy()
         {
+            // Never query world-wide tags from delayed OnDestroy: a replacement
+            // dungeon may already have been built in this World.
+            ReleaseContents(false);
+        }
+
+        public void ReleaseContents(bool includeRuntimeDescendants = true)
+        {
+            if (_released) return;
+            _released = true;
             if (_hasCameraWorldBounds)
                 CameraComponent.Instance?.ClearWorldBounds(GetInstanceID());
+            _hasCameraWorldBounds = false;
 
-            DestroyTrackedEntities();
-            DestroyRuntimeAssets();
-            ResourceComponent.Instance?.ReleaseOwner(_resourceOwnerKey);
+            try { DestroyTrackedEntities(includeRuntimeDescendants); }
+            finally
+            {
+                DestroyRuntimeAssets();
+                ResourceComponent.Instance?.ReleaseOwner(_resourceOwnerKey);
+                _resourceOwnerKey = null;
+                _owningWorld = null;
+                _spawnedEntities?.Clear();
+            }
         }
 
         private void DestroyRuntimeAssets()
@@ -70,24 +85,28 @@ namespace CrystalMagic.Core
             _runtimeAssets.Clear();
         }
 
-        private void DestroyTrackedEntities()
+        private void DestroyTrackedEntities(bool includeRuntimeDescendants)
         {
             World world = _owningWorld;
             if (world == null || !world.IsCreated)
                 return;
 
             EntityManager entityManager = world.EntityManager;
-            for (int i = 0; i < _spawnedEntities.Count; i++)
+            entityManager.CompleteAllTrackedJobs();
+            for (int i = 0; _spawnedEntities != null && i < _spawnedEntities.Count; i++)
             {
                 Entity entity = _spawnedEntities[i];
                 if (entity != Entity.Null && entityManager.Exists(entity))
                     entityManager.DestroyEntity(entity);
             }
 
-            _spawnedEntities.Clear();
+            if (!includeRuntimeDescendants) return;
 
-            EntityQuery runtimeOwnedQuery = entityManager.CreateEntityQuery(
-                ComponentType.ReadOnly<DungeonRuntimeOwnedEntity>());
+            using EntityQuery runtimeOwnedQuery = entityManager.CreateEntityQuery(new EntityQueryDesc
+            {
+                All = new[] { ComponentType.ReadOnly<DungeonRuntimeOwnedEntity>() },
+                Options = EntityQueryOptions.IncludeDisabledEntities,
+            });
             if (!runtimeOwnedQuery.IsEmptyIgnoreFilter)
                 entityManager.DestroyEntity(runtimeOwnedQuery);
         }

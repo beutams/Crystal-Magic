@@ -33,5 +33,7 @@ namespace CrystalMagic.Core {
         /// 状态更新
         /// </summary>
         public virtual void OnUpdate() { }
+
+        public virtual void OnLateUpdate() { }
     }
 }

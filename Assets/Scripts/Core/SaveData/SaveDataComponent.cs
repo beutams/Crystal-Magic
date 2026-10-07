@@ -30,7 +30,6 @@ namespace CrystalMagic.Core {
         #endregion
 
         #region Constants
-        private const string SAVE_FOLDER = "SaveData";
         public const string DungeonThemeUnlockedVariablePrefix = "DungeonThemeUnlocked_";
         #endregion
 
@@ -72,7 +71,7 @@ namespace CrystalMagic.Core {
         #endregion
 
         /// <summary>
-        /// 保存当前存档。若当前没有已选槽位，则保存到默认槽位 0。
+        /// 保存当前选中的存档槽位。
         /// </summary>
         #region Save Load
         public bool Save()
@@ -93,6 +92,37 @@ namespace CrystalMagic.Core {
         /// </summary>
         public bool SaveToSlot(int index)
         {
+            SaveData data = index >= 0 ? GameRuntimeStateUtility.Export(index, _globalData, _variables) : null;
+            return SaveToSlot(index, data);
+        }
+
+        /// <summary>在卸载地牢前保存结算后的角色；重试时也使用保留的回城数据。</summary>
+        public bool SaveDungeonSettlement(LoadGameContext returnContext)
+        {
+            if (returnContext == null || returnContext.SaveIndex != _currentSaveIndex ||
+                !string.Equals(returnContext.SaveGuid, _currentSaveGuid, StringComparison.Ordinal))
+            {
+                const string error = "Save failed: dungeon settlement does not match the selected save.";
+                OnSaveFailed?.Invoke(error);
+                Debug.LogError($"[SaveDataComponent] {error}");
+                return false;
+            }
+
+            SaveData data = new()
+            {
+                Global = _globalData,
+                Variables = _variables,
+                Stash = GetStashData(),
+                Character = PlayerCharacterUtility.Clone(returnContext.Character) ?? new CharacterData(),
+                Location = new SaveLocationData { AreaType = SaveAreaType.Town },
+                Player = null,
+                DungeonRun = null,
+            };
+            return SaveToSlot(returnContext.SaveIndex, data);
+        }
+
+        private bool SaveToSlot(int index, SaveData data)
+        {
             if (index < 0)
             {
                 OnSaveFailed?.Invoke($"Save failed: invalid slot index {index}.");
@@ -100,7 +130,6 @@ namespace CrystalMagic.Core {
                 return false;
             }
 
-            SaveData data = GameRuntimeStateUtility.Export(index, _globalData, _variables);
             if (data == null)
             {
                 OnSaveFailed?.Invoke("Save failed: GameWorld runtime state is unavailable.");
@@ -116,7 +145,7 @@ namespace CrystalMagic.Core {
                     ? currentSaveGuid.ToString("N")
                     : Guid.NewGuid().ToString("N");
                 EnsureSaveDataValid(data);
-                ApplySteamIdentity(data.Character);
+                ApplyClientIdentity(data.Character);
 
                 string json = JsonUtility.ToJson(data, true);
                 string filePath = GetSavePath(index);
@@ -209,8 +238,8 @@ namespace CrystalMagic.Core {
                     return false;
                 }
 
-                bool steamIdentityChanged = ApplySteamIdentity(data.Character);
-                if (!string.Equals(storedSaveGuid, data.SaveGuid, StringComparison.Ordinal) || steamIdentityChanged)
+                bool identityChanged = ApplyClientIdentity(data.Character);
+                if (!string.Equals(storedSaveGuid, data.SaveGuid, StringComparison.Ordinal) || identityChanged)
                     AtomicSaveFile.Write(filePath, JsonUtility.ToJson(data, true));
 
                 _currentSaveIndex = data.SaveIndex;
@@ -465,17 +494,15 @@ namespace CrystalMagic.Core {
         public DungeonSettlementResult SettleDungeonRun(DungeonSettlementOutcome outcome)
         {
             DungeonRunData dungeonRun = GetDungeonRunData();
-            int reachedFloor = Mathf.Max(1, dungeonRun?.CurrentFloor ?? 1);
+            // Take the detached report before defeat removes the character and run entities.
+            DungeonSettlementResult result = DungeonSettlementUtility.CreateResult(
+                outcome, dungeonRun, GetActiveCharacterDataInternal());
             if (outcome == DungeonSettlementOutcome.Defeated)
                 GameRuntimeStateUtility.ClearPlayerCharacterData();
 
             GameRuntimeStateUtility.ClearDungeonRun();
             PublishAllDataChangedEvents();
-            return new DungeonSettlementResult
-            {
-                Outcome = outcome,
-                ReachedFloor = reachedFloor,
-            };
+            return result;
         }
 
         public void ClearDungeonRun()
@@ -643,27 +670,27 @@ namespace CrystalMagic.Core {
         {
             SaveData data = new SaveData();
             EnsureSaveDataValid(data, false);
-            ApplySteamIdentity(data.Character);
+            ApplyClientIdentity(data.Character);
             return data;
         }
 
         /// <summary>
-        /// 客户端存档统一使用启动阶段缓存的 Steam 身份；服务端存档不写入本地玩家身份。
+        /// 客户端存档使用启动时选定的 Steam 或本地测试身份，和大厅保持一致。
         /// </summary>
-        private static bool ApplySteamIdentity(CharacterData characterData)
+        private static bool ApplyClientIdentity(CharacterData characterData)
         {
             if (characterData == null || NetworkComponent.Instance.Role != NetworkRole.Client)
                 return false;
 
-            if (!SteamComponent.Instance.TryGetLocalUser(out ulong steamAccountId, out string playerName))
+            if (!SteamComponent.Instance.TryGetAccount(out ulong accountId, out string playerName))
                 return false;
 
-            bool changed = characterData.SteamAccountId != steamAccountId ||
+            bool changed = characterData.SteamAccountId != accountId ||
                            !string.Equals(characterData.Name, playerName, StringComparison.Ordinal);
             if (!changed)
                 return false;
 
-            characterData.SteamAccountId = steamAccountId;
+            characterData.SteamAccountId = accountId;
             characterData.Name = playerName;
             return true;
         }
@@ -720,7 +747,7 @@ namespace CrystalMagic.Core {
                 data.Location = new SaveLocationData { AreaType = SaveAreaType.Town };
                 data.LastBattleSettlementId = session.ToString("N");
                 EnsureSaveDataValid(data);
-                ApplySteamIdentity(data.Character);
+                ApplyClientIdentity(data.Character);
                 AtomicSaveFile.Write(path, JsonUtility.ToJson(data, true));
                 if (index == _currentSaveIndex && _currentSaveGuid == expected.ToString("N"))
                     _lastBattleSettlementId = data.LastBattleSettlementId;
@@ -736,7 +763,9 @@ namespace CrystalMagic.Core {
 
         private string GetSaveFolderPath()
         {
-            return System.IO.Path.Combine(Application.persistentDataPath, SAVE_FOLDER);
+            return NetworkComponent.Instance.Role == NetworkRole.Client
+                ? SteamComponent.Instance.Account.GetSaveFolder(Application.persistentDataPath)
+                : System.IO.Path.Combine(Application.persistentDataPath, "SaveData");
         }
 
         private string GetSavePath(int index)
@@ -817,7 +846,13 @@ namespace CrystalMagic.Core {
             EnsureStashDataValid(data.Stash, repairedPaths);
             EnsureCharacterDataValid(data.Character, repairedPaths, "Character");
 
-            if (data.DungeonRun != null)
+            // JsonUtility can expand a null inline class into an empty object on disk.
+            // A town save must never retain or recreate a finished dungeon run.
+            if (data.Location.AreaType == SaveAreaType.Town)
+            {
+                data.DungeonRun = null;
+            }
+            else if (data.DungeonRun != null)
             {
                 EnsureDungeonRunDataValid(data.DungeonRun, data.Location.DungeonThemeId, repairedPaths);
             }
@@ -975,6 +1010,8 @@ namespace CrystalMagic.Core {
                 CurrentFloor = NormalizeDungeonFloor(dungeonFloor),
                 Units = new List<UnitRuntimeData>(),
                 ItemDrops = new List<ItemDropData>(),
+                HasAcquisitionHistory = true,
+                AcquiredItems = new List<InventoryItemData>(),
             };
             data.BaseSeed = DeriveDungeonRunBaseSeed(data);
             EnsureDungeonRunDataValid(data, dungeonThemeId);
@@ -1099,8 +1136,9 @@ namespace CrystalMagic.Core {
     {
         public int SaveIndex;
         public long StashMoney;
-        public int MaxFloor;
-        public int TotalRuns;
+        // These statistics are not persisted yet. Do not present missing history as zero.
+        public int MaxFloor = -1;
+        public int TotalRuns = -1;
     }
 
     /// <summary>

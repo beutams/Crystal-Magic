@@ -1,6 +1,7 @@
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
+using CrystalMagic.Game.Skill;
 
 [DisallowMultipleComponent]
 public class SkillProjectileAuthoring : MonoBehaviour
@@ -27,11 +28,16 @@ public class SkillProjectileAuthoring : MonoBehaviour
 
 public struct SkillProjectileComponent : IComponentData
 {
+    public SkillEffectIdentity Identity;
+    public uint HitSequence;
+    public byte Ended;
+    public float3 PreviousPosition;
     public float3 Direction;
     public float Speed;
     public float MaxRange;
     public float TraveledDistance;
     public float HitRadius;
+    public float RepeatHitIntervalSeconds;
     public byte CanPierce;
     public byte TriggerDestroyEffectsOnMaxRange;
     public byte NetworkDirty;

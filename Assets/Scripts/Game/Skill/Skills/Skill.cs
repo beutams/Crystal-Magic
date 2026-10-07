@@ -68,6 +68,9 @@ namespace CrystalMagic.Game.Skill
             in SkillReleaseRequest request)
         {
             context.EntityManager = entityManager;
+            context.EffectIdentity = request.HasCastIdentity != 0
+                ? SkillEffectIdentity.Create(entityManager, request.OriginEntity, request.CastFrame, request.CastOrdinal)
+                : default;
             context.HasOriginEntity = true;
             context.OriginEntity = request.OriginEntity;
             context.HasOriginPositionSnapshot = false;

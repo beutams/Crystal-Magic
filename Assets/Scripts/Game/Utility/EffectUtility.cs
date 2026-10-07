@@ -97,6 +97,7 @@ public static class EffectUtility
             HasOtherEntity = source.HasOtherEntity ? (byte)1 : (byte)0,
             OtherEntity = source.OtherEntity,
             SourceSkillId = source.SourceSkillId,
+            EffectIdentity = source.EffectIdentity,
             HasPosition = source.HasPosition ? (byte)1 : (byte)0,
             Position = new float3(source.Position.x, source.Position.y, source.Position.z),
             HasOriginPositionSnapshot = source.HasOriginPositionSnapshot ? (byte)1 : (byte)0,
@@ -124,6 +125,7 @@ public static class EffectUtility
             HasOtherEntity = source.HasOtherEntity != 0,
             OtherEntity = source.OtherEntity,
             SourceSkillId = source.SourceSkillId,
+            EffectIdentity = source.EffectIdentity,
             HasPosition = source.HasPosition != 0,
             Position = new Vector3(source.Position.x, source.Position.y, source.Position.z),
             HasOriginPositionSnapshot = source.HasOriginPositionSnapshot != 0,
@@ -162,6 +164,7 @@ public static class EffectUtility
         context.HasOtherEntity = source.HasOtherEntity != 0;
         context.OtherEntity = source.OtherEntity;
         context.SourceSkillId = source.SourceSkillId;
+        context.EffectIdentity = source.EffectIdentity;
         context.HasPosition = source.HasPosition != 0;
         context.Position = new Vector3(source.Position.x, source.Position.y, source.Position.z);
         context.HasOriginPositionSnapshot = source.HasOriginPositionSnapshot != 0;

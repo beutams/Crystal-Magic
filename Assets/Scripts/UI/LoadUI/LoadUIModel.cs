@@ -15,7 +15,7 @@
         public const string SaveRecordsChangedEventName = "LoadUIModel.SaveRecordsChanged";
         public override string ChangedEventName => SaveRecordsChangedEventName;
 
-        private const int SlotCount = 20;
+        public const int SlotCount = 3;
         private readonly CrystalMagic.Core.SaveRecord[] _saveRecords = new CrystalMagic.Core.SaveRecord[SlotCount];
 
         public int SlotCountValue => SlotCount;

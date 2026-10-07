@@ -1,3 +1,4 @@
+using CrystalMagic.Game.Skill;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -14,10 +15,12 @@ public enum ClientPresentationEventType : byte
     CameraShake = 7,
     PickupFeedback = 8,
     Notification = 9,
+    ProjectileImpact = 10,
 }
 
 public struct ClientPresentationEventElement : IBufferElementData
 {
+    public SkillEffectIdentity Identity;
     public uint Frame;
     public uint Sequence;
     public ClientPresentationEventType Type;

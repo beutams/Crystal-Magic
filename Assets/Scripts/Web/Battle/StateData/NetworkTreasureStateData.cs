@@ -1,4 +1,5 @@
 using System;
+using CrystalMagic.Game.Data;
 using Unity.Entities;
 
 [Serializable]
@@ -7,6 +8,7 @@ public sealed class NetworkTreasureStateData : NetworkStateData
     public int regionId;
     public uint randomSeed;
     public byte interestSize;
+    public DungeonTreasureQuality quality;
     public byte isOpened;
 
     public override void Apply(NetworkStateApplyContext context)
@@ -17,6 +19,7 @@ public sealed class NetworkTreasureStateData : NetworkStateData
                 RegionId = regionId,
                 RandomSeed = randomSeed,
                 InterestSize = interestSize,
+                Quality = quality,
                 IsOpened = isOpened,
                 NetworkDirty = 0,
             });

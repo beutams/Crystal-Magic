@@ -1,6 +1,8 @@
 using CrystalMagic.Game.Data;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Mathematics;
+using Unity.Transforms;
 
 public static class ClientSkillVisualPredictionUtility
 {
@@ -84,6 +86,9 @@ public static class ClientSkillVisualPredictionUtility
                 modifiers,
                 command.Position,
                 command.TargetEntity);
+            request.CastFrame = frame;
+            request.CastOrdinal = requestOrdinal;
+            request.HasCastIdentity = 1;
             if (entityManager.HasComponent<UnitMoveComponent>(player))
             {
                 UnitMoveComponent move = entityManager.GetComponentData<UnitMoveComponent>(player);
@@ -104,62 +109,37 @@ public static class ClientSkillVisualPredictionUtility
         EntityManager entityManager,
         in ClientPresentationEventElement presentationEvent)
     {
-        if (!IsVisualEvent(presentationEvent.Type) ||
-            presentationEvent.Source == Entity.Null ||
-            presentationEvent.SourceSkillId < 0 ||
-            !TryGetRuntimeEntity(entityManager, out Entity runtimeEntity))
-        {
-            return false;
-        }
-
+        if (presentationEvent.Identity.Valid == 0 ||
+            !TryGetRuntimeEntity(entityManager, out Entity runtimeEntity)) return false;
         DynamicBuffer<ClientPredictedSkillVisualEventElement> events =
             entityManager.GetBuffer<ClientPredictedSkillVisualEventElement>(runtimeEntity);
         for (int index = 0; index < events.Length; index++)
         {
             ClientPredictedSkillVisualEventElement predicted = events[index];
-            if (predicted.IsConfirmed != 0 ||
-                !IsMatchingFrame(predicted.Frame, presentationEvent.Frame) ||
-                predicted.Source != presentationEvent.Source ||
-                predicted.SkillId != presentationEvent.SourceSkillId ||
-                predicted.Type != presentationEvent.Type ||
-                !predicted.AssetName.Equals(presentationEvent.AssetName))
-            {
+            if (!predicted.Identity.Equals(presentationEvent.Identity) || predicted.Type != presentationEvent.Type)
                 continue;
-            }
-
             predicted.IsConfirmed = 1;
-            if (predicted.IsProjectile != 0)
+            if (predicted.IsProjectile != 0 && predicted.AnchorEntity != Entity.Null &&
+                entityManager.Exists(predicted.AnchorEntity))
             {
-                if (predicted.VisualEntity == Entity.Null ||
-                    !entityManager.Exists(predicted.VisualEntity) ||
-                    presentationEvent.Target == Entity.Null ||
-                    !entityManager.Exists(presentationEvent.Target))
-                {
-                    events[index] = predicted;
-                    return false;
-                }
-
-                EffectVisualFollowComponent follow = new()
-                {
-                    Target = presentationEvent.Target,
-                    Offset = presentationEvent.SecondaryPosition,
-                    AlignRotation = presentationEvent.FlagA,
-                    EndWhenTargetMissing = 1,
-                };
-                if (entityManager.HasComponent<EffectVisualFollowComponent>(predicted.VisualEntity))
-                    entityManager.SetComponentData(predicted.VisualEntity, follow);
-                else
-                    entityManager.AddComponentData(predicted.VisualEntity, follow);
-
-                if (predicted.AnchorEntity != Entity.Null && entityManager.Exists(predicted.AnchorEntity))
-                    entityManager.DestroyEntity(predicted.AnchorEntity);
-                predicted.AnchorEntity = Entity.Null;
+                // Confirmation links identities; the local collision simulation and
+                // its follow anchor continue until the authoritative impact ends them.
+                ClientProjectilePredictionUtility.Link(entityManager, predicted.AnchorEntity, presentationEvent.Target);
+                events = entityManager.GetBuffer<ClientPredictedSkillVisualEventElement>(runtimeEntity);
             }
-
+            else if (predicted.Identity.Phase != 0 && predicted.VisualEntity != Entity.Null &&
+                     entityManager.Exists(predicted.VisualEntity) &&
+                     entityManager.HasComponent<LocalTransform>(predicted.VisualEntity))
+            {
+                LocalTransform transform = entityManager.GetComponentData<LocalTransform>(predicted.VisualEntity);
+                transform.Position = presentationEvent.Position;
+                entityManager.SetComponentData(predicted.VisualEntity, transform);
+            }
             events[index] = predicted;
+            // A completed effect with this identity has already been shown, even
+            // when its short animation finished before the confirmation arrived.
             return true;
         }
-
         return false;
     }
 
@@ -177,16 +157,4 @@ public static class ClientSkillVisualPredictionUtility
         return entityManager.HasBuffer<ClientPredictedSkillVisualEventElement>(entity);
     }
 
-    private static bool IsVisualEvent(ClientPresentationEventType type)
-    {
-        return type == ClientPresentationEventType.SpawnVfx ||
-               type == ClientPresentationEventType.SpawnFollowVfx ||
-               type == ClientPresentationEventType.SpawnLineVfx ||
-               type == ClientPresentationEventType.MoveVfx;
-    }
-
-    private static bool IsMatchingFrame(uint predictedFrame, uint authoritativeFrame)
-    {
-        return authoritativeFrame >= predictedFrame && authoritativeFrame - predictedFrame <= 2u;
-    }
 }

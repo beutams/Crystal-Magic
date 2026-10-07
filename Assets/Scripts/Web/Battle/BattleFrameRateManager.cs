@@ -10,7 +10,6 @@ namespace Server
         private readonly FrameManager frame;
         private readonly Func<long> timeProvider;
         private bool pushedTime;
-        private bool simulated;
         private int steps;
         private long updateTime;
         private double catchUpTarget;
@@ -31,7 +30,7 @@ namespace Server
             {
                 group.World.PopTime();
                 pushedTime = false;
-                if (simulated && frame.running)
+                if (frame.running)
                     frame.OnTick();
                 else
                     return false;
@@ -44,14 +43,14 @@ namespace Server
                 catchUpTarget = 0;
                 if (!frame.running)
                 {
-                    // 黑屏初始化仍需推进烘焙/初始化系统，但不能消耗战斗时间。
+                    // World initialization runs outside this player-only group.
                     frame.clock.Reset(updateTime);
-                    group.World.PushTime(new TimeData(0, 0));
-                    pushedTime = true;
-                    simulated = false;
-                    return true;
+                    return false;
                 }
 
+                float gameDeltaTime = group.World.Time.DeltaTime;
+                if (gameDeltaTime <= 0)
+                    return false;
                 double speed = 1;
                 if (frame is ClientFrameManager client)
                 {
@@ -60,7 +59,7 @@ namespace Server
                         frame.currentFrame <= client.EstimatedServerFrame)
                         catchUpTarget = Math.Ceiling(client.EstimatedServerFrame + client.TargetAheadFrames);
                 }
-                frame.clock.Advance(updateTime, speed);
+                frame.clock.AdvanceGameTime(gameDeltaTime * 1000d, updateTime, speed);
             }
 
             if (!frame.running || steps >= MaxStepsPerUpdate ||
@@ -71,7 +70,6 @@ namespace Server
             LastStepCount = steps;
             group.World.PushTime(new TimeData((frame.currentFrame + 1d) * Timestep, Timestep));
             pushedTime = true;
-            simulated = true;
             return true;
         }
     }

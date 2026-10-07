@@ -25,7 +25,7 @@ namespace CrystalMagic.Core
         [SerializeField]
         private float _zOffset = -0.05f;
 
-        [SerializeField]
+        [SerializeField, Tooltip("Draw query volumes, hit lines and markers. Disabling this also stops debug capture.")]
         private bool _drawHitMarkers = true;
 
         [SerializeField, Min(0.01f)]
@@ -68,6 +68,7 @@ namespace CrystalMagic.Core
         public override int Priority => 3;
 
         public bool IsEnabled => _isEnabled;
+        public bool DrawQueryVisualization => _isEnabled && _drawHitMarkers && isActiveAndEnabled;
 
         public event Action<bool> EnabledChanged;
 
@@ -108,10 +109,9 @@ namespace CrystalMagic.Core
 
         private void LateUpdate()
         {
-            if (!_isEnabled)
+            UpdateQueryVisualizationSubscription();
+            if (!DrawQueryVisualization)
             {
-                _activeShapes.Clear();
-                _activeLines.Clear();
                 return;
             }
 
@@ -162,7 +162,7 @@ namespace CrystalMagic.Core
 
         private void UpdateQueryVisualizationSubscription()
         {
-            if (_isEnabled)
+            if (DrawQueryVisualization)
             {
                 if (_isQueryVisualizationSubscribed)
                     return;
@@ -174,7 +174,21 @@ namespace CrystalMagic.Core
             }
 
             UnsubscribeQueryVisualization();
+            _activeShapes.Clear();
+            _activeLines.Clear();
+            _shapeDrawFrame = -1;
+            _shapeCountThisFrame = 0;
         }
+
+        private void OnValidate()
+        {
+            if (Application.isPlaying)
+                UpdateQueryVisualizationSubscription();
+        }
+
+        private void OnDisable() => UpdateQueryVisualizationSubscription();
+
+        private void OnEnable() => UpdateQueryVisualizationSubscription();
 
         private void UnsubscribeQueryVisualization()
         {
@@ -202,7 +216,7 @@ namespace CrystalMagic.Core
 
         private void HandleQueryHitReported(float3 origin, float3 position)
         {
-            if (!_drawCurrentQueryHits || !_drawHitMarkers)
+            if (!_drawCurrentQueryHits || !DrawQueryVisualization)
                 return;
 
             Vector3 start = ToDebugPosition(origin);
@@ -234,7 +248,7 @@ namespace CrystalMagic.Core
 
         private bool TryBeginShapeDraw()
         {
-            if (!_isEnabled)
+            if (!DrawQueryVisualization)
                 return false;
 
             int frame = Time.frameCount;

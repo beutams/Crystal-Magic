@@ -45,8 +45,10 @@ public sealed class SettingUI : UIBase<SettingUIData, SettingUIModel>
         UI.Panel_MasterVolumeSlider.Slider.SetValueWithoutNotify(Model.MasterVolume);
         UI.Panel_BgmVolumeSlider.Slider.SetValueWithoutNotify(Model.BgmVolume);
         UI.Panel_SfxVolumeSlider.Slider.SetValueWithoutNotify(Model.SfxVolume);
-        UI.Panel_RowsValue.TextMeshProUGUI.text =
-            $"{ToPercent(Model.MasterVolume)}\n{ToPercent(Model.BgmVolume)}\n{ToPercent(Model.SfxVolume)}\n{Model.LanguageDisplayName}";
+        UI.Panel_MasterVolumeValue.TextMeshProUGUI.text = ToPercent(Model.MasterVolume);
+        UI.Panel_BgmVolumeValue.TextMeshProUGUI.text = ToPercent(Model.BgmVolume);
+        UI.Panel_SfxVolumeValue.TextMeshProUGUI.text = ToPercent(Model.SfxVolume);
+        UI.Panel_LanguageValue.TextMeshProUGUI.text = Model.LanguageDisplayName;
     }
 
     private static string ToPercent(float value)

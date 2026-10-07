@@ -7,22 +7,20 @@ namespace Server
     {
         Client,
         LobbyServer,
-        BattleServer,
     }
 
     public class NetworkComponent : GameComponent<NetworkComponent>
     {
         [SerializeField] private NetworkRole debugRole = NetworkRole.Client;
         [SerializeField] private bool debugFrameSpeedAdjustment = true;
-        [Tooltip("大厅使用 Steam 房主战斗或独立 TCP 战斗服。Steam 双机断线验收前保留 TCP 默认值。")]
-        [SerializeField] private BattleTransportKind battleHosting = BattleTransportKind.Tcp;
+        [Tooltip("Steam 模式使用客户端托管（Steam / Socket 混合房间）；Tcp 为独立 BattleServer。")]
+        [SerializeField] private BattleTransportKind battleHosting = BattleTransportKind.Steam;
 
         public IClientTransport lobbyTransport;
         public IClientTransport battleTransport;
         public ClientLobbyManager clientLobbyManager;
         public ClientBattleManager clientBattleManager;
         public ServerLobbyManager serverLobbyManager;
-        public ServerBattleManager serverBattleManager;
         public BattleHostManager battleHostManager;
 
         public NetworkRole Role
@@ -31,8 +29,6 @@ namespace Server
             {
 #if CRYSTAL_MAGIC_LOBBY_SERVER
                 return NetworkRole.LobbyServer;
-#elif CRYSTAL_MAGIC_BATTLE_SERVER
-                return NetworkRole.BattleServer;
 #elif CRYSTAL_MAGIC_CLIENT
                 return NetworkRole.Client;
 #else
@@ -62,16 +58,14 @@ namespace Server
                     battleHostManager.SessionEnded += clientLobbyManager.NotifyHostSessionEnded;
                     break;
                 case NetworkRole.LobbyServer:
+                    var serverConfig = ClientAccountPolicy.ForLaunch(new CrystalMagic.Game.Config.LobbyAccountConfig
+                    { lobbyAddress = ServerUtility.lobbyIP, lobbyPort = ServerUtility.lobbyPort },
+                        System.Environment.GetCommandLineArgs(), false);
                     serverLobbyManager = new ServerLobbyManager();
-                    serverLobbyManager.Initialize(new ServerService(ServerUtility.GetLobbyEndpoint()),
+                    serverLobbyManager.Initialize(new ServerService(new TcpEndpoint(new System.Net.IPEndPoint(
+                        System.Net.IPAddress.Parse(serverConfig.lobbyAddress), serverConfig.lobbyPort))),
                         battleHosting == BattleTransportKind.Tcp ? new ClientService() : null,
                         battleHosting == BattleTransportKind.Steam);
-                    break;
-                case NetworkRole.BattleServer:
-                    serverBattleManager = new ServerBattleManager();
-                    serverBattleManager.Initialize(
-                        new ServerService(ServerUtility.GetBattleEndpoint()),
-                        new ServerService(ServerUtility.GetBattleLobbyEndpoint()));
                     break;
             }
         }
@@ -91,9 +85,6 @@ namespace Server
                     break;
                 case NetworkRole.LobbyServer:
                     serverLobbyManager.Update();
-                    break;
-                case NetworkRole.BattleServer:
-                    serverBattleManager.Update();
                     break;
                 }
             }
@@ -117,10 +108,10 @@ namespace Server
             CloseBattleTransport();
             if (connection == null || !connection.IsValid)
                 throw new System.ArgumentException("Invalid battle connection descriptor.");
-            if (connection.kind == BattleTransportKind.Tcp)
-                battleTransport = new ClientService();
-            else if (battleHostManager.IsHosting && battleHostManager.Connection.sessionId == connection.sessionId)
+            if (battleHostManager.IsHosting && battleHostManager.Connection.sessionId == connection.sessionId)
                 battleTransport = battleHostManager.LocalClient;
+            else if (connection.kind == BattleTransportKind.Tcp)
+                battleTransport = new ClientService();
             else
                 battleTransport = new SteamP2PTransport();
             battleTransport.Init();
@@ -163,14 +154,12 @@ namespace Server
             SafeCleanup(CloseBattleTransport);
             SafeCleanup(() => battleHostManager?.Shutdown());
             SafeCleanup(() => serverLobbyManager?.Cleanup());
-            SafeCleanup(() => serverBattleManager?.Cleanup());
             NetworkTimer.Instance.Clear();
 
             clientLobbyManager = null;
             clientBattleManager = null;
             lobbyTransport = null;
             serverLobbyManager = null;
-            serverBattleManager = null;
             battleHostManager = null;
 
             base.Cleanup();

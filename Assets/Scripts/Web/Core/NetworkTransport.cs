@@ -19,6 +19,13 @@ namespace Server
         void Send(byte[] message);
     }
 
+    // Only battle-frame packets may use this path. Their handlers enqueue state;
+    // lifecycle/control messages retain the transport's ordinary queued dispatch.
+    internal interface IImmediateBattleFrameTransport
+    {
+        bool TrySendBattleFrame(byte[] message);
+    }
+
     /// <summary>
     /// 传输服务拥有连接资源；Update 在主线程派发消息和连接事件。
     /// Shutdown 释放全部连接和回调，可重复调用，不再派发业务回调。

@@ -7,6 +7,8 @@ using UnityEngine.EventSystems;
 
 public class StashUI : UIBase<StashUIData, CrystalMagic.UI.StashUIModel>
 {
+    // Visual padding only; storage capacity and saved contents are unchanged.
+    private const int MinimumVisibleStashSlots = 24;
     private readonly List<StashUI_InventoryItemView> _inventoryItemViews = new();
     private readonly List<StashUI_StashItemView> _stashItemViews = new();
     private StashInventoryDisplayData _draggedInventoryItem;
@@ -19,6 +21,9 @@ public class StashUI : UIBase<StashUIData, CrystalMagic.UI.StashUIModel>
     public event Action PropsCategoryRequested;
     public event Action<StashInventoryDisplayData> InventoryStoreRequested;
     public event Action<StashItemDisplayData> StashWithdrawRequested;
+    public event Action BackClicked;
+    public event Action InventorySortRequested;
+    public event Action StashSortRequested;
 
     public override void OnOpen()
     {
@@ -28,6 +33,9 @@ public class StashUI : UIBase<StashUIData, CrystalMagic.UI.StashUIModel>
         UI.ButtonList_Skill.ButtonPlus.onClick.AddListener(OnSkillCategoryButton);
         UI.ButtonList_Equip.ButtonPlus.onClick.AddListener(OnEquipCategoryButton);
         UI.ButtonList_Props.ButtonPlus.onClick.AddListener(OnPropsCategoryButton);
+        UI.Back.ButtonPlus.onClick.AddListener(OnBackButton);
+        UI.InventorySort.ButtonPlus.onClick.AddListener(OnInventorySortButton);
+        UI.StashSort.ButtonPlus.onClick.AddListener(OnStashSortButton);
         base.OnOpen();
     }
 
@@ -37,6 +45,9 @@ public class StashUI : UIBase<StashUIData, CrystalMagic.UI.StashUIModel>
         UI.ButtonList_Skill.ButtonPlus.onClick.RemoveListener(OnSkillCategoryButton);
         UI.ButtonList_Equip.ButtonPlus.onClick.RemoveListener(OnEquipCategoryButton);
         UI.ButtonList_Props.ButtonPlus.onClick.RemoveListener(OnPropsCategoryButton);
+        UI.Back.ButtonPlus.onClick.RemoveListener(OnBackButton);
+        UI.InventorySort.ButtonPlus.onClick.RemoveListener(OnInventorySortButton);
+        UI.StashSort.ButtonPlus.onClick.RemoveListener(OnStashSortButton);
         _draggedInventoryItem = null;
         _draggedStashItem = null;
         SetDragVisible(false);
@@ -50,6 +61,7 @@ public class StashUI : UIBase<StashUIData, CrystalMagic.UI.StashUIModel>
         if (Model == null)
             return;
 
+        CancelDrag();
         RenderInventory(Model.InventoryItems, Model.InventorySlotCount);
         RenderStash(Model.StashItems);
         UI.Coin_MoneyText.TextMeshProUGUI.text = Model.StashMoney.ToString();
@@ -67,10 +79,30 @@ public class StashUI : UIBase<StashUIData, CrystalMagic.UI.StashUIModel>
         }
     }
 
+    private void CancelDrag()
+    {
+        _draggedInventoryItem = null;
+        _draggedStashItem = null;
+        SetDragVisible(false);
+    }
+
+    private void OnInventorySortButton()
+    {
+        CancelDrag();
+        InventorySortRequested?.Invoke();
+    }
+
+    private void OnStashSortButton()
+    {
+        CancelDrag();
+        StashSortRequested?.Invoke();
+    }
+
     private void RenderStash(System.Collections.Generic.IReadOnlyList<CrystalMagic.UI.StashItemDisplayData> stashItems)
     {
         int stashItemCount = stashItems != null ? stashItems.Count : 0;
-        EnsureStashItemViews(stashItemCount);
+        EnsureStashItemViews(Math.Max(MinimumVisibleStashSlots, stashItemCount));
+        UI.StashView_EmptyHint.GameObject.SetActive(stashItemCount == 0);
 
         for (int i = 0; i < _stashItemViews.Count; i++)
         {
@@ -195,6 +227,7 @@ public class StashUI : UIBase<StashUIData, CrystalMagic.UI.StashUIModel>
     private void OnSkillCategoryButton() => SkillCategoryRequested?.Invoke();
     private void OnEquipCategoryButton() => EquipCategoryRequested?.Invoke();
     private void OnPropsCategoryButton() => PropsCategoryRequested?.Invoke();
+    private void OnBackButton() => BackClicked?.Invoke();
 
     private void HandleInventoryDragStarted(StashInventoryDisplayData data, PointerEventData eventData)
     {
@@ -203,8 +236,8 @@ public class StashUI : UIBase<StashUIData, CrystalMagic.UI.StashUIModel>
 
         _draggedStashItem = null;
         _draggedInventoryItem = data;
-        if (UI.Drag_Icon.Image != null)
-            UI.Drag_Icon.Image.sprite = LoadIcon(data.IconPath);
+        UI.Drag_Icon.Image.sprite = LoadIcon(data.IconPath);
+        UI.Drag_Icon.GameObject.SetActive(UI.Drag_Icon.Image.sprite != null);
         SetDragVisible(true);
         UpdateDragPosition(eventData);
     }
@@ -245,8 +278,8 @@ public class StashUI : UIBase<StashUIData, CrystalMagic.UI.StashUIModel>
 
         _draggedInventoryItem = null;
         _draggedStashItem = data;
-        if (UI.Drag_Icon.Image != null)
-            UI.Drag_Icon.Image.sprite = LoadIcon(data.IconPath);
+        UI.Drag_Icon.Image.sprite = LoadIcon(data.IconPath);
+        UI.Drag_Icon.GameObject.SetActive(UI.Drag_Icon.Image.sprite != null);
         SetDragVisible(true);
         UpdateDragPosition(eventData);
     }

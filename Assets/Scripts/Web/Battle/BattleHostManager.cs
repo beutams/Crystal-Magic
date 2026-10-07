@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Net;
 using CrystalMagic.Core;
 using UnityEngine;
 
@@ -17,10 +19,9 @@ namespace Server
 
         public B2L_StartRoomResult Start(L2C_HostBattleStart request)
         {
-            if (request?.connection == null || !request.connection.IsValid || request.room == null ||
-                request.connection.kind != BattleTransportKind.Steam ||
-                request.connection.hostSteamId != SteamComponent.Instance.SteamId ||
-                request.room.ownerAccountId != request.connection.hostSteamId)
+            if (!SteamComponent.Instance.Account.IsValid || !HostedBattlePolicy.IsHostRequest(request,
+                SteamComponent.Instance.Account.NetworkAccountId,
+                SteamComponent.Instance.CanUseSteamP2P ? SteamComponent.Instance.SteamId : 0))
                 throw new ArgumentException("Invalid host session request.");
             if (IsHosting)
             {
@@ -30,12 +31,26 @@ namespace Server
             try
             {
                 Connection = request.connection;
-                LoopbackTransport.CreatePair(Connection.hostSteamId, out LoopbackTransport server, out LoopbackTransport client);
+                LoopbackTransport.CreatePair(Connection.hostAccountId, out LoopbackTransport server, out LoopbackTransport client);
                 LocalClient = client;
-                SteamP2PTransport steam = new(new SteamEndpoint(Connection.hostSteamId, Connection.port), request.room.players);
+                List<IServerTransport> listeners = new() { server };
+                ServerService tcp = null;
+                if (request.tcpRequired)
+                {
+                    IPAddress advertised = IPAddress.Parse(Connection.address);
+                    IPAddress bind = IPAddress.IsLoopback(advertised) ? advertised :
+                        advertised.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork ? IPAddress.Any : IPAddress.IPv6Any;
+                    tcp = new ServerService(new TcpEndpoint(new IPEndPoint(bind, Connection.port)));
+                    listeners.Add(tcp);
+                }
+                if (Connection.HasSteamEndpoint)
+                {
+                    listeners.Add(new SteamP2PTransport(new SteamEndpoint(Connection.hostSteamId, Connection.steamPort), request.steamMembers));
+                }
                 Runtime = new ServerBattleManager();
                 Runtime.SessionEnded += OnSessionEnded;
-                Runtime.Initialize(new CompositeServerTransport(steam, server));
+                Runtime.Initialize(new CompositeServerTransport(listeners.ToArray()));
+                if (tcp != null) Connection.port = ((TcpEndpoint)tcp.LocalEndpoint).Address.Port;
                 startResult = Runtime.CreateSession(request.room, Connection) ??
                     throw new InvalidOperationException("Invalid battle roster.");
                 // HostReady 只表示已监听且建好入场房间；World 要等角色数据入场后才初始化。

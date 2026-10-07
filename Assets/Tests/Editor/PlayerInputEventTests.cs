@@ -76,7 +76,8 @@ public sealed class PlayerInputEventTests
     public void ConfiguredInputGraphsHaveValidEventPorts()
     {
         Table table = JsonConvert.DeserializeObject<Table>(File.ReadAllText(
-            Path.Combine(Directory.GetCurrentDirectory(), "Assets/Res/Data/StateScriptDataTable.json")));
+            Path.Combine(Directory.GetCurrentDirectory(), "Assets/Res/Data/StateScriptDataTable.json")),
+            new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.Auto });
         int listeners = 0;
         foreach (StateScriptData row in table.Rows)
         {
@@ -101,7 +102,8 @@ public sealed class PlayerInputEventTests
     public void ConfiguredInputGraphsCompileWithEventListeners()
     {
         Table table = JsonConvert.DeserializeObject<Table>(File.ReadAllText(
-            Path.Combine(Application.dataPath, "Res/Data/StateScriptDataTable.json")));
+            Path.Combine(Application.dataPath, "Res/Data/StateScriptDataTable.json")),
+            new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.Auto });
         bool success = StateScriptCompiler.TryBuildRegistry(table.Rows, out var registry, out string error);
         try { Assert.That(success, Is.True, error); }
         finally { if (registry.IsCreated) registry.Dispose(); }
@@ -137,10 +139,12 @@ public sealed class PlayerInputEventTests
         private readonly Guid unitId = Guid.NewGuid();
         private readonly Unity.Entities.BlobAssetReference<StateScriptRuntimeRegistryBlob> registry;
         private readonly StateScriptSystem system;
+        private readonly UnitInitializationSystemGroup initialization;
+        private readonly Entity commandQueue;
         private readonly int timerIndex;
         public EntityManager Manager => world.EntityManager;
         public Entity Player { get; }
-        public DynamicBuffer<StateScriptManagedCommandElement> Commands => Manager.GetBuffer<StateScriptManagedCommandElement>(Player);
+        public DynamicBuffer<StateScriptManagedCommandElement> Commands => Manager.GetBuffer<StateScriptManagedCommandElement>(commandQueue);
         public float TimerTime => Manager.GetBuffer<StateScriptNodeStateElement>(Player)[timerIndex].Time;
 
         public InputWorld(bool repeatWhileHeld = false)
@@ -200,7 +204,10 @@ public sealed class PlayerInputEventTests
             Manager.AddBuffer<StateScriptSourceCommandArgumentElement>(Player);
             Manager.AddBuffer<StateScriptManagedCommandElement>(Player);
             Manager.AddBuffer<StateScriptExternalResultElement>(Player);
+            initialization = world.GetOrCreateSystemManaged<UnitInitializationSystemGroup>();
+            initialization.AddSystemToUpdateList(world.GetOrCreateSystem<UnitQueryBuildSystem>());
             system = world.GetOrCreateSystemManaged<StateScriptSystem>();
+            commandQueue = StateScriptManagedCommandQueueUtility.GetOrCreateEntity(Manager);
             world.SetTime(new TimeData(0.033, 0.033f));
         }
 
@@ -212,6 +219,7 @@ public sealed class PlayerInputEventTests
 
         public void Update()
         {
+            initialization.Update();
             system.Update();
             Manager.CompleteAllTrackedJobs();
         }

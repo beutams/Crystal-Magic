@@ -8,7 +8,8 @@ using Unity.Physics;
 using Unity.Transforms;
 
 [BurstCompile]
-[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation |
+                   WorldSystemFilterFlags.ClientSimulation)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateAfter(typeof(UnitAvoidanceSystem))]
 [UpdateBefore(typeof(VfxArrivalSystem))]
@@ -29,6 +30,10 @@ partial struct UnitMoveSystem : ISystem
     {
         UnitMoveJob job = new()
         {
+            LocalPrediction = SystemAPI.TryGetSingleton(out GameWorldContextComponent context) &&
+                              context.Role == GameWorldRole.Client,
+            LocalPlayers = SystemAPI.GetComponentLookup<NetworkPlayerComponent>(true),
+            Scope = SystemAPI.TryGetSingleton(out BattleSimulationScope scope) ? scope : default,
             DeltaTime = SystemAPI.Time.DeltaTime,
             Avoidances = SystemAPI.GetComponentLookup<UnitAvoidanceComponent>(true),
             Modifiers = SystemAPI.GetComponentLookup<UnitModifierComponent>(true),
@@ -50,6 +55,9 @@ partial struct UnitMoveSystem : ISystem
     [WithNone(typeof(VfxArrivalComponent))]
     private partial struct UnitMoveJob : IJobEntity
     {
+        public bool LocalPrediction;
+        [ReadOnly] public ComponentLookup<NetworkPlayerComponent> LocalPlayers;
+        public BattleSimulationScope Scope;
         public float DeltaTime;
         public Entity NavigationMapEntity;
         public DungeonNavigationMapComponent NavigationMap;
@@ -84,6 +92,17 @@ partial struct UnitMoveSystem : ISystem
             ref PhysicsVelocity physicsVelocity,
             ref LocalTransform transform)
         {
+            if ((LocalPrediction && !LocalPlayers.HasComponent(entity)) ||
+                !Scope.Includes(PlayerInputs.HasComponent(entity)))
+                return;
+            if (LocalPrediction)
+            {
+                // Rendering may have written an interpolated position since the last
+                // tick. Start physics from the last completed simulation state.
+                if (move.HasPredictedPosition != 0)
+                    transform.Position = move.PredictedPosition;
+                physicsVelocity.Angular = float3.zero;
+            }
             float2 requestedDirection = move.Direction;
             float requestedMoveSpeed = move.CommandMoveSpeed;
             bool hasFrameVelocity = move.HasFrameVelocity != 0;

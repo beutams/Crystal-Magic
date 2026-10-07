@@ -53,6 +53,8 @@ public partial class StateScriptManagedCommandSystem : SystemBase
     private readonly Dictionary<StateScriptEffectKey, EffectDataListId> _effectLists = new();
     private readonly List<Entity> _missingDestroyFlags = new();
     private readonly SkillContent _skillContext = new();
+    private readonly Dictionary<Entity, int> _castOrdinals = new();
+    private uint _castOrdinalFrame;
     private readonly Dictionary<Entity, NPCInteractionSession> _npcSessions = new();
     private readonly List<Entity> _completedNpcTargets = new();
     private UnitSourceDispatcher _sourceDispatcher;
@@ -62,6 +64,26 @@ public partial class StateScriptManagedCommandSystem : SystemBase
     private NPCInteractionNodeRunnerFactory _npcRunnerFactory;
     private bool _npcInputLocked;
     private GameWorldRole _worldRole;
+    private BattleSimulationScope _scope;
+    private bool _replayClientSkills;
+
+    public void ReplayClientSkills()
+    {
+        if (_worldRole != GameWorldRole.Client)
+            return;
+        _replayClientSkills = true;
+        try { Update(); }
+        finally { _replayClientSkills = false; }
+    }
+
+    public bool HasRunningActions(Entity entity)
+    {
+        foreach (StateScriptActionKey key in _runningActions.Keys)
+            if (key.Entity == entity) return true;
+        foreach (StateScriptActionKey key in _spawnBatches.Keys)
+            if (key.Entity == entity) return true;
+        return false;
+    }
 
     protected override void OnCreate()
     {
@@ -81,6 +103,7 @@ public partial class StateScriptManagedCommandSystem : SystemBase
 
     protected override void OnUpdate()
     {
+        SystemAPI.TryGetSingleton(out _scope);
         using (WaitForScheduledJobsMarker.Auto())
             Dependency.Complete();
 
@@ -90,13 +113,15 @@ public partial class StateScriptManagedCommandSystem : SystemBase
             return;
 
         // Spawning makes structural changes; refresh source lookups afterwards.
-        TickSpawnBatches(SystemAPI.Time.DeltaTime);
+        if (!_replayClientSkills)
+            TickSpawnBatches(SystemAPI.Time.DeltaTime);
         using (UpdateSourceDispatcherMarker.Auto())
             _sourceDispatcher.Update(this);
         using (TickRunningActionsMarker.Auto())
             TickRunningActions();
         using (TickNpcSessionsMarker.Auto())
-            TickNpcSessions(SystemAPI.Time.DeltaTime);
+            if (!_replayClientSkills && _scope.Pass != BattleSimulationPass.Players)
+                TickNpcSessions(SystemAPI.Time.DeltaTime);
 
         _missingDestroyFlags.Clear();
         DynamicBuffer<StateScriptManagedCommandElement> commandQueue =
@@ -120,6 +145,10 @@ public partial class StateScriptManagedCommandSystem : SystemBase
                 for (int commandIndex = 0; commandIndex < pendingCommands.Length; commandIndex++)
                 {
                     StateScriptManagedCommandElement command = pendingCommands[commandIndex];
+                    // 重演技能附加的本地状态及完成回执；交互、转场等操作只处理原始输入。
+                    if (_replayClientSkills && command.Type is not
+                        (StateScriptManagedCommandType.StartAddition or StateScriptManagedCommandType.StopAddition))
+                        continue;
                     Entity entity = command.SourceEntity;
                     if (entity != currentEntity)
                     {
@@ -162,6 +191,7 @@ public partial class StateScriptManagedCommandSystem : SystemBase
 
     public void ResetScene()
     {
+        _castOrdinals.Clear();
         if (_commandQueueEntity != Entity.Null && EntityManager.Exists(_commandQueueEntity))
             EntityManager.GetBuffer<StateScriptManagedCommandElement>(_commandQueueEntity).Clear();
         foreach (KeyValuePair<StateScriptActionKey, RunningAddition> pair in _runningActions)
@@ -446,6 +476,19 @@ public partial class StateScriptManagedCommandSystem : SystemBase
             modifiers,
             command.Position,
             command.TargetEntity);
+        if (FrameManagerUtility.TryGet(EntityManager, out FrameManager frame))
+        {
+            if (_castOrdinalFrame != frame.currentFrame)
+            {
+                _castOrdinalFrame = frame.currentFrame;
+                _castOrdinals.Clear();
+            }
+            _castOrdinals.TryGetValue(entity, out int ordinal);
+            _castOrdinals[entity] = ordinal + 1;
+            request.CastFrame = frame.currentFrame;
+            request.CastOrdinal = ordinal;
+            request.HasCastIdentity = 1;
+        }
         if (!SkillReleaseSnapshotUtility.TryCreate(EntityManager, in request, out ResolvedSkillData resolvedSkill))
         {
             Debug.LogError($"[StateScriptManagedCommand] Failed to analyze SkillId={request.SkillId}.");
@@ -509,6 +552,7 @@ public partial class StateScriptManagedCommandSystem : SystemBase
                     GameRuntimeStateUtility.TryGetPlayerCharacterData(EntityManager, transaction.Actor, out CharacterData characterData))
                 {
                     characterData.Money = System.Math.Max(0L, characterData.Money + amount);
+                    DungeonSettlementUtility.RecordMoneyAcquired(EntityManager, amount);
                     PlayerCharacterUtility.MarkChanged(EntityManager, transaction.Actor);
                     resultCode = InteractionResultCode.Success;
                     PublishPickupFeedback(transaction.Actor, PickupFeedbackType.Money, -1, amount);
@@ -542,6 +586,7 @@ public partial class StateScriptManagedCommandSystem : SystemBase
                     PlayerCharacterUtility.MarkChanged(EntityManager, transaction.Actor);
                     resultCode = InteractionResultCode.Success;
                     PublishPickupFeedback(transaction.Actor, PickupFeedbackType.Item, data.DataId, amount);
+                    DungeonSettlementUtility.RecordItemAcquired(EntityManager, data.DataId, amount);
                 }
                 else
                 {
@@ -603,7 +648,7 @@ public partial class StateScriptManagedCommandSystem : SystemBase
             return;
         }
 
-        NPCInteractionSession session = new(target, npcData, interaction, transaction.Actor);
+        NPCInteractionSession session = new(target, npcData, interaction, transaction.Actor, World);
         _npcSessions.Add(target, session);
         AcquireNpcInput();
         EventComponent.Instance.Publish(new NPCInteractionStartedEvent(target, npcData, interaction));
@@ -679,7 +724,17 @@ public partial class StateScriptManagedCommandSystem : SystemBase
                 session.CurrentRunner.Enter(session);
             }
 
+            if (!session.IsActive)
+            {
+                FinishNpcSession(session, true);
+                return;
+            }
             session.CurrentRunner.Update(session, deltaTime);
+            if (!session.IsActive)
+            {
+                FinishNpcSession(session, true);
+                return;
+            }
             if (!session.CurrentRunner.IsCompleted(session))
                 return;
 
@@ -782,6 +837,9 @@ public partial class StateScriptManagedCommandSystem : SystemBase
         foreach (KeyValuePair<StateScriptActionKey, RunningAddition> pair in _runningActions)
         {
             StateScriptActionKey key = pair.Key;
+            if (EntityManager.Exists(key.Entity) &&
+                !_scope.Includes(EntityManager.HasComponent<PlayerInputComponent>(key.Entity)))
+                continue;
             RunningAddition execution = pair.Value;
             if (!EntityManager.Exists(key.Entity) ||
                 EntityManager.HasComponent<BattleSpectatorComponent>(key.Entity) ||
@@ -1010,6 +1068,9 @@ public partial class StateScriptManagedCommandSystem : SystemBase
         foreach (KeyValuePair<StateScriptActionKey, StateScriptSpawnBatch> pair in _spawnBatches)
         {
             Entity spawner = pair.Key.Entity;
+            if (EntityManager.Exists(spawner) &&
+                !_scope.Includes(EntityManager.HasComponent<PlayerInputComponent>(spawner)))
+                continue;
             StateScriptSpawnBatch batch = pair.Value;
             if (!StateScriptSpawnBatch.CanContinue(EntityManager, spawner, pair.Key.GraphIndex))
             {

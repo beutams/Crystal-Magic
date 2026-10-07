@@ -9,8 +9,11 @@ namespace Server
     public class FrameManager
     {
         public int frameInterval = 33;
+        public int sendInterval = 33;
+        private long lastSendTime;
+        private bool immediateFlushRequested;
         public bool running;
-        // 下一轮要执行的逻辑帧；只在这一轮 ECS 完成后递增。
+        // Next player simulation tick, independent of world updates and packet flushes.
         public uint currentFrame;
         public uint sceneVersion;
         public readonly BattleFrameClock clock = new BattleFrameClock();
@@ -22,50 +25,70 @@ namespace Server
         public Action<uint, Queue<NetworkStateData>> onSendMessage;
         public virtual void OnTick()
         {
-            SendMessage();
             if (running)
                 currentFrame++;
         }
         public virtual void SendMessage()
         {
-            if(sendOrder.TryGetValue(currentFrame, out var queue))
+            List<NetworkFrameData> frames = new();
+            while (sendOrder.Count > 0)
             {
-                NetworkFrameData data = new NetworkFrameData() { frameId = currentFrame };
-                data.datas = queue.ToList();
-                SendFrame(data);
-                onSendMessage?.Invoke(currentFrame, queue);
-
-                sendOrder.Remove(currentFrame);
+                var pending = sendOrder.First();
+                // Never transmit an input frame before prediction has consumed it.
+                if (this is ClientFrameManager && pending.Key >= currentFrame)
+                    break;
+                frames.Add(new NetworkFrameData { frameId = pending.Key, datas = pending.Value.ToList() });
+                onSendMessage?.Invoke(pending.Key, pending.Value);
+                sendOrder.Remove(pending.Key);
             }
+            if (this is ServerFrameManager)
+                NetworkSnapshotBatchUtility.Coalesce(frames);
+            if (frames.Count > 0)
+                SendFrames(frames);
+        }
 
+        public void RequestImmediateFlush() => immediateFlushRequested = true;
+
+        public bool FlushNetwork(long now, bool immediate = false)
+        {
+            if (!running || (!immediate && !immediateFlushRequested &&
+                now - lastSendTime < Math.Max(1, sendInterval)))
+                return false;
+            // One flush after a stall, never a burst of overdue send timers.
+            lastSendTime = now;
+            immediateFlushRequested = false;
+            SendMessage();
+            return true;
         }
         public virtual void OnReceiveMessage(IMessage message,Connect connect)
         {
             General_FrameStateData realMessage = message as General_FrameStateData;
-            if (realMessage == null || realMessage.data == null || realMessage.sceneVersion != sceneVersion)
+            if (realMessage?.frames == null || realMessage.sceneVersion != sceneVersion)
             {
                 return;
             }
 
-            NetworkFrameData frameData = realMessage.data;
-            if (!receivedOrder.ContainsKey(frameData.frameId))
+            foreach (NetworkFrameData frameData in realMessage.frames)
             {
-                receivedOrder.Add(frameData.frameId, new Queue<NetworkState>());
-            }
-            foreach (var data in frameData.datas)
-            {
-                NetworkState state = new NetworkState() { data = data, hasChecked = false };
-                receivedOrder[frameData.frameId].Enqueue(state);
+                if (frameData?.datas == null)
+                    continue;
+                if (!receivedOrder.TryGetValue(frameData.frameId, out var states))
+                    receivedOrder.Add(frameData.frameId, states = new Queue<NetworkState>());
+                foreach (var data in frameData.datas)
+                    if (data != null)
+                        states.Enqueue(new NetworkState { data = data });
             }
         }
         public virtual void HandleReceive() { }
-        protected virtual void SendFrame(NetworkFrameData data){}
+        protected virtual void SendFrames(List<NetworkFrameData> frames){}
         public virtual void AddConnect(Connect connect){}
         public virtual void RemoveConnect(Connect connect){}
         public virtual void ClearOrders()
         {
             receivedOrder.Clear();
             sendOrder.Clear();
+            immediateFlushRequested = false;
+            lastSendTime = NetworkTimer.Instance.TimeNow;
         }
         public virtual void Start()
         {
@@ -78,6 +101,7 @@ namespace Server
 
             currentFrame = startFrame;
             clock.Reset(NetworkTimer.Instance.TimeNow);
+            lastSendTime = NetworkTimer.Instance.TimeNow;
             running = true;
         }
         public virtual void Stop()

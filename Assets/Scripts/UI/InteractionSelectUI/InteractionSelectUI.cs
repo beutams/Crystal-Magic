@@ -2,22 +2,20 @@ using System;
 using System.Collections.Generic;
 using CrystalMagic.Core;
 using CrystalMagic.UI;
+using UnityEngine;
+using UnityEngine.UI;
 
 public class InteractionSelectUI : UIBase<InteractionSelectUIData, InteractionSelectUIModel>
 {
+    private const float HorizontalPadding = 40f;
+    private const float DialogInset = 68f;
+    private const float TopPadding = 54f;
+    private const float BottomPadding = 34f;
+    private const float DialogOptionSpacing = 44f;
+
     private readonly List<InteractionSelectUI_OptionView> _optionViews = new();
 
     public event Action<InteractionSelectOptionDisplayData> OptionClicked;
-
-    protected override void OnInit()
-    {
-        base.OnInit();
-    }
-
-    public override void OnOpen()
-    {
-        base.OnOpen();
-    }
 
     public override void OnClose()
     {
@@ -29,6 +27,34 @@ public class InteractionSelectUI : UIBase<InteractionSelectUIData, InteractionSe
     {
         UI.Dialog.TextMeshProUGUI.text = Model.Dialog;
         RenderOptions(Model.Options);
+        RefreshLayout(_optionViews.Count);
+    }
+
+    private void RefreshLayout(int optionCount)
+    {
+        float panelWidth = UI.BG.RectTransform.sizeDelta.x;
+        float rowHeight = UI.Content_Button.RectTransform.sizeDelta.y;
+        float rowSpacing = UI.Content.GameObject.GetComponent<VerticalLayoutGroup>().spacing;
+        float contentHeight = optionCount * rowHeight + Mathf.Max(0, optionCount - 1) * rowSpacing;
+        float dialogWidth = panelWidth - DialogInset * 2f;
+        bool hasDialog = !string.IsNullOrWhiteSpace(UI.Dialog.TextMeshProUGUI.text);
+        float dialogHeight = hasDialog
+            ? Mathf.Ceil(UI.Dialog.TextMeshProUGUI.GetPreferredValues(
+                UI.Dialog.TextMeshProUGUI.text, dialogWidth, Mathf.Infinity).y)
+            : 0f;
+        float dialogSpacing = hasDialog && optionCount > 0 ? DialogOptionSpacing : 0f;
+        float panelHeight = TopPadding + dialogHeight + dialogSpacing + contentHeight + BottomPadding;
+
+        UI.BG.RectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, panelHeight);
+        UI.Content.GameObject.SetActive(optionCount > 0);
+        UI.Content.RectTransform.sizeDelta = new Vector2(panelWidth - HorizontalPadding * 2f, contentHeight);
+        UI.Content.RectTransform.anchoredPosition = new Vector2(-HorizontalPadding, BottomPadding);
+        UI.Dialog.GameObject.SetActive(hasDialog);
+        UI.Dialog.RectTransform.sizeDelta = new Vector2(dialogWidth, dialogHeight);
+        UI.Dialog.RectTransform.anchoredPosition = new Vector2(-panelWidth + DialogInset, panelHeight - TopPadding);
+
+        if (optionCount > 0)
+            LayoutRebuilder.ForceRebuildLayoutImmediate(UI.Content.RectTransform);
     }
 
     private void RenderOptions(IReadOnlyList<InteractionSelectOptionDisplayData> options)

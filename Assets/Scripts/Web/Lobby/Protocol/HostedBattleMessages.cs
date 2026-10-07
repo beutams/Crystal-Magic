@@ -7,6 +7,8 @@ namespace Server
     {
         public BattleConnectionInfo connection;
         public L2B_StartRoom room;
+        public ulong[] steamMembers;
+        public bool tcpRequired;
     }
     [Serializable, Message(Opcode = 61)]
     public sealed class C2L_HostBattleReady : IMessage { public B2L_StartRoomResult result; }

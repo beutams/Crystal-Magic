@@ -29,6 +29,107 @@
         }
       ],
       "Id": 2
+    },
+    {
+      "Properties": [
+        {
+          "Channel": 10,
+          "BaseBonus": 0.3
+        }
+      ],
+      "Id": 3
+    },
+    {
+      "Properties": [
+        {
+          "Channel": 12,
+          "BaseBonus": 0.3
+        }
+      ],
+      "Id": 4
+    },
+    {
+      "Properties": [
+        {
+          "Channel": 3,
+          "BaseBonus": 2.0
+        }
+      ],
+      "Id": 5
+    },
+    {
+      "Properties": [
+        {
+          "Channel": 9,
+          "BaseBonus": 25.0
+        }
+      ],
+      "Id": 6
+    },
+    {
+      "Properties": [
+        {
+          "Channel": 0,
+          "BaseBonus": 0.5
+        }
+      ],
+      "Id": 7
+    },
+    {
+      "Properties": [
+        {
+          "Channel": 1,
+          "BaseBonus": 50.0
+        },
+        {
+          "Channel": 2,
+          "BaseBonus": 3.0
+        }
+      ],
+      "Id": 8
+    },
+    {
+      "Properties": [
+        {
+          "Channel": 5,
+          "BaseBonus": 20.0
+        }
+      ],
+      "Id": 9
+    },
+    {
+      "Properties": [
+        {
+          "Channel": 6,
+          "BaseBonus": 1.0
+        },
+        {
+          "Channel": 7,
+          "BaseBonus": 2.0
+        }
+      ],
+      "Id": 10
+    },
+    {
+      "Properties": [
+        {
+          "Channel": 10,
+          "BaseBonus": 0.2
+        },
+        {
+          "Channel": 11,
+          "BaseBonus": 0.2
+        },
+        {
+          "Channel": 12,
+          "BaseBonus": 0.2
+        },
+        {
+          "Channel": 13,
+          "BaseBonus": 0.2
+        }
+      ],
+      "Id": 11
     }
   ]
 }

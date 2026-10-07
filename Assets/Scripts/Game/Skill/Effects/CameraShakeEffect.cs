@@ -29,7 +29,7 @@ namespace CrystalMagic.Game.Skill.Effects
                     Data.Amplitude,
                     Data.Frequency,
                     Data.UseDistanceAttenuation,
-                    Data.Radius))
+                    Data.Radius, context.EffectIdentity))
             {
                 return;
             }

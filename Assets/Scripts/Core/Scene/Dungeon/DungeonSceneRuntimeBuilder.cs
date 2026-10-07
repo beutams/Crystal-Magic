@@ -31,88 +31,103 @@ namespace CrystalMagic.Core
             if (mapData == null || !mapData.HasLayout || mapData.SceneData == null)
             {
                 DungeonFlowTiming.Fail("Runtime dungeon map data is unavailable");
-                yield break;
+                throw new InvalidOperationException("Runtime dungeon map data is unavailable.");
             }
 
             DungeonFlowTiming.BeginStage(14, "准备运行时根节点并等待 ECS Spawn Registry");
             DestroyCurrentDungeonScene();
 
             reportProgress?.Invoke(0.985f, "Building dungeon scene", "Creating runtime scene root");
-            GameObject rootObject = new(RuntimeRootName);
-            DungeonSceneRuntimeRoot runtimeRoot = rootObject.AddComponent<DungeonSceneRuntimeRoot>();
             List<Entity> spawnedEntities = new();
             Dictionary<Entity, int> controlledSceneObjects = new();
             string resourceOwnerKey = $"{RuntimeRootName}_{Guid.NewGuid():N}";
-            RuntimeDungeonSceneData sceneData = mapData.SceneData;
-
-            EntityManager entityManager = default;
-            bool hasSpawnRegistry = false;
-            for (int frame = 0; frame < SpawnRegistryWaitFrames; frame++)
+            DungeonSceneRuntimeRoot runtimeRoot = CreateRuntimeRoot(resourceOwnerKey, spawnedEntities, null);
+            bool completed = false;
+            try
             {
-                World world = World.DefaultGameObjectInjectionWorld;
-                if (world != null && world.IsCreated)
+                RuntimeDungeonSceneData sceneData = mapData.SceneData;
+
+                EntityManager entityManager = default;
+                bool hasSpawnRegistry = false;
+                for (int frame = 0; frame < SpawnRegistryWaitFrames; frame++)
                 {
-                    entityManager = world.EntityManager;
-                    if (HasSpawnRegistry(entityManager))
+                    if (!IsCurrent(runtimeRoot)) yield break;
+                    World world = World.DefaultGameObjectInjectionWorld;
+                    if (world != null && world.IsCreated)
                     {
-                        hasSpawnRegistry = true;
-                        break;
+                        entityManager = world.EntityManager;
+                        if (HasSpawnRegistry(entityManager))
+                        {
+                            hasSpawnRegistry = true;
+                            break;
+                        }
                     }
+
+                    reportProgress?.Invoke(0.992f, "Building dungeon scene", "Waiting for entity spawn registry");
+                    yield return null;
                 }
 
-                reportProgress?.Invoke(0.992f, "Building dungeon scene", "Waiting for entity spawn registry");
+                if (!hasSpawnRegistry)
+                {
+                    DungeonFlowTiming.EndStage(14, "ECS Spawn Registry 不可用");
+                    DungeonFlowTiming.Fail("Entity spawn registry is unavailable in DungeonScene");
+                    Debug.LogError("[DungeonSceneRuntimeBuilder] Entity spawn registry is unavailable in DungeonScene.");
+                    throw new InvalidOperationException("Entity spawn registry is unavailable in DungeonScene.");
+                }
+                runtimeRoot.BindWorld(entityManager.World);
+                DungeonFlowTiming.EndStage(14, "ECS Spawn Registry 已就绪");
+
+                DungeonFlowTiming.BeginStage(15, "构建地牢视觉、碰撞与场景对象");
+                reportProgress?.Invoke(0.993f, "Building dungeon scene", "Building tile visuals");
+                DungeonRuleTileVisualBuilder.Build(runtimeRoot, sceneData.TerrainVisual, resourceOwnerKey);
+                DungeonFogOfWarVisualBuilder.Build(runtimeRoot, mapData.FogData);
+                runtimeRoot.SetCameraWorldBounds(sceneData.CameraWorldBounds);
                 yield return null;
-            }
+                if (!IsCurrent(runtimeRoot)) yield break;
 
-            if (!hasSpawnRegistry)
+                reportProgress?.Invoke(0.994f, "Building dungeon scene", "Spawning obstacles");
+                SpawnObstacles(entityManager, runtimeRoot, sceneData, resourceOwnerKey, spawnedEntities);
+                yield return null;
+                if (!IsCurrent(runtimeRoot)) yield break;
+
+                reportProgress?.Invoke(0.995f, "Building dungeon scene", "Spawning environment");
+                SpawnEnvironment(entityManager, sceneData, resourceOwnerKey, spawnedEntities);
+                yield return null;
+                if (!IsCurrent(runtimeRoot)) yield break;
+
+                reportProgress?.Invoke(0.996f, "Building dungeon scene", "Spawning scene objects");
+                SpawnSceneObjects(entityManager, sceneData, spawnedEntities, controlledSceneObjects);
+                yield return null;
+                if (!IsCurrent(runtimeRoot)) yield break;
+                DungeonFlowTiming.EndStage(15, "视觉、碰撞和场景对象已完成");
+
+                DungeonFlowTiming.BeginStage(16, "生成玩家、兴趣点与怪物");
+                reportProgress?.Invoke(0.997f, "Building dungeon scene", "Spawning player");
+                SpawnPlayer(entityManager, sceneData, spawnedEntities);
+                yield return null;
+                if (!IsCurrent(runtimeRoot)) yield break;
+
+                reportProgress?.Invoke(0.9975f, "Building dungeon scene", "Spawning interest point units");
+                Entity floorController = SpawnFloorController(entityManager, sceneData, spawnedEntities);
+                Dictionary<int, Entity> interestPoints = new();
+                SpawnInterestPoints(entityManager, sceneData, spawnedEntities, interestPoints, floorController);
+                Dictionary<int, Entity> wildSquads = SpawnWildSquads(entityManager, sceneData, spawnedEntities, floorController);
+                LinkSceneObjectsToInterestPoints(entityManager, controlledSceneObjects, interestPoints);
+                yield return null;
+                if (!IsCurrent(runtimeRoot)) yield break;
+
+                reportProgress?.Invoke(0.998f, "Building dungeon scene", "Spawning monsters");
+                SpawnMonsters(entityManager, sceneData, spawnedEntities, interestPoints, wildSquads);
+                SetInterestPointsReady(entityManager, interestPoints);
+
+                completed = true;
+                DungeonFlowTiming.EndStage(16, $"SpawnedEntities={spawnedEntities.Count}");
+            }
+            finally
             {
-                DungeonFlowTiming.EndStage(14, "ECS Spawn Registry 不可用");
-                DungeonFlowTiming.Fail("Entity spawn registry is unavailable in DungeonScene");
-                Debug.LogError("[DungeonSceneRuntimeBuilder] Entity spawn registry is unavailable in DungeonScene.");
-                runtimeRoot.Initialize(resourceOwnerKey, spawnedEntities, null);
-                yield break;
+                if (!completed && runtimeRoot != null)
+                    SceneComponent.Instance.MapPresentation.ClearIfCurrent(runtimeRoot.gameObject);
             }
-            DungeonFlowTiming.EndStage(14, "ECS Spawn Registry 已就绪");
-
-            DungeonFlowTiming.BeginStage(15, "构建地牢视觉、碰撞与场景对象");
-            reportProgress?.Invoke(0.993f, "Building dungeon scene", "Building tile visuals");
-            DungeonRuleTileVisualBuilder.Build(runtimeRoot, sceneData.TerrainVisual, resourceOwnerKey);
-            DungeonFogOfWarVisualBuilder.Build(runtimeRoot, mapData.FogData);
-            runtimeRoot.SetCameraWorldBounds(sceneData.CameraWorldBounds);
-            yield return null;
-
-            reportProgress?.Invoke(0.994f, "Building dungeon scene", "Spawning obstacles");
-            SpawnObstacles(entityManager, runtimeRoot, sceneData, resourceOwnerKey, spawnedEntities);
-            yield return null;
-
-            reportProgress?.Invoke(0.995f, "Building dungeon scene", "Spawning environment");
-            SpawnEnvironment(entityManager, sceneData, resourceOwnerKey, spawnedEntities);
-            yield return null;
-
-            reportProgress?.Invoke(0.996f, "Building dungeon scene", "Spawning scene objects");
-            SpawnSceneObjects(entityManager, sceneData, spawnedEntities, controlledSceneObjects);
-            yield return null;
-            DungeonFlowTiming.EndStage(15, "视觉、碰撞和场景对象已完成");
-
-            DungeonFlowTiming.BeginStage(16, "生成玩家、兴趣点与怪物");
-            reportProgress?.Invoke(0.997f, "Building dungeon scene", "Spawning player");
-            SpawnPlayer(entityManager, sceneData, spawnedEntities);
-            yield return null;
-
-            reportProgress?.Invoke(0.9975f, "Building dungeon scene", "Spawning interest point units");
-            Entity floorController = SpawnFloorController(entityManager, sceneData, spawnedEntities);
-            Dictionary<int, Entity> interestPoints = new();
-            SpawnInterestPoints(entityManager, sceneData, spawnedEntities, interestPoints, floorController);
-            Dictionary<int, Entity> wildSquads = SpawnWildSquads(entityManager, sceneData, spawnedEntities, floorController);
-            LinkSceneObjectsToInterestPoints(entityManager, controlledSceneObjects, interestPoints);
-            yield return null;
-
-            reportProgress?.Invoke(0.998f, "Building dungeon scene", "Spawning monsters");
-            SpawnMonsters(entityManager, sceneData, spawnedEntities, interestPoints, wildSquads);
-            SetInterestPointsReady(entityManager, interestPoints);
-
-            runtimeRoot.Initialize(resourceOwnerKey, spawnedEntities, entityManager.World);
-            DungeonFlowTiming.EndStage(16, $"SpawnedEntities={spawnedEntities.Count}");
         }
 
         /// <summary>
@@ -206,17 +221,22 @@ namespace CrystalMagic.Core
                 mapPlan.seed,
                 mapPlan.attemptCount,
                 enableFogOfWar: false);
-            GameObject rootObject = new(RuntimeRootName);
-            DungeonSceneRuntimeRoot runtimeRoot = rootObject.AddComponent<DungeonSceneRuntimeRoot>();
             List<Entity> spawnedEntities = new();
             string resourceOwnerKey = $"{RuntimeRootName}_{Guid.NewGuid():N}";
-
-            DungeonRuleTileVisualBuilder.Build(runtimeRoot, sceneData.TerrainVisual, resourceOwnerKey);
-            runtimeRoot.SetCameraWorldBounds(sceneData.CameraWorldBounds);
-            SpawnObstacles(entityManager, runtimeRoot, sceneData, resourceOwnerKey, spawnedEntities);
-            SpawnEnvironment(entityManager, sceneData, resourceOwnerKey, spawnedEntities, true);
-            runtimeRoot.Initialize(resourceOwnerKey, spawnedEntities, entityManager.World);
-            return true;
+            DungeonSceneRuntimeRoot runtimeRoot = CreateRuntimeRoot(resourceOwnerKey, spawnedEntities, entityManager.World);
+            try
+            {
+                DungeonRuleTileVisualBuilder.Build(runtimeRoot, sceneData.TerrainVisual, resourceOwnerKey);
+                runtimeRoot.SetCameraWorldBounds(sceneData.CameraWorldBounds);
+                SpawnObstacles(entityManager, runtimeRoot, sceneData, resourceOwnerKey, spawnedEntities);
+                SpawnEnvironment(entityManager, sceneData, resourceOwnerKey, spawnedEntities, true);
+                return true;
+            }
+            catch
+            {
+                SceneComponent.Instance.MapPresentation.ClearIfCurrent(runtimeRoot.gameObject);
+                throw;
+            }
         }
 
         private static void SpawnObstacles(
@@ -284,8 +304,7 @@ namespace CrystalMagic.Core
             if (sprite == null)
                 return;
 
-            GameObject visualObject = new($"ObstacleSprite_{obstacleIndex}_{visualIndex}");
-            visualObject.transform.SetParent(runtimeRoot.transform, false);
+            GameObject visualObject = PoolComponent.Instance.CreateTransient($"ObstacleSprite_{obstacleIndex}_{visualIndex}", runtimeRoot.transform);
             visualObject.transform.localPosition = visual.WorldPosition;
             visualObject.transform.localRotation = Quaternion.Euler(0f, 0f, visual.RotationQuarterTurns * 90f);
             SpriteRenderer renderer = visualObject.AddComponent<SpriteRenderer>();
@@ -371,6 +390,7 @@ namespace CrystalMagic.Core
                     entityInfo.treasureRegionId = sceneObject.RegionId;
                     entityInfo.treasureRandomSeed = sceneObject.RandomSeed == 0 ? 1u : sceneObject.RandomSeed;
                     entityInfo.treasureInterestSize = sceneObject.InterestSize;
+                    entityInfo.treasureQuality = sceneObject.TreasureQuality;
                     entityInfo.treasureIsOpened = false;
                     entityInfo.treasureCandidateItemIds = sceneObject.TreasureCandidateItemIds?.ToArray();
                 }
@@ -399,14 +419,6 @@ namespace CrystalMagic.Core
                 }
                 else if (sceneObject.ObjectType == RuntimeDungeonSceneObjectType.Treasure)
                 {
-                    if (entityManager.HasComponent<TreasureComponent>(entity))
-                    {
-                        TreasureComponent treasure = entityManager.GetComponentData<TreasureComponent>(entity);
-                        treasure.Quality = sceneObject.TreasureQuality;
-                        treasure.RewardsSpawned = 0;
-                        entityManager.SetComponentData(entity, treasure);
-                    }
-
                     controlledSceneObjects[entity] = sceneObject.RegionId;
                 }
 
@@ -804,14 +816,17 @@ namespace CrystalMagic.Core
 
         private static bool HasSpawnRegistry(EntityManager entityManager)
         {
-            EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<EntitySpawnRegistrySingleton>());
-            return !query.IsEmptyIgnoreFilter;
+            return EntitySpawnRegistryUtility.HasRegistry(entityManager);
         }
 
 
         private static void DestroyRuntimeOwnedEntities(EntityManager entityManager)
         {
-            EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<DungeonRuntimeOwnedEntity>());
+            using EntityQuery query = entityManager.CreateEntityQuery(new EntityQueryDesc
+            {
+                All = new[] { ComponentType.ReadOnly<DungeonRuntimeOwnedEntity>() },
+                Options = EntityQueryOptions.IncludeDisabledEntities,
+            });
             if (!query.IsEmptyIgnoreFilter)
             {
                 entityManager.DestroyEntity(query);
@@ -820,18 +835,26 @@ namespace CrystalMagic.Core
 
         public static void DestroyCurrentDungeonScene()
         {
-            DungeonSceneRuntimeRoot[] runtimeRoots = UnityEngine.Object.FindObjectsByType<DungeonSceneRuntimeRoot>(
-                FindObjectsInactive.Include,
-                FindObjectsSortMode.None);
-            for (int index = 0; index < runtimeRoots.Length; index++)
-            {
-                DungeonSceneRuntimeRoot runtimeRoot = runtimeRoots[index];
-                if (runtimeRoot == null)
-                    continue;
+            SceneMapPresentation maps = SceneComponent.Instance.MapPresentation;
+            if (maps.SceneName == DungeonState.SceneName) maps.Clear();
+        }
 
-                runtimeRoot.gameObject.SetActive(false);
-                UnityEngine.Object.Destroy(runtimeRoot.gameObject);
-            }
+        private static bool IsCurrent(DungeonSceneRuntimeRoot root) =>
+            root != null && SceneComponent.Instance.MapPresentation.IsCurrent(root.gameObject);
+
+        private static DungeonSceneRuntimeRoot CreateRuntimeRoot(string ownerKey, List<Entity> entities, World world)
+        {
+            SceneMapPresentation maps = SceneComponent.Instance.MapPresentation;
+            maps.Clear(); // Dispose old entities before any new ones spawn.
+            GameObject root = PoolComponent.Instance.CreateTransient(RuntimeRootName);
+            DungeonSceneRuntimeRoot runtime = root.AddComponent<DungeonSceneRuntimeRoot>();
+            runtime.Initialize(ownerKey, entities, world);
+            maps.Replace(DungeonState.SceneName, root, () =>
+            {
+                try { if (runtime != null) runtime.ReleaseContents(); }
+                finally { if (root != null) PoolComponent.Instance.Release(root); }
+            });
+            return runtime;
         }
     }
 }

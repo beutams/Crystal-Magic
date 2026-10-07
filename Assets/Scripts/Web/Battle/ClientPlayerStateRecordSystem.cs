@@ -36,11 +36,23 @@ public partial class ClientPlayerStateRecordSystem : SystemBase
                      .WithAll<NetworkPlayerComponent>()
                      .WithEntityAccess())
         {
+            ClientPlayerPhysicsPredictionUtility.CaptureSimulationPosition(EntityManager, entity);
             ClientPlayerPredictionSnapshot snapshot = ClientPlayerPredictionSnapshot.Capture(
                 EntityManager,
                 entity,
                 identityRef.ValueRO.id);
             frame.RecordPlayerStates(currentFrame, snapshot);
+            if (EntityManager.HasComponent<ClientPlayerMovePresentationComponent>(entity) &&
+                EntityManager.HasComponent<UnitMoveComponent>(entity))
+            {
+                ClientPlayerMovePresentationComponent presentation =
+                    EntityManager.GetComponentData<ClientPlayerMovePresentationComponent>(entity);
+                presentation.PreviousPredictionPosition = presentation.LatestPredictionPosition;
+                presentation.LatestPredictionPosition =
+                    EntityManager.GetComponentData<UnitMoveComponent>(entity).PredictedPosition;
+                presentation.HasPredictionSamples = 1;
+                EntityManager.SetComponentData(entity, presentation);
+            }
             _lastRecordedFrame = currentFrame;
             _hasRecordedFrame = true;
             break;

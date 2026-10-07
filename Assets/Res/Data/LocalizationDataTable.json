@@ -200,7 +200,7 @@
         },
         {
             "Id": 33,
-            "Key": "ui.game_menu.save",
+            "Key": "ui.character.settings.save",
             "ChineseSimplified": "存档",
             "English": "Save"
         },
@@ -853,14 +853,8 @@
             "English": "Empty"
         },
         {
-            "Id": 148,
-            "Key": "ui.game_menu.continue",
-            "ChineseSimplified": "继续",
-            "English": "Continue"
-        },
-        {
             "Id": 149,
-            "Key": "ui.game_menu.return_main_menu",
+            "Key": "ui.character.settings.return_main_menu",
             "ChineseSimplified": "返回主菜单",
             "English": "Return to Main Menu"
         },
@@ -917,6 +911,294 @@
             "Key": "ui.main_menu.exit_game",
             "ChineseSimplified": "退出游戏",
             "English": "Exit Game"
+        },
+        {
+            "Id": 159,
+            "Key": "ui.load.slot",
+            "ChineseSimplified": "存档",
+            "English": "Save"
+        },
+        {
+            "Id": 160,
+            "Key": "ui.load.max_floor",
+            "ChineseSimplified": "最高层数",
+            "English": "Best floor"
+        },
+        {
+            "Id": 161,
+            "Key": "ui.load.total_runs",
+            "ChineseSimplified": "冒险次数",
+            "English": "Adventures"
+        },
+        {
+            "Id": 162,
+            "Key": "ui.load.money",
+            "ChineseSimplified": "仓库金币",
+            "English": "Stash gold"
+        },
+        {
+            "Id": 163,
+            "Key": "ui.load.read",
+            "ChineseSimplified": "读取",
+            "English": "Load"
+        },
+        {
+            "Id": 164,
+            "Key": "ui.load.delete",
+            "ChineseSimplified": "删除",
+            "English": "Delete"
+        },
+        {
+            "Id": 165,
+            "Key": "ui.load.empty",
+            "ChineseSimplified": "空存档",
+            "English": "Empty slot"
+        },
+        {
+            "Id": 166,
+            "Key": "ui.load.empty_hint",
+            "ChineseSimplified": "尚未开始冒险",
+            "English": "No adventure yet"
+        },
+        {
+            "Id": 167,
+            "Key": "ui.load.hint",
+            "ChineseSimplified": "选择一个存档，继续冒险",
+            "English": "Choose a save to continue your adventure"
+        },
+        {
+            "Id": 168,
+            "Key": "ui.load.back",
+            "ChineseSimplified": "返回",
+            "English": "Back"
+        },
+        {
+            "Id": 169,
+            "Key": "ui.load.floor_value",
+            "ChineseSimplified": "{0} 层",
+            "English": "{0}"
+        },
+        {
+            "Id": 170,
+            "Key": "ui.load.run_value",
+            "ChineseSimplified": "{0} 次",
+            "English": "{0}"
+        },
+        {
+            "Id": 171,
+            "Key": "ui.save.title",
+            "ChineseSimplified": "选择存档",
+            "English": "Choose a Save"
+        },
+        {
+            "Id": 172,
+            "Key": "ui.save.hint",
+            "ChineseSimplified": "选择一个位置，开始新的冒险",
+            "English": "Choose a slot to begin a new adventure"
+        },
+        {
+            "Id": 173,
+            "Key": "ui.save.empty_hint",
+            "ChineseSimplified": "在这里开始新的冒险",
+            "English": "Begin a new adventure here"
+        },
+        {
+            "Id": 174,
+            "Key": "ui.save.create",
+            "ChineseSimplified": "新建",
+            "English": "Create"
+        },
+        {
+            "Id": 175,
+            "Key": "ui.save.overwrite",
+            "ChineseSimplified": "覆盖",
+            "English": "Overwrite"
+        },
+        {
+            "Id": 176,
+            "Key": "ui.settings.master_volume",
+            "ChineseSimplified": "总音量",
+            "English": "Master volume"
+        },
+        {
+            "Id": 177,
+            "Key": "ui.settings.bgm_volume",
+            "ChineseSimplified": "背景音乐",
+            "English": "Music"
+        },
+        {
+            "Id": 178,
+            "Key": "ui.settings.sfx_volume",
+            "ChineseSimplified": "音效",
+            "English": "Sound effects"
+        },
+        {
+            "Id": 179,
+            "Key": "ui.settings.language",
+            "ChineseSimplified": "语言",
+            "English": "Language"
+        },
+        {
+            "Id": 180,
+            "Key": "ui.settings.reset",
+            "ChineseSimplified": "恢复默认",
+            "English": "Reset defaults"
+        },
+        {
+            "Id": 181,
+            "Key": "ui.character.settings.audio",
+            "ChineseSimplified": "声音",
+            "English": "Audio"
+        },
+        {
+            "Id": 184,
+            "Key": "ui.character.settings.language_hint",
+            "ChineseSimplified": "选择后立即切换并保存",
+            "English": "Applied and saved immediately"
+        },
+        {
+            "Id": 186,
+            "Key": "ui.character.settings.autosave_hint",
+            "ChineseSimplified": "调整后自动保存",
+            "English": "Changes save automatically"
+        },
+        {
+            "Id": 187,
+            "Key": "ui.shop.title",
+            "ChineseSimplified": "商店",
+            "English": "Shop"
+        },
+        {
+            "Id": 188,
+            "Key": "ui.shop.backpack",
+            "ChineseSimplified": "背包",
+            "English": "Backpack"
+        },
+        {
+            "Id": 189,
+            "Key": "ui.shop.balance",
+            "ChineseSimplified": "持有金币",
+            "English": "Gold"
+        },
+        {
+            "Id": 190,
+            "Key": "ui.shop.buy_hint",
+            "ChineseSimplified": "双击购买 · 拖入背包购买",
+            "English": "Double-click or drag to your bag to buy"
+        },
+        {
+            "Id": 191,
+            "Key": "ui.shop.sell_hint",
+            "ChineseSimplified": "拖到左侧出售",
+            "English": "Drag to the left to sell"
+        },
+        {
+            "Id": 192,
+            "Key": "ui.stash.title",
+            "ChineseSimplified": "仓库",
+            "English": "Storage"
+        },
+        {
+            "Id": 193,
+            "Key": "ui.stash.category.all",
+            "ChineseSimplified": "全部",
+            "English": "All"
+        },
+        {
+            "Id": 194,
+            "Key": "ui.stash.category.skill",
+            "ChineseSimplified": "技能",
+            "English": "Skills"
+        },
+        {
+            "Id": 195,
+            "Key": "ui.stash.category.equip",
+            "ChineseSimplified": "装备",
+            "English": "Gear"
+        },
+        {
+            "Id": 196,
+            "Key": "ui.stash.category.props",
+            "ChineseSimplified": "道具",
+            "English": "Items"
+        },
+        {
+            "Id": 197,
+            "Key": "ui.stash.empty",
+            "ChineseSimplified": "暂无符合条件的物品",
+            "English": "No items in this category"
+        },
+        {
+            "Id": 198,
+            "Key": "ui.stash.withdraw_hint",
+            "ChineseSimplified": "双击取出 · 拖入背包",
+            "English": "Double-click or drag to your bag to withdraw"
+        },
+        {
+            "Id": 199,
+            "Key": "ui.stash.store_hint",
+            "ChineseSimplified": "双击存入 · 拖到左侧",
+            "English": "Double-click or drag to the left to store"
+        },
+        {
+            "Id": 200,
+            "Key": "ui.character.handbook_unavailable",
+            "ChineseSimplified": "图鉴尚未开放",
+            "English": "The handbook is not available yet"
+        },
+        {
+            "Id": 201,
+            "Key": "ui.inventory.sort",
+            "ChineseSimplified": "一键整理",
+            "English": "Sort"
+        },
+        {
+            "Id": 202,
+            "Key": "ui.character.chain_full",
+            "ChineseSimplified": "每条技能链最多可配置 {0} 个技能",
+            "English": "Each skill chain can hold up to {0} skills"
+        },
+        {
+            "Id": 203,
+            "Key": "ui.confirm.save_current.content",
+            "ChineseSimplified": "是否保存当前进度？",
+            "English": "Save your current progress?"
+        },
+        {
+            "Id": 204,
+            "Key": "ui.confirm.return_main_menu.content",
+            "ChineseSimplified": "是否返回主菜单？未保存的进度将丢失。",
+            "English": "Return to the main menu? Unsaved progress will be lost."
+        },
+        {
+            "Id": 205,
+            "Key": "ui.confirm.exit_game.content",
+            "ChineseSimplified": "是否退出游戏？",
+            "English": "Quit the game?"
+        },
+        {
+            "Id": 206,
+            "Key": "item.type.skill_stone",
+            "ChineseSimplified": "技能石",
+            "English": "Skill Stone"
+        },
+        {
+            "Id": 207,
+            "Key": "item.type.prop",
+            "ChineseSimplified": "道具",
+            "English": "Item"
+        },
+        {
+            "Id": 208,
+            "Key": "item.type.magic_stone",
+            "ChineseSimplified": "魔法石",
+            "English": "Magic Stone"
+        },
+        {
+            "Id": 209,
+            "Key": "item.type.spirit",
+            "ChineseSimplified": "精灵",
+            "English": "Spirit"
         }
     ]
 }

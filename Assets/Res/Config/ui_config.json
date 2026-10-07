@@ -13,9 +13,7 @@
                 "MainMenuUI",
                 "LoadUI",
                 "SaveUI",
-                "ConfirmUI",
-                "GameMenuUI",
-                "GameSaveUI"
+                "ConfirmUI"
             ]
         },
         {
@@ -24,6 +22,8 @@
             "order": 80,
             "uiNames": [
                 "UnitHealthBarUI",
+                "InteractionPromptUI",
+                "DialogueUI",
                 "MinimapUI",
                 "NotificationUI"
             ]

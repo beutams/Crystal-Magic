@@ -3,7 +3,7 @@
     {
       "NameKey": "伤害增幅",
       "DescriptionKey": "技能的伤害提升",
-      "IconPath": "Assets/Res/Sprites/Skill/arcane_skill_20.png",
+      "IconPath": "Assets/Res/Sprites/SkillAddition/addition_00_damage_boost.png",
       "Callbacks": [
         {
           "EventName": "skill.beforeRequest",
@@ -95,7 +95,7 @@
     {
       "NameKey": "双发",
       "DescriptionKey": "连续释放两次技能，但是第二次只会造成少量伤害",
-      "IconPath": "Assets/Res/Sprites/Skill/arcane_skill_20.png",
+      "IconPath": "Assets/Res/Sprites/SkillAddition/addition_01_double_cast.png",
       "Callbacks": [
         {
           "EventName": "skill.afterRequest",
@@ -259,6 +259,7 @@
     {
       "NameKey": "节省",
       "DescriptionKey": "技能MP消耗降低减半",
+      "IconPath": "Assets/Res/Sprites/SkillAddition/addition_02_mana_saver.png",
       "Callbacks": [
         {
           "EventName": "skill.beforeRequest",
@@ -350,6 +351,7 @@
     {
       "NameKey": "扩散",
       "DescriptionKey": "技能范围扩大一半",
+      "IconPath": "Assets/Res/Sprites/SkillAddition/addition_03_spread.png",
       "Callbacks": [
         {
           "EventName": "skill.beforeRequest",
@@ -441,6 +443,7 @@
     {
       "NameKey": "格挡",
       "DescriptionKey": "抵挡施法过程中第一次受到的伤害",
+      "IconPath": "Assets/Res/Sprites/SkillAddition/addition_04_block.png",
       "Callbacks": [
         {
           "EventName": "skill.beforeRequest",
@@ -484,6 +487,7 @@
     {
       "NameKey": "灵巧",
       "DescriptionKey": "加快施法过程中的移动速度",
+      "IconPath": "Assets/Res/Sprites/SkillAddition/addition_05_agility.png",
       "Callbacks": [
         {
           "EventName": "skill.beforeRequest",
@@ -527,6 +531,7 @@
     {
       "NameKey": "缩时咏唱",
       "DescriptionKey": "减少法术的咏唱时间，每使用一次效果就更弱",
+      "IconPath": "Assets/Res/Sprites/SkillAddition/addition_06_quick_chant.png",
       "Callbacks": [
         {
           "EventName": "skill.beforeCast",
@@ -790,6 +795,7 @@
     {
       "NameKey": "反射",
       "DescriptionKey": "技能期间若受到伤害，则对目标造成一次伤害",
+      "IconPath": "Assets/Res/Sprites/SkillAddition/addition_07_reflect.png",
       "Callbacks": [
         {
           "EventName": "skill.beforeRequest",
@@ -833,6 +839,7 @@
     {
       "NameKey": "连击",
       "DescriptionKey": "连续使用则每次伤害都会变高",
+      "IconPath": "Assets/Res/Sprites/SkillAddition/addition_08_combo.png",
       "Callbacks": [
         {
           "EventName": "skill.beforeRequest",
@@ -956,6 +963,7 @@
     {
       "NameKey": "反转",
       "DescriptionKey": "不消耗蓝量，但是本次以及下个技能造成的伤害极低。",
+      "IconPath": "Assets/Res/Sprites/SkillAddition/addition_09_reversal.png",
       "Callbacks": [
         {
           "EventName": "skill.beforeRequest",

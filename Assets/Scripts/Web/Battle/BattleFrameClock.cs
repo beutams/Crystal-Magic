@@ -2,7 +2,7 @@ using System;
 
 namespace Server
 {
-    // 只累计现实时间；逻辑帧号由 ECS 完成整轮模拟后推进。
+    // Game deltaTime drives simulation; wall time is only used for network clock samples.
     public sealed class BattleFrameClock
     {
         public double AccumulatedMilliseconds { get; private set; }
@@ -17,6 +17,12 @@ namespace Server
         public void Advance(long now, double speed)
         {
             AccumulatedMilliseconds += Math.Max(0, now - LastUpdateTime) * speed;
+            LastUpdateTime = now;
+        }
+
+        public void AdvanceGameTime(double deltaMilliseconds, long now, double speed)
+        {
+            AccumulatedMilliseconds += Math.Max(0, deltaMilliseconds) * speed;
             LastUpdateTime = now;
         }
 

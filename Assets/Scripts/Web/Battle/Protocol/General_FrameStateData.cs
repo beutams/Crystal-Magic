@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Server
 {
@@ -6,7 +7,8 @@ namespace Server
     [Serializable]
     public class General_FrameStateData : IMessage
     {
-        public NetworkFrameData data;
+        // A transport packet may contain several simulation ticks.
+        public List<NetworkFrameData> frames;
         public uint sceneVersion;
 
         // Client -> server: monotonically increasing sequence of this client's battle frame.

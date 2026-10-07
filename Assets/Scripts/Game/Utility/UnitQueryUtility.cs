@@ -299,6 +299,9 @@ public struct UnitQueryTree
 
     private static void ReportQuery(in UnitQueryShape shape, List<UnitQueryHit> results)
     {
+        if (!DebugComponent.TryGetInstance(out DebugComponent debug) || !debug.DrawQueryVisualization)
+            return;
+
         float3 origin = new(shape.Origin, 0f);
         switch (shape.Type)
         {

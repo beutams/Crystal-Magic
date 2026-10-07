@@ -18,6 +18,8 @@ using Unity.Transforms;
 public partial struct UnitNavigationSystem : ISystem
 {
     private EntityQuery _mapQuery;
+    private EntityQuery _dormantQuery;
+    private double _nextDormantUpdate;
     private NativeArray<int> _cost;
     private NativeArray<int> _parent;
     private NativeArray<int> _seenStamp;
@@ -33,7 +35,19 @@ public partial struct UnitNavigationSystem : ISystem
             ComponentType.ReadOnly<DungeonNavigationMapComponent>(),
             ComponentType.ReadOnly<DungeonNavigationCollisionWord>());
         _searchStamp = new NativeArray<int>(1, Allocator.Persistent, NativeArrayOptions.ClearMemory);
-        state.RequireForUpdate<UnitNavigationComponent>();
+        _dormantQuery = state.GetEntityQuery(new EntityQueryDesc
+        {
+            All = new[] { ComponentType.ReadOnly<Disabled>(), ComponentType.ReadOnly<DungeonMonsterDistanceState>(),
+                ComponentType.ReadWrite<UnitNavigationComponent>(), ComponentType.ReadWrite<LocalTransform>(),
+                ComponentType.ReadOnly<UnitMoveComponent>(), ComponentType.ReadWrite<UnitNavigationPathElement>() },
+            None = new[] { ComponentType.ReadOnly<UnitDeathComponent>(), ComponentType.ReadOnly<DestroyEntityFlag>() },
+            Options = EntityQueryOptions.IncludeDisabledEntities,
+        });
+        state.RequireForUpdate(state.GetEntityQuery(new EntityQueryDesc
+        {
+            All = new[] { ComponentType.ReadOnly<UnitNavigationComponent>() },
+            Options = EntityQueryOptions.IncludeDisabledEntities,
+        }));
     }
 
     public void OnUpdate(ref SystemState state)
@@ -59,7 +73,7 @@ public partial struct UnitNavigationSystem : ISystem
 
         EnsureScratchCapacity(ref state, map.CellCount);
         NativeArray<DungeonNavigationCollisionWord> collisionWords = collisionBuffer.AsNativeArray();
-        JobHandle pathfindHandle = new NavigationPathfindJob
+        NavigationPathfindJob pathfindJob = new()
         {
             Map = map,
             CollisionWords = collisionWords,
@@ -70,7 +84,20 @@ public partial struct UnitNavigationSystem : ISystem
             HeapPosition = _heapPosition,
             Heap = _heap,
             SearchStamp = _searchStamp,
-        }.Schedule(state.Dependency);
+        };
+        JobHandle pathfindHandle = pathfindJob.Schedule(state.Dependency);
+
+        // Dormant monsters use the same obstacle/clearance-aware A*, without AI,
+        // ORCA, physics or per-frame path following. No straight-line wall crossing.
+        double now = SystemAPI.Time.ElapsedTime;
+        if (now >= _nextDormantUpdate)
+        {
+            const float interval = 0.5f;
+            _nextDormantUpdate = now + interval;
+            pathfindHandle = pathfindJob.Schedule(_dormantQuery, pathfindHandle);
+            pathfindHandle = new DormantNavigationFollowJob { Map = map, DeltaTime = interval }
+                .ScheduleParallel(_dormantQuery, pathfindHandle);
+        }
 
         state.Dependency = new NavigationFollowJob
         {
@@ -568,6 +595,45 @@ public partial struct UnitNavigationSystem : ISystem
         public int Index;
         public int Cost;
         public int Heuristic;
+    }
+
+    [BurstCompile]
+    private partial struct DormantNavigationFollowJob : IJobEntity
+    {
+        public DungeonNavigationMapComponent Map;
+        public float DeltaTime;
+
+        private void Execute(ref LocalTransform transform, ref UnitNavigationComponent navigation,
+            in UnitMoveComponent move, in DungeonMonsterDistanceState sleep,
+            in DynamicBuffer<UnitNavigationPathElement> path)
+        {
+            if (sleep.Sleeping == 0 || navigation.HasDestination == 0 || navigation.PathFound == 0 || path.Length == 0) return;
+            float remaining = math.max(0f, move.CommandMoveSpeed >= 0 ? move.CommandMoveSpeed : move.BaseMoveSpeedValue) * DeltaTime;
+            float2 position = transform.Position.xy;
+            int index = math.clamp(navigation.CurrentWaypointIndex, 0, path.Length - 1);
+            while (remaining > 0f)
+            {
+                int cellIndex = path[index].CellIndex;
+                if ((uint)cellIndex >= (uint)Map.CellCount) { navigation.PathDirty = 1; break; }
+                float2 waypoint = DungeonNavigationMapUtility.CellToWorld(in Map, DungeonNavigationMapUtility.ToCell(in Map, cellIndex));
+                float distance = math.distance(position, waypoint);
+                if (math.distance(position, navigation.Destination.xy) <= navigation.StopDistance) break;
+                if (distance <= remaining)
+                {
+                    position = waypoint;
+                    remaining -= distance;
+                    if (index == path.Length - 1) break;
+                    index++;
+                }
+                else
+                {
+                    position += math.normalizesafe(waypoint - position) * remaining;
+                    remaining = 0;
+                }
+            }
+            navigation.CurrentWaypointIndex = index;
+            transform.Position = new float3(position, transform.Position.z);
+        }
     }
 
     private static void WriteDirection(ref UnitMoveComponent move, float2 direction)

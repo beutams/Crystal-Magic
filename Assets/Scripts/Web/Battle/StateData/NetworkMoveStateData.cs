@@ -20,6 +20,8 @@ public sealed class NetworkMoveStateData : NetworkStateData
         if (!context.TryGetEntity(unitId, out Entity entity))
             return;
 
+        // Capture the present prediction before replacing it with a historical state.
+        context.ApplyPosition(entity, new float3(positionX, positionY, positionZ));
         context.SetOrAdd(entity, new UnitMoveComponent
         {
             BaseMoveSpeed = baseMoveSpeed,
@@ -33,7 +35,5 @@ public sealed class NetworkMoveStateData : NetworkStateData
             CommandMoveSpeed = -1f,
             NetworkDirty = 0,
         });
-
-        context.ApplyPosition(entity, new float3(positionX, positionY, positionZ));
     }
 }

@@ -31,6 +31,33 @@ namespace CrystalMagic.Game.Data
         [JsonIgnore]
         public string Description => LocalizationComponent.Resolve(DescriptionKey);
 
+        [JsonIgnore]
+        public string TypeName => ItemType switch
+        {
+            ItemType.SkillStone => LocalizationComponent.Resolve("item.type.skill_stone"),
+            ItemType.Prop => LocalizationComponent.Resolve("item.type.prop"),
+            ItemType.MagicStone => LocalizationComponent.Resolve("item.type.magic_stone"),
+            ItemType.Spirit => LocalizationComponent.Resolve("item.type.spirit"),
+            _ => string.Empty,
+        };
+
+        /// <summary>用于物品介绍的类型标签和说明，保留原始 Description 不变。</summary>
+        [JsonIgnore]
+        public string DescriptionWithType
+        {
+            get
+            {
+                string description = Description;
+                string typeName = TypeName;
+                if (string.IsNullOrEmpty(typeName))
+                    return description;
+
+                return string.IsNullOrWhiteSpace(description)
+                    ? $"【{typeName}】"
+                    : $"【{typeName}】{description}";
+            }
+        }
+
         /// <summary>
         /// 额外关联数据的 Id。
         /// </summary>

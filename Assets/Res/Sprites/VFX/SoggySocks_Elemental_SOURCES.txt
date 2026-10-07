@@ -1,0 +1,32 @@
+SoggySocks elemental VFX import — 2026-10-06
+
+Source: the user's existing local packages in Downloads:
+  SoggySocks Water FX.rar / Unity/soggysocks_water_vfx.unitypackage
+  SoggySocks Lightning FX.rar / Unity/soggysocks_lightning_vfx.unitypackage
+  SoggySocks Earth FX_Free.rar / Unity/soggysocks_earth_vfx_free.unitypackage
+
+Imported: 20 water, 30 lightning (blue/yellow), 2 earth sprite sheets and matching
+animation clips/controllers. Original source GUIDs and pixel data are preserved.
+No vendor scripts, example scenes, or project settings were imported.
+
+Textures: Assets/Res/Sprites/VFX/{Water,Lightning,Earth}
+Animations: Assets/Res/Animation/Effects/{Water,Lightning,Earth}
+Runtime prefabs: Assets/Res/Prefab/VFX/{Water_,Lightning_,Earth_}*.prefab
+
+Runtime prefabs follow the project's Fireball convention:
+16 pixels/unit; Point filtering; no mipmaps/compression; original project material;
+SpriteEffectAnimationAuthoring; disabled Animator; flat, unique registry names.
+
+Skill icons reuse Assets/Res/Sprites/Skill (the project's existing icon assets).
+No new skill art was generated. Freeze temporarily reuses Water_Bubble_Sphere;
+the imported packages do not provide a dedicated ice/freeze animation.
+
+Rights: imported from user-supplied packages for use in this project. This note
+does not assert CC0/public-domain rights or grant redistribution permission.
+Retain and follow the original pack license/purchase terms when distributing.
+
+Reproducible import tool: Tools/import_soggysocks_elements.py
+Configuration tool: Tools/configure_elemental_skills.py
+Reference validation: Tools/validate_elemental_skills.py
+Package hashes, source-to-project asset mapping and prototype notes:
+output/elemental-skills-v1/import-manifest.json and CONFIGURATION.txt

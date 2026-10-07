@@ -120,6 +120,7 @@ namespace CrystalMagic.Core {
 
             if (transitionData.LoadError != null)
             {
+                SceneComponent.Instance.MapPresentation.Clear();
                 SceneLoadTiming.Mark("LOAD FAILED", transitionData.LoadError);
                 Debug.LogError(transitionData.LoadError);
                 // 失败不能进入原来的目标状态，更不能执行成功后的保存/清理回调。
@@ -188,12 +189,13 @@ namespace CrystalMagic.Core {
             DungeonFlowTiming.BeginStage(6, "激活并等待目标 SubScene");
             if (activeSubSceneNames == null)
             {
+                SceneComponent.Instance.ShowMapPresentation(transitionData.TargetSceneName);
                 DungeonFlowTiming.EndStage(6, "没有 SubScene 变更");
                 yield break;
             }
 
             using (SceneLoadTiming.Measure("Activate target / deactivate previous SubScenes"))
-                SceneComponent.Instance.SetSubScenesActive(activeSubSceneNames);
+                yield return SceneComponent.Instance.SetSubScenesActiveCoroutine(activeSubSceneNames);
             foreach (string subSceneName in activeSubSceneNames)
             {
                 PublishLoadProgress(transitionData.TargetSceneName, 0.27f, "Loading sub-scene", subSceneName);
@@ -205,6 +207,7 @@ namespace CrystalMagic.Core {
                 }
             }
             DungeonFlowTiming.EndStage(6, "目标 SubScene 已完成");
+            SceneComponent.Instance.ShowMapPresentation(transitionData.TargetSceneName);
         }
 
         private IEnumerator FadeOutAsync(ITransitionUI transitionUI, string targetSceneName)
@@ -287,6 +290,7 @@ namespace CrystalMagic.Core {
             SceneLoadTiming.Finish(error);
             StopAllCoroutines();
             data.LoadError = error;
+            SceneComponent.Instance.MapPresentation.Clear();
             data.OnComplete = null;
             try
             {
@@ -318,7 +322,10 @@ namespace CrystalMagic.Core {
         public override void Cleanup()
         {
             if (_isTransitioning)
+            {
                 SceneLoadTiming.Finish("Transition cleanup / play session stopped.");
+                SceneComponent.Instance.MapPresentation.Clear();
+            }
             StopAllCoroutines();
             ReleaseTransitionLocks();
             base.Cleanup();

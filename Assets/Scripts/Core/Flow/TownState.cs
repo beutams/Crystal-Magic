@@ -13,7 +13,6 @@ namespace CrystalMagic.Core {
         private CharacterUI _characterUI;
         private InteractionPromptManager _interactionPromptManager;
         private NotificationUI _notificationUI;
-        private GameMenuUI _gameMenuUI;
         private bool _inputBound;
         private bool _playerInputLockedByUI;
 
@@ -71,7 +70,7 @@ namespace CrystalMagic.Core {
                 TargetStateData = data,
                 TransitionUIName = "TransitionUI",
                 KeepCurrentMainScene = true,
-                ActiveSubSceneNames = new[] { SubSceneName },
+                ActiveSubSceneNames = new[] { DungeonState.RegistrySubSceneName, SubSceneName },
             };
         }
 
@@ -117,16 +116,14 @@ namespace CrystalMagic.Core {
 
         private void HandleUnhandledEscape()
         {
-            if (_gameMenuUI == null || !UIComponent.Instance.IsManaged(_gameMenuUI))
+            if (_characterUI == null || !UIComponent.Instance.IsManaged(_characterUI))
             {
-                _gameMenuUI = UIComponent.Instance.Open<GameMenuUI>();
+                _characterUI = UIComponent.Instance.Open<CharacterUI>(CharacterPage.Setting);
                 return;
             }
 
-            if (_gameMenuUI.gameObject.activeSelf)
-                return;
-
-            UIComponent.Instance.ShowUI(_gameMenuUI);
+            UIComponent.Instance.ShowUI(_characterUI);
+            _characterUI.ShowSettings();
         }
 
         private void RefreshUIInputLock()

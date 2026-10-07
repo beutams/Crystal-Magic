@@ -1,5 +1,4 @@
 using CrystalMagic.Core;
-using CrystalMagic.Game.Config;
 using CrystalMagic.UI;
 using System;
 using UnityEngine;
@@ -37,7 +36,9 @@ namespace Server
             }
 
             LoginFailure = LobbyRequestType.Unknown;
-            clientServic.Connect(ServerUtility.GetLobbyEndpoint(), out lobbyConnect);
+            var config = SteamComponent.Instance.LaunchConfig;
+            clientServic.Connect(new TcpEndpoint(new System.Net.IPEndPoint(
+                System.Net.IPAddress.Parse(config.lobbyAddress), config.lobbyPort)), out lobbyConnect);
             loginDeadline = NetworkTimer.Instance.TimeNow + ServerUtility.ConnectTimeout + ServerUtility.Timeout;
 
             lobbyConnect.OnConnected += OnLobbyConnected;
@@ -109,24 +110,10 @@ namespace Server
 
             disconnecting = false;
             DisconnectRequested = false;
-            LobbyAccountConfig config = ConfigComponent.Instance.Get<LobbyAccountConfig>();
-            string username;
-            if (SteamComponent.Instance.TryGetLocalUser(out ulong steamAccountId, out string steamPersonaName))
-            {
-                accountId = steamAccountId;
-                username = steamPersonaName;
-                Debug.Log($"[Lobby] Using Steam account {accountId} ({username}).");
-            }
-            else if (CanUseDevelopmentFallback(config))
-            {
-                accountId = config.accountId;
-                username = config.username;
-                Debug.LogWarning($"[Lobby] Steam is unavailable. Using the configured development account: {accountId} ({username}).");
-            }
-            else
+            if (!SteamComponent.Instance.TryGetAccount(out accountId, out string username))
             {
                 LoginFailure = LobbyRequestType.LoginFail;
-                Debug.LogError($"[Lobby] Steam account is required: {SteamComponent.Instance.FailureReason}");
+                Debug.LogError($"[Lobby] No valid client account: {SteamComponent.Instance.FailureReason}");
                 clientServic.Disconnect(lobbyConnect);
                 return;
             }
@@ -152,19 +139,12 @@ namespace Server
                 accountId = accountId,
                 username = username,
                 saveGuid = parsedSaveGuid.ToString("N"),
-                steamP2PAvailable = SteamComponent.Instance.IsInitialized,
+                steamP2PAvailable = SteamComponent.Instance.CanUseSteamP2P,
                 protocolVersion = BattleConnectionInfo.CurrentProtocolVersion,
                 activeSessionId = BattleControlActive ? activeSessionId : null,
+                hostedTcpAddress = SteamComponent.Instance.LaunchConfig.hostedTcpAddress,
+                hostedTcpPort = SteamComponent.Instance.LaunchConfig.hostedTcpPort,
             });
-        }
-
-        private static bool CanUseDevelopmentFallback(LobbyAccountConfig config)
-        {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-            return config.allowDevelopmentFallback;
-#else
-            return false;
-#endif
         }
 
         private void OnLoginResult(IMessage message, Connect connect)
@@ -265,13 +245,12 @@ namespace Server
                     string.IsNullOrEmpty(error) ? "无法保存当前角色数据。" : error,
                     null,
                     null,
-                    "确定",
-                    false));
+                    "确定"));
                 Disconnect();
                 return;
             }
 
-            BattleControlActive = startTicket.connection.kind == BattleTransportKind.Steam;
+            BattleControlActive = startTicket.connection.IsHosted;
             activeSessionId = startTicket.connection.sessionId;
             GameFlowComponent.Instance.BeginTransition(OnlineBattlePreparationState.CreateEnterTransitionData(
                 battleManager,

@@ -1,4 +1,5 @@
 using CrystalMagic.Core;
+using CrystalMagic.UI;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -9,6 +10,14 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
 {
     private readonly List<CharacterUI_SkillItemView> _skillItemViews = new();
     private readonly List<CharacterUI_InventoryItemView> _inventoryItemViews = new();
+    private readonly List<CharacterUI_InventoryItemView> _skillInventoryItemViews = new();
+    private readonly float[] _bookmarkWidths = new float[4];
+    private Sprite _selectedChainSprite;
+    private Sprite _idleChainSprite;
+    private Color _selectedChainTextColor;
+    private Color _idleChainTextColor;
+    private CharacterPage _renderedPage = (CharacterPage)(-1);
+    private int _renderedChain = -1;
     private readonly List<CrystalMagic.UI.CharacterSkillDisplayData> _currentSkillItems = new();
     private readonly CrystalMagic.UI.CharacterEquipDisplayData[] _currentEquipItems = new CrystalMagic.UI.CharacterEquipDisplayData[5];
     private readonly CrystalMagic.UI.CharacterPropDisplayData[] _currentPropItems = new CrystalMagic.UI.CharacterPropDisplayData[3];
@@ -31,13 +40,139 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
     public event Action<CrystalMagic.UI.CharacterSkillDisplayData, int> SkillReturnedToInventory;
     public event Action<int, int> PropReturnedToInventory;
     public event Action<int, int> PropSlotMoved;
+    public event Action<CharacterPage> PageRequested;
+    public event Action<int> ChainRequested;
+    public event Action InventorySortRequested;
+
+    public CharacterUI_SettingView SettingsView => UI.Setting.GameObject.GetComponent<CharacterUI_SettingView>();
+    public bool IsSettingsPage => Model != null && Model.SelectedPage == CharacterPage.Setting;
+
+    public void ShowSettings() => PageRequested?.Invoke(CharacterPage.Setting);
+
+    // The current prefab keeps a drag visual inside each page, not at the book root.
+    private UINode ActiveItemDrag => UI.Skill.GameObject.activeInHierarchy ? UI.Skill_SkillDrag : UI.Equip_ItemDrag;
+    private UINode ActiveItemDragIcon => UI.Skill.GameObject.activeInHierarchy ? UI.Skill_SkillDrag_Mask_Icon : UI.Equip_ItemDrag_Mask_Icon;
+
+    protected override void OnInit()
+    {
+        base.OnInit();
+        SettingsView.InitializeBindings();
+        UI.Equip_InventorySort.ButtonPlus.onClick.AddListener(HandleInventorySort);
+        UI.Skill_InventorySort.ButtonPlus.onClick.AddListener(HandleInventorySort);
+        for (int i = 0; i < 4; i++)
+        {
+            int index = i;
+            UINode bookmark = GetBookmark(i);
+            _bookmarkWidths[i] = bookmark.RectTransform.sizeDelta.x;
+            bookmark.ButtonPlus.onClick.AddListener(() => PageRequested?.Invoke((CharacterPage)index));
+        }
+        for (int i = 0; i < 5; i++)
+        {
+            int index = i;
+            GetChainTab(i).ButtonPlus.onClick.AddListener(() => ChainRequested?.Invoke(index));
+        }
+        _selectedChainSprite = UI.Skill_ChainTabs_Chain1.Image.sprite;
+        _idleChainSprite = UI.Skill_ChainTabs_Chain2.Image.sprite;
+        _selectedChainTextColor = UI.Skill_ChainTabs_Chain1_Label.TextMeshProUGUI.color;
+        _idleChainTextColor = UI.Skill_ChainTabs_Chain2_Label.TextMeshProUGUI.color;
+    }
+
+    private UINode GetBookmark(int index) => index switch
+    {
+        0 => UI.Buttons_Equip, 1 => UI.Buttons_Skill,
+        2 => UI.Buttons_Handbook, _ => UI.Buttons_Setting,
+    };
+
+    private UINode GetChainTab(int index) => index switch
+    {
+        0 => UI.Skill_ChainTabs_Chain1, 1 => UI.Skill_ChainTabs_Chain2,
+        2 => UI.Skill_ChainTabs_Chain3, 3 => UI.Skill_ChainTabs_Chain4,
+        _ => UI.Skill_ChainTabs_Chain5,
+    };
+
+    private UINode GetEquipSelect(int index) => index switch
+    {
+        0 => UI.Equip_MagicStoneBorder_Select, 1 => UI.Equip_Equip1Border_Select,
+        2 => UI.Equip_Equip2Border_Select, 3 => UI.Equip_Equip3Border_Select,
+        _ => UI.Equip_Equip4Border_Select,
+    };
+
+    private UINode GetChainLabel(int index) => index switch
+    {
+        0 => UI.Skill_ChainTabs_Chain1_Label, 1 => UI.Skill_ChainTabs_Chain2_Label,
+        2 => UI.Skill_ChainTabs_Chain3_Label, 3 => UI.Skill_ChainTabs_Chain4_Label,
+        _ => UI.Skill_ChainTabs_Chain5_Label,
+    };
+
+    private UINode GetPropSelect(int index) => index switch
+    {
+        0 => UI.Equip_PropSlot1_Select, 1 => UI.Equip_PropSlot2_Select,
+        _ => UI.Equip_PropSlot3_Select,
+    };
+
+    private void RenderNavigation()
+    {
+        if (_renderedPage != Model.SelectedPage || _renderedChain != Model.SelectedChainIndex)
+        {
+            CancelDrag();
+            ClearSlotSelection();
+            UI.Skill_SkillChain.GameObject.GetComponent<ScrollRect>().verticalNormalizedPosition = 1f;
+            _renderedPage = Model.SelectedPage;
+            _renderedChain = Model.SelectedChainIndex;
+        }
+        UI.Equip.GameObject.SetActive(Model.SelectedPage == CharacterPage.Equip);
+        UI.Skill.GameObject.SetActive(Model.SelectedPage == CharacterPage.Skill);
+        UI.Handbook.GameObject.SetActive(Model.SelectedPage == CharacterPage.Handbook);
+        UI.Setting.GameObject.SetActive(Model.SelectedPage == CharacterPage.Setting);
+        for (int i = 0; i < 4; i++)
+        {
+            RectTransform rect = GetBookmark(i).RectTransform;
+            rect.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal,
+                _bookmarkWidths[i] + (i == (int)Model.SelectedPage ? 50f : 0f));
+        }
+        for (int i = 0; i < 5; i++)
+        {
+            GetChainTab(i).Image.sprite = i == Model.SelectedChainIndex ? _selectedChainSprite : _idleChainSprite;
+            GetChainLabel(i).TextMeshProUGUI.color = i == Model.SelectedChainIndex ? _selectedChainTextColor : _idleChainTextColor;
+        }
+    }
+
+    private void CancelDrag()
+    {
+        _draggedInventoryItem = null;
+        _draggedEquipItem = null;
+        _draggedSkillItem = null;
+        _draggedPropItem = null;
+        SetDragVisible(UI.Equip_ItemDrag.GameObject, false);
+        SetDragVisible(UI.Skill_SkillDrag.GameObject, false);
+    }
+
+    private void HandleInventorySort()
+    {
+        CancelDrag();
+        ClearSlotSelection();
+        InventorySortRequested?.Invoke();
+    }
+
+    private void ClearSlotSelection()
+    {
+        for (int i = 0; i < 5; i++) GetEquipSelect(i).GameObject.SetActive(false);
+        for (int i = 0; i < 3; i++) GetPropSelect(i).GameObject.SetActive(false);
+    }
+
+    private void HandleEquipHover(int index, bool hovered) => GetEquipSelect(index).GameObject.SetActive(hovered);
+    private void HandlePropHover(int index, bool hovered) => GetPropSelect(index).GameObject.SetActive(hovered);
 
     public override void OnOpen()
     {
+        _renderedPage = (CharacterPage)(-1);
+        _renderedChain = -1;
         EnsureEquipSlotHandlers();
         EnsurePropSlotHandlers();
         EnsureItemDragInitialized();
         EnsureSkillDragInitialized();
+        UI.Equip_ItemDrag.GameObject.transform.SetAsLastSibling();
+        UI.Skill_SkillDrag.GameObject.transform.SetAsLastSibling();
         SetItemDragVisible(false);
         SetSkillDragVisible(false);
         base.OnOpen();
@@ -45,14 +180,11 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
 
     public override void OnClose()
     {
-        _draggedInventoryItem = null;
-        _draggedEquipItem = null;
-        _draggedSkillItem = null;
-        _draggedPropItem = null;
-        SetItemDragVisible(false);
-        SetSkillDragVisible(false);
+        CancelDrag();
+        ClearSlotSelection();
         UISubViewBase.ReleaseAllToPool(_skillItemViews);
         UISubViewBase.ReleaseAllToPool(_inventoryItemViews);
+        UISubViewBase.ReleaseAllToPool(_skillInventoryItemViews);
         base.OnClose();
     }
 
@@ -61,8 +193,18 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
         if (Model == null)
             return;
 
+        CancelDrag();
+        RenderNavigation();
+        if (Model.SelectedPage == CharacterPage.Setting)
+        {
+            SettingsView.Render(Model.Settings, Model.SelectedSettingsSection);
+            return;
+        }
         RenderSkill(Model.SkillItems);
-        RenderInventory(Model.InventoryItems, Model.InventorySlotCount);
+        RenderInventory(Model.InventoryItems, Model.InventorySlotCount, _inventoryItemViews,
+            UI.Equip_InventoryView_InventoryItem, UI.Equip_InventoryView);
+        RenderInventory(Model.InventoryItems, Model.InventorySlotCount, _skillInventoryItemViews,
+            UI.Skill_InventoryView_InventoryItem, UI.Skill_InventoryView);
         RenderEquip(Model.EquipItems);
         RenderProps(Model.PropItems);
     }
@@ -82,14 +224,15 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
         }
     }
 
-    private void RenderInventory(IReadOnlyList<CrystalMagic.UI.CharacterInventoryDisplayData> inventoryItems, int slotCount)
+    private void RenderInventory(IReadOnlyList<CrystalMagic.UI.CharacterInventoryDisplayData> inventoryItems, int slotCount,
+        List<CharacterUI_InventoryItemView> views, UINode template, UINode container)
     {
-        EnsureInventoryItemViews(slotCount);
+        EnsureInventoryItemViews(slotCount, views, template, container);
 
-        for (int i = 0; i < _inventoryItemViews.Count; i++)
+        for (int i = 0; i < views.Count; i++)
         {
             CrystalMagic.UI.CharacterInventoryDisplayData data = inventoryItems != null && i < inventoryItems.Count ? inventoryItems[i] : null;
-            _inventoryItemViews[i].Render(data, i);
+            views[i].Render(data, i);
         }
     }
 
@@ -103,6 +246,11 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
         RenderEquipSlot(UI.Equip_Equip2Border_Equip2, _currentEquipItems[2]);
         RenderEquipSlot(UI.Equip_Equip3Border_Equip3, _currentEquipItems[3]);
         RenderEquipSlot(UI.Equip_Equip4Border_Equip4, _currentEquipItems[4]);
+        UI.Equip_MagicStoneBorder_Default.GameObject.SetActive(_currentEquipItems[0] == null);
+        UI.Equip_Equip1Border_Default.GameObject.SetActive(_currentEquipItems[1] == null);
+        UI.Equip_Equip2Border_Default.GameObject.SetActive(_currentEquipItems[2] == null);
+        UI.Equip_Equip3Border_Default.GameObject.SetActive(_currentEquipItems[3] == null);
+        UI.Equip_Equip4Border_Default.GameObject.SetActive(_currentEquipItems[4] == null);
     }
 
     private void RenderProps(CrystalMagic.UI.CharacterPropDisplayData[] propItems)
@@ -110,15 +258,19 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
         for (int i = 0; i < _currentPropItems.Length; i++)
             _currentPropItems[i] = propItems != null && i < propItems.Length ? propItems[i] : null;
 
-        RenderPropSlot(UI.PropSlots_PropSlot1_Icon, UI.PropSlots_PropSlot1_Count, _currentPropItems[0]);
-        RenderPropSlot(UI.PropSlots_PropSlot2_Icon, UI.PropSlots_PropSlot2_Count, _currentPropItems[1]);
-        RenderPropSlot(UI.PropSlots_PropSlot3_Icon, UI.PropSlots_PropSlot3_Count, _currentPropItems[2]);
+        RenderPropSlot(UI.Equip_PropSlot1_Icon, UI.Equip_PropSlot1_Count, _currentPropItems[0]);
+        RenderPropSlot(UI.Equip_PropSlot2_Icon, UI.Equip_PropSlot2_Count, _currentPropItems[1]);
+        RenderPropSlot(UI.Equip_PropSlot3_Icon, UI.Equip_PropSlot3_Count, _currentPropItems[2]);
+        UI.Equip_PropSlot1_Default.GameObject.SetActive(_currentPropItems[0] == null);
+        UI.Equip_PropSlot2_Default.GameObject.SetActive(_currentPropItems[1] == null);
+        UI.Equip_PropSlot3_Default.GameObject.SetActive(_currentPropItems[2] == null);
     }
 
     private void RenderPropSlot(UINode iconNode, UINode countNode, CrystalMagic.UI.CharacterPropDisplayData data)
     {
         iconNode.Image.sprite = LoadIcon(data != null ? data.IconPath : string.Empty);
-        iconNode.Image.color = data != null ? Color.white : new Color(1f, 1f, 1f, 0.2f);
+        iconNode.GameObject.SetActive(iconNode.Image.sprite != null);
+        iconNode.Image.color = Color.white;
         countNode.TextMeshProUGUI.text = data != null && data.Count > 0 ? data.Count.ToString() : string.Empty;
     }
 
@@ -126,7 +278,8 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
     {
         Sprite icon = LoadIcon(data != null ? data.IconPath : string.Empty);
         node.Image.sprite = icon;
-        node.Image.color = data != null ? Color.white : new Color(1f, 1f, 1f, 0.2f);
+        node.GameObject.SetActive(icon != null);
+        node.Image.color = Color.white;
     }
 
     private void EnsureSkillItemViews(int itemCount)
@@ -158,32 +311,33 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
         }
     }
 
-    private void EnsureInventoryItemViews(int itemCount)
+    private void EnsureInventoryItemViews(int itemCount, List<CharacterUI_InventoryItemView> views,
+        UINode template, UINode container)
     {
-        UI.InventoryView_Viewport_Content_InventoryItem.GameObject.SetActive(false);
+        template.GameObject.SetActive(false);
 
-        while (_inventoryItemViews.Count > itemCount)
+        while (views.Count > itemCount)
         {
-            int lastIndex = _inventoryItemViews.Count - 1;
-            CharacterUI_InventoryItemView itemView = _inventoryItemViews[lastIndex];
+            int lastIndex = views.Count - 1;
+            CharacterUI_InventoryItemView itemView = views[lastIndex];
             UISubViewBase.ReleaseToPool(itemView);
-            _inventoryItemViews.RemoveAt(lastIndex);
+            views.RemoveAt(lastIndex);
         }
 
-        CharacterUI_InventoryItemView templateView = UI.InventoryView_Viewport_Content_InventoryItem.GameObject.GetComponent<CharacterUI_InventoryItemView>();
+        CharacterUI_InventoryItemView templateView = template.GameObject.GetComponent<CharacterUI_InventoryItemView>();
         if (templateView == null)
             return;
 
         UISubViewBase.EnsurePoolCapacity(templateView, itemCount, itemCount);
 
-        while (_inventoryItemViews.Count < itemCount)
+        while (views.Count < itemCount)
         {
-            CharacterUI_InventoryItemView itemView = UISubViewBase.AcquireFromPool(templateView, UI.InventoryView_Viewport_Content.GameObject.transform);
+            CharacterUI_InventoryItemView itemView = UISubViewBase.AcquireFromPool(templateView, container.GameObject.transform);
             if (itemView == null)
                 break;
 
             BindInventoryItemView(itemView);
-            _inventoryItemViews.Add(itemView);
+            views.Add(itemView);
         }
     }
 
@@ -226,15 +380,17 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
 
     private void EnsurePropSlotHandlers()
     {
-        BindPropSlotHandler(0, UI.PropSlots_PropSlot1.GameObject);
-        BindPropSlotHandler(1, UI.PropSlots_PropSlot2.GameObject);
-        BindPropSlotHandler(2, UI.PropSlots_PropSlot3.GameObject);
+        BindPropSlotHandler(0, UI.Equip_PropSlot1.GameObject);
+        BindPropSlotHandler(1, UI.Equip_PropSlot2.GameObject);
+        BindPropSlotHandler(2, UI.Equip_PropSlot3.GameObject);
     }
 
     private void BindPropSlotHandler(int slotIndex, GameObject target)
     {
         CharacterUI_PropSlotDragHandler handler = target.GetComponent<CharacterUI_PropSlotDragHandler>();
         handler.Initialize(slotIndex);
+        handler.HoverChanged -= HandlePropHover;
+        handler.HoverChanged += HandlePropHover;
         handler.DragStarted -= HandlePropDragStarted;
         handler.Dragging -= HandlePropDragging;
         handler.DragEnded -= HandlePropDragEnded;
@@ -245,14 +401,10 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
 
     private void BindEquipSlotHandler(int slotIndex, GameObject target)
     {
-        if (target == null)
-            return;
-
         CharacterUI_EquipSlotDragHandler handler = target.GetComponent<CharacterUI_EquipSlotDragHandler>();
-        if (handler == null)
-            handler = target.AddComponent<CharacterUI_EquipSlotDragHandler>();
-
         handler.Initialize(slotIndex);
+        handler.HoverChanged -= HandleEquipHover;
+        handler.HoverChanged += HandleEquipHover;
         handler.DragStarted -= HandleEquipDragStarted;
         handler.Dragging -= HandleEquipDragging;
         handler.DragEnded -= HandleEquipDragEnded;
@@ -270,7 +422,7 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
         _draggedSkillItem = null;
         _draggedPropItem = null;
         _draggedInventoryItem = data;
-        UI.ItemDrag_Mask_Icon.Image.sprite = LoadIcon(data.IconPath);
+        SetDragIcon(ActiveItemDragIcon, data.IconPath);
         SetItemDragVisible(true);
         UpdateItemDragPosition(eventData);
     }
@@ -328,7 +480,7 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
         _draggedSkillItem = null;
         _draggedPropItem = null;
         _draggedEquipItem = data;
-        UI.ItemDrag_Mask_Icon.Image.sprite = LoadIcon(data.IconPath);
+        SetDragIcon(ActiveItemDragIcon, data.IconPath);
         SetItemDragVisible(true);
         UpdateItemDragPosition(eventData);
     }
@@ -377,7 +529,7 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
         _draggedEquipItem = null;
         _draggedPropItem = null;
         _draggedSkillItem = data;
-        UI.SkillDrag_Mask_Icon.Image.sprite = LoadIcon(data.SkillIconPath);
+        SetDragIcon(UI.Skill_SkillDrag_Mask_Icon, data.SkillIconPath);
         SetSkillDragVisible(true);
         UpdateSkillDragPosition(eventData);
     }
@@ -434,7 +586,7 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
         _draggedEquipItem = null;
         _draggedSkillItem = null;
         _draggedPropItem = data;
-        UI.ItemDrag_Mask_Icon.Image.sprite = LoadIcon(data.IconPath);
+        SetDragIcon(ActiveItemDragIcon, data.IconPath);
         SetItemDragVisible(true);
         UpdateItemDragPosition(eventData);
     }
@@ -468,12 +620,12 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
 
     private void EnsureItemDragInitialized()
     {
-        DisableDragRaycasts(UI.ItemDrag.GameObject, ref _itemDragRaycastDisabled);
+        DisableDragRaycasts(UI.Equip_ItemDrag.GameObject, ref _itemDragRaycastDisabled);
     }
 
     private void EnsureSkillDragInitialized()
     {
-        DisableDragRaycasts(UI.SkillDrag.GameObject, ref _skillDragRaycastDisabled);
+        DisableDragRaycasts(UI.Skill_SkillDrag.GameObject, ref _skillDragRaycastDisabled);
     }
 
     private static void DisableDragRaycasts(GameObject dragObject, ref bool raycastsDisabled)
@@ -490,12 +642,12 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
 
     private void SetItemDragVisible(bool visible)
     {
-        SetDragVisible(UI.ItemDrag.GameObject, visible);
+        SetDragVisible(ActiveItemDrag.GameObject, visible);
     }
 
     private void SetSkillDragVisible(bool visible)
     {
-        SetDragVisible(UI.SkillDrag.GameObject, visible);
+        SetDragVisible(UI.Skill_SkillDrag.GameObject, visible);
     }
 
     private static void SetDragVisible(GameObject dragObject, bool visible)
@@ -506,12 +658,18 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
 
     private void UpdateItemDragPosition(PointerEventData eventData)
     {
-        UpdateDragPosition(UI.ItemDrag.RectTransform, eventData);
+        UpdateDragPosition(ActiveItemDrag.RectTransform, eventData);
     }
 
     private void UpdateSkillDragPosition(PointerEventData eventData)
     {
-        UpdateDragPosition(UI.SkillDrag.RectTransform, eventData);
+        UpdateDragPosition(UI.Skill_SkillDrag.RectTransform, eventData);
+    }
+
+    private void SetDragIcon(UINode node, string path)
+    {
+        node.Image.sprite = LoadIcon(path);
+        node.GameObject.SetActive(node.Image.sprite != null);
     }
 
     private static void UpdateDragPosition(RectTransform dragRect, PointerEventData eventData)
@@ -527,13 +685,13 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
         }
 
         Camera eventCamera = eventData.pressEventCamera != null ? eventData.pressEventCamera : eventData.enterEventCamera;
-        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(parentRect, eventData.position, eventCamera, out Vector2 localPoint))
-            dragRect.anchoredPosition = localPoint;
+        if (RectTransformUtility.ScreenPointToWorldPointInRectangle(parentRect, eventData.position, eventCamera, out Vector3 worldPoint))
+            dragRect.position = worldPoint;
     }
 
     private bool IsPointerOverSkillChain(PointerEventData eventData)
     {
-        if (eventData == null)
+        if (eventData == null || !UI.Skill.GameObject.activeInHierarchy)
             return false;
 
         Camera eventCamera = eventData.pressEventCamera != null ? eventData.pressEventCamera : eventData.enterEventCamera;
@@ -548,7 +706,7 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
         if (_skillItemViews.Count == 0)
             return 0;
 
-        float pointerX = eventData.position.x;
+        float pointerY = eventData.position.y;
         Camera eventCamera = eventData.pressEventCamera != null ? eventData.pressEventCamera : eventData.enterEventCamera;
 
         for (int i = 0; i < _skillItemViews.Count; i++)
@@ -559,11 +717,11 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
 
             Vector3[] corners = new Vector3[4];
             rectTransform.GetWorldCorners(corners);
-            float left = RectTransformUtility.WorldToScreenPoint(eventCamera, corners[0]).x;
-            float right = RectTransformUtility.WorldToScreenPoint(eventCamera, corners[3]).x;
-            float mid = (left + right) * 0.5f;
+            float bottom = RectTransformUtility.WorldToScreenPoint(eventCamera, corners[0]).y;
+            float top = RectTransformUtility.WorldToScreenPoint(eventCamera, corners[1]).y;
+            float mid = (bottom + top) * 0.5f;
 
-            if (pointerX < mid)
+            if (pointerY > mid)
                 return i;
         }
 
@@ -577,7 +735,7 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
         CharacterUI_InventoryItemView itemView = hovered != null
             ? hovered.GetComponentInParent<CharacterUI_InventoryItemView>()
             : null;
-        if (itemView == null)
+        if (itemView == null || !itemView.gameObject.activeInHierarchy || !itemView.transform.IsChildOf(transform))
             return false;
 
         slotIndex = itemView.SlotIndex;
@@ -591,7 +749,7 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
         CharacterUI_PropSlotDragHandler handler = hovered != null
             ? hovered.GetComponentInParent<CharacterUI_PropSlotDragHandler>()
             : null;
-        if (handler == null)
+        if (handler == null || !handler.gameObject.activeInHierarchy || !handler.transform.IsChildOf(UI.Equip.GameObject.transform))
             return false;
 
         slotIndex = handler.SlotIndex;
@@ -601,7 +759,7 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
     private bool TryGetHoveredEquipSlotIndex(PointerEventData eventData, out int slotIndex)
     {
         slotIndex = -1;
-        if (eventData == null)
+        if (eventData == null || !UI.Equip.GameObject.activeInHierarchy)
             return false;
 
         Camera eventCamera = eventData.pressEventCamera != null ? eventData.pressEventCamera : eventData.enterEventCamera;
@@ -649,33 +807,5 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
             return null;
 
         return LoadManagedSprite(iconPath);
-    }
-}
-
-public class CharacterUI_EquipSlotDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
-{
-    public int SlotIndex { get; private set; }
-    public event Action<int, PointerEventData> DragStarted;
-    public event Action<int, PointerEventData> Dragging;
-    public event Action<int, PointerEventData> DragEnded;
-
-    public void Initialize(int slotIndex)
-    {
-        SlotIndex = slotIndex;
-    }
-
-    public void OnBeginDrag(PointerEventData eventData)
-    {
-        DragStarted?.Invoke(SlotIndex, eventData);
-    }
-
-    public void OnDrag(PointerEventData eventData)
-    {
-        Dragging?.Invoke(SlotIndex, eventData);
-    }
-
-    public void OnEndDrag(PointerEventData eventData)
-    {
-        DragEnded?.Invoke(SlotIndex, eventData);
     }
 }

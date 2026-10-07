@@ -5,6 +5,7 @@ using CrystalMagic.Core;
 using Server;
 using Unity.Collections;
 using Unity.Entities;
+using Unity.Profiling;
 
 [WorldSystemFilter(WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.ClientSimulation)]
 [UpdateInGroup(typeof(SimulationSystemGroup), OrderFirst = true)]
@@ -12,6 +13,12 @@ public partial class FrameReceiveSystem : SystemBase
 {
     private EntityQuery _bufferQuery;
     private EntityQuery _localPlayerQuery;
+    private EntityQuery _networkEntitiesQuery;
+    private EntityQuery _inputPlayersQuery;
+    private readonly Dictionary<Guid, Entity> _entities = new();
+    private readonly List<NetworkStateData> _localPlayerStates = new();
+    private NetworkStateApplyContext _applyContext;
+    private static readonly ProfilerMarker<int> ApplyFrameMarker = new("Network.Receive.ApplyFrame", "StateCount");
     private FrameManager _frameManager;
     private int _frameInterval;
 
@@ -19,12 +26,14 @@ public partial class FrameReceiveSystem : SystemBase
     {
         _bufferQuery = GetEntityQuery(ComponentType.ReadWrite<FrameReceiveBufferComponent>());
         _localPlayerQuery = GetEntityQuery(ComponentType.ReadOnly<NetworkPlayerComponent>());
+        _networkEntitiesQuery = GetEntityQuery(ComponentType.ReadOnly<NetworkIdentityComponent>());
+        _inputPlayersQuery = GetEntityQuery(ComponentType.ReadOnly<NetworkIdentityComponent>(),
+            ComponentType.ReadOnly<PlayerInputComponent>());
         if (_bufferQuery.IsEmptyIgnoreFilter)
         {
             Entity bufferEntity = EntityManager.CreateEntity();
             EntityManager.AddComponentObject(bufferEntity, new FrameReceiveBufferComponent());
         }
-
     }
 
     protected override void OnDestroy()
@@ -48,24 +57,41 @@ public partial class FrameReceiveSystem : SystemBase
         }
 
         _frameInterval = frameManager.frameInterval;
+        if (frameManager is ClientFrameManager && frameManager.running &&
+            SystemAPI.TryGetSingleton(out BattleSimulationScope scope) &&
+            scope.Pass == BattleSimulationPass.World)
+            return;
         if (!TryGetBuffer(out FrameReceiveBufferComponent buffer))
             return;
 
         if (_frameManager.running)
             _frameManager.HandleReceive();
+        if (buffer.frames.Count == 0)
+            return;
+
+        // Server inputs resolve players only. Refresh once per received batch so
+        // client spawn registrations remain visible to subsequent frames in it.
+        _applyContext ??= new NetworkStateApplyContext(EntityManager, _entities);
+        _applyContext.RefreshEntityMap(frameManager is ServerFrameManager ? _inputPlayersQuery : _networkEntitiesQuery);
+        ClientFrameManager clientFrame = _frameManager as ClientFrameManager;
         while (buffer.frames.Count > 0)
         {
             KeyValuePair<uint, Queue<NetworkState>> frame = buffer.frames.First();
             buffer.frames.Remove(frame.Key);
 
-            NetworkStateApplyContext context = new(EntityManager, frame.Key, buffer.frameInterval);
-            ClientFrameManager clientFrame = _frameManager as ClientFrameManager;
+            using var profile = ApplyFrameMarker.Auto(frame.Value.Count);
+            NetworkStateApplyContext context = _applyContext;
+            context.BeginFrame(frame.Key, buffer.frameInterval);
             clientFrame?.RecordServerFrame(frame.Key);
 
-            Guid localPlayerId = GetLocalPlayerId();
-            List<NetworkStateData> localPlayerStates = CollectPlayerStates(frame.Value, localPlayerId);
-            bool playerFrameHandled =
-                clientFrame?.TryHandlePlayerFrame(frame.Key, localPlayerStates, context) == true;
+            Guid localPlayerId = Guid.Empty;
+            bool playerFrameHandled = false;
+            if (clientFrame != null)
+            {
+                localPlayerId = GetLocalPlayerId();
+                CollectPlayerStates(frame.Value, localPlayerId);
+                playerFrameHandled = clientFrame.TryHandlePlayerFrame(frame.Key, _localPlayerStates, context);
+            }
 
             while (frame.Value.Count > 0)
             {
@@ -90,22 +116,20 @@ public partial class FrameReceiveSystem : SystemBase
         return player.id;
     }
 
-    private static List<NetworkStateData> CollectPlayerStates(
+    private void CollectPlayerStates(
         Queue<NetworkState> states,
         Guid localPlayerId)
     {
-        List<NetworkStateData> result = new();
+        _localPlayerStates.Clear();
         if (localPlayerId == Guid.Empty)
-            return result;
+            return;
 
         foreach (NetworkState state in states)
         {
             if (state.data != null && state.data.unitId == localPlayerId &&
                 state.data is not NetworkCharacterStateData and not NetworkBattlePlayerStatusStateData)
-                result.Add(state.data);
+                _localPlayerStates.Add(state.data);
         }
-
-        return result;
     }
 
     private void OnReceiveFrame(uint frame, Queue<NetworkState> states)

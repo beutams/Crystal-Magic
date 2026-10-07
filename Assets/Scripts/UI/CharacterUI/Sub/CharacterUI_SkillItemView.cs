@@ -3,7 +3,7 @@ using System;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class CharacterUI_SkillItemView : UISubView<CharacterUI_SkillItemData>, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerClickHandler
+public class CharacterUI_SkillItemView : UISubView<CharacterUI_SkillItemData>, IBeginDragHandler, IDragHandler, IEndDragHandler, IPointerEnterHandler, IPointerExitHandler
 {
     private CrystalMagic.UI.CharacterSkillDisplayData _data;
 
@@ -11,6 +11,17 @@ public class CharacterUI_SkillItemView : UISubView<CharacterUI_SkillItemData>, I
     public event Action<CrystalMagic.UI.CharacterSkillDisplayData, PointerEventData> DragStarted;
     public event Action<CrystalMagic.UI.CharacterSkillDisplayData, PointerEventData> Dragging;
     public event Action<CrystalMagic.UI.CharacterSkillDisplayData, PointerEventData> DragEnded;
+
+    protected override void Awake()
+    {
+        base.Awake();
+        UI.Effect.ButtonPlus.onClick.RemoveListener(HandleAdditionClicked);
+        UI.Effect.ButtonPlus.onClick.AddListener(HandleAdditionClicked);
+    }
+
+    public void OnPointerEnter(PointerEventData eventData) => UI.Select.GameObject.SetActive(true);
+    public void OnPointerExit(PointerEventData eventData) => UI.Select.GameObject.SetActive(false);
+    private void OnDisable() => UI.Select.GameObject.SetActive(false);
 
     public void Render(CrystalMagic.UI.CharacterSkillDisplayData data)
     {
@@ -20,15 +31,23 @@ public class CharacterUI_SkillItemView : UISubView<CharacterUI_SkillItemData>, I
         if (data == null)
         {
             UI.SkillMask_Skill.Image.sprite = null;
+            UI.SkillMask_Skill.GameObject.SetActive(false);
             UI.Effect_EffectIcon.Image.sprite = null;
             UI.Effect.GameObject.SetActive(false);
             UI.Effect_EffectIcon.GameObject.SetActive(false);
             UI.IndexNum.TextMeshProUGUI.text = string.Empty;
+            UI.NameLabel.TextMeshProUGUI.text = string.Empty;
+            UI.StatsLabel.TextMeshProUGUI.text = string.Empty;
+            UI.Connector.GameObject.SetActive(false);
             return;
         }
 
         UI.IndexNum.TextMeshProUGUI.text = data.DisplayIndex.ToString();
+        UI.NameLabel.TextMeshProUGUI.text = data.Name;
+        UI.StatsLabel.TextMeshProUGUI.text = $"{data.MpCost} MP · {data.ChantDuration:0.##} s";
+        UI.Connector.GameObject.SetActive(data.SkillIndex > 0);
         UI.SkillMask_Skill.Image.sprite = LoadIcon(data.SkillIconPath);
+        UI.SkillMask_Skill.GameObject.SetActive(UI.SkillMask_Skill.Image.sprite != null);
         UI.Effect.GameObject.SetActive(data.CanSelectAddition);
 
         Sprite additionIcon = LoadIcon(data.AdditionIconPath);
@@ -60,15 +79,10 @@ public class CharacterUI_SkillItemView : UISubView<CharacterUI_SkillItemData>, I
         DragEnded?.Invoke(_data, eventData);
     }
 
-    public void OnPointerClick(PointerEventData eventData)
+    private void HandleAdditionClicked()
     {
-        if (_data == null || eventData == null)
+        if (_data == null || !_data.CanSelectAddition)
             return;
-
-        Camera eventCamera = eventData.pressEventCamera != null ? eventData.pressEventCamera : eventData.enterEventCamera;
-        if (!RectTransformUtility.RectangleContainsScreenPoint(UI.Effect.RectTransform, eventData.position, eventCamera))
-            return;
-
         AdditionClicked?.Invoke(_data);
     }
 

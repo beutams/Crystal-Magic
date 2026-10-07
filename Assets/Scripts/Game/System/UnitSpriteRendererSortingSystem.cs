@@ -1,3 +1,4 @@
+using CrystalMagic.Game.Map;
 using Unity.Entities;
 using Unity.Transforms;
 using UnityEngine;
@@ -7,8 +8,6 @@ using UnityEngine;
 [UpdateAfter(typeof(UnitAnimationSystem))]
 public partial class UnitSpriteRendererSortingSystem : SystemBase
 {
-    private const float SortingPrecision = 100f;
-
     protected override void OnUpdate()
     {
         foreach ((RefRO<UnitAnimationComponent> _, RefRO<LocalTransform> transform, Entity entity) in
@@ -18,7 +17,7 @@ public partial class UnitSpriteRendererSortingSystem : SystemBase
                 continue;
 
             SpriteRenderer spriteRenderer = EntityManager.GetComponentObject<SpriteRenderer>(entity);
-            spriteRenderer.sortingOrder = Mathf.RoundToInt(-transform.ValueRO.Position.y * SortingPrecision);
+            spriteRenderer.sortingOrder = TileOcclusionSortAnchor.OrderForY(transform.ValueRO.Position.y);
         }
     }
 }

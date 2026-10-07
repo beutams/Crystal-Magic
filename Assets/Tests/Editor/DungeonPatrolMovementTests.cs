@@ -270,6 +270,28 @@ public sealed class DungeonPatrolMovementTests
         Assert.That(math.all(math.isfinite(corrected)), Is.True);
     }
 
+    [Test]
+    public void AllSleepingPatrolArrivalRunsAtLowFrequency()
+    {
+        using var f = new PatrolWorld();
+        Entity member = f.Member(f.Point, 3f);
+        f.Manager.AddComponentData(member, new DungeonMonsterDistanceState { Sleeping = 1 });
+        f.Manager.SetEnabled(member, false);
+        f.TickAt(0);
+        Assert.That(f.Reached, Is.Zero);
+        f.Position(member, 0.1f);
+        f.TickAt(0.1);
+        Assert.That(f.Reached, Is.Zero);
+        f.TickAt(0.5);
+        Assert.That(f.Reached, Is.EqualTo(1));
+        f.Manager.SetComponentData(member, new DungeonMonsterDistanceState { Sleeping = 0 });
+        f.Manager.SetEnabled(member, true);
+        f.Position(member, 3);
+        f.Number(f.Point, DungeonPatrolRuntimeUtility.PatrolTargetVersionKey, 2);
+        f.TickAt(0.6);
+        Assert.That(f.Reached, Is.Zero, "An awake squad must update without waiting for the dormant interval.");
+    }
+
     private sealed class PatrolWorld : IDisposable
     {
         private readonly World _world = new("Patrol arrival test");
@@ -331,6 +353,7 @@ public sealed class DungeonPatrolMovementTests
             return vector;
         }
         public void Tick() { _system.Update(_world.Unmanaged); Manager.CompleteAllTrackedJobs(); }
+        public void TickAt(double time) { _world.SetTime(new Unity.Core.TimeData(time, 0.1f)); Tick(); }
         public void Dispose() => _world.Dispose();
     }
 }

@@ -11,6 +11,7 @@
 
         protected override void OnOpen()
         {
+            CrystalMagic.Core.SceneComponent.Instance.PreloadOnlineWorlds();
             closing = false;
             View.BindModel(Model);
             Bindings.Bind(() => View.BackClicked += OnBackClicked, () => View.BackClicked -= OnBackClicked);
@@ -101,8 +102,7 @@
                 content,
                 null,
                 null,
-                "OK",
-                false));
+                "OK"));
         }
 
         private void OnDisconnected()
@@ -125,8 +125,7 @@
                     content,
                     null,
                     null,
-                    "确定",
-                    false));
+                    "确定"));
                 return;
             }
 
@@ -135,8 +134,7 @@
                 "The connection to the lobby was lost.",
                 () => Lobby.Initialize(),
                 RequestClose,
-                "Reconnect",
-                true));
+                "Reconnect"));
         }
 
         private void RequestClose()

@@ -21,9 +21,13 @@ public class ShopUI : UIBase<ShopUIData, ShopUIModel>
     public event Action<ShopCommodityDisplayData> CommodityBuyRequested;
     public event Action<ShopInventoryDisplayData> InventorySellRequested;
     public event Action CommodityHoverExited;
+    public event Action BackClicked;
+    public event Action InventorySortRequested;
 
     public override void OnOpen()
     {
+        UI.Back.ButtonPlus.onClick.AddListener(HandleBackClicked);
+        UI.InventorySort.ButtonPlus.onClick.AddListener(HandleInventorySort);
         EnsureDragVisualInitialized();
         ClearCommoditySelection();
         SetDragVisible(false);
@@ -32,6 +36,8 @@ public class ShopUI : UIBase<ShopUIData, ShopUIModel>
 
     public override void OnClose()
     {
+        UI.Back.ButtonPlus.onClick.RemoveListener(HandleBackClicked);
+        UI.InventorySort.ButtonPlus.onClick.RemoveListener(HandleInventorySort);
         CancelCommodityHover(true);
         ClearCommoditySelection();
         _draggedCommodity = null;
@@ -42,11 +48,28 @@ public class ShopUI : UIBase<ShopUIData, ShopUIModel>
         base.OnClose();
     }
 
+    private void HandleBackClicked()
+    {
+        BackClicked?.Invoke();
+    }
+
+    private void HandleInventorySort()
+    {
+        _draggedInventoryItem = null;
+        _draggedCommodity = null;
+        SetDragVisible(false);
+        CancelCommodityHover(true);
+        InventorySortRequested?.Invoke();
+    }
+
     protected override void RefreshView()
     {
         if (Model == null)
             return;
 
+        _draggedInventoryItem = null;
+        _draggedCommodity = null;
+        SetDragVisible(false);
         RenderCommodities(Model.Commodities);
         RenderInventory(Model.InventoryItems, Model.InventorySlotCount);
         RenderMoney(Model.Money);

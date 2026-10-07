@@ -160,11 +160,11 @@ public sealed class NetworkInputAndProtocolTests
         return new General_FrameStateData
         {
             sceneVersion = sceneVersion,
-            data = new NetworkFrameData
+            frames = new List<NetworkFrameData> { new NetworkFrameData
             {
                 frameId = frameId,
                 datas = states,
-            },
+            } },
         };
     }
 

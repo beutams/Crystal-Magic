@@ -5,7 +5,7 @@ using Unity.Entities;
 using UnityEngine;
 
 [WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
-[UpdateInGroup(typeof(UnitExecutionSystemGroup))]
+[UpdateInGroup(typeof(SkillProjectileSimulationSystemGroup))]
 [UpdateAfter(typeof(SkillProjectileSystem))]
 partial class PersistentEffectSystem : SystemBase
 {

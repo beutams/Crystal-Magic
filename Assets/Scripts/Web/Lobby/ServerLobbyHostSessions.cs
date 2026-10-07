@@ -13,6 +13,8 @@ namespace Server
             public Connect Host;
             public bool Ready;
             public long Deadline;
+            public bool TcpRequired;
+            public Dictionary<ulong, bool> SteamRoutes;
         }
         private sealed class HostedReload
         {
@@ -20,7 +22,7 @@ namespace Server
             public Player Player;
             public long Deadline;
         }
-        public bool UseSteamHosting { get; private set; }
+        public bool UseClientHosting { get; private set; }
         private readonly Dictionary<string, HostedSession> hostedSessions = new();
         private readonly Dictionary<string, HostedReload> hostedReloads = new();
         private readonly Dictionary<Connect, long> loginTimeouts = new();
@@ -34,19 +36,27 @@ namespace Server
 
         private void StartHostedRoom(Room room, Connect owner)
         {
-            if (room.players.Values.Any(player => !player.steamP2PAvailable || player.connect?.State != ConnectState.Connected))
+            if (room.players.Values.Any(player => player.connect?.State != ConnectState.Connected ||
+                (!player.steamP2PAvailable && !CrystalMagic.Core.ClientAccountIdentity.IsLocalNetworkId(player.accountId))))
+            { owner.Send(new L2C_StartReturn { type = LobbyRequestType.StartFail }); return; }
+            Player host = HostedBattlePolicy.SelectHost(room);
+            bool tcpRequired = room.players.Values.Any(player => !player.steamP2PAvailable);
+            if (host == null || (tcpRequired && !BattleConnectionInfo.IsConnectAddress(host.hostedTcpAddress)))
             { owner.Send(new L2C_StartReturn { type = LobbyRequestType.StartFail }); return; }
             string sessionId = Guid.NewGuid().ToString("N");
             HostedSession session = new()
             {
-                Connection = new BattleConnectionInfo { kind = BattleTransportKind.Steam, sessionId = sessionId,
-                    hostSteamId = room.ownerAccountId, port = 0 },
+                Connection = new BattleConnectionInfo { kind = host.steamP2PAvailable ? BattleTransportKind.Steam : BattleTransportKind.Tcp,
+                    sessionId = sessionId, hostAccountId = host.accountId, hostSteamId = host.steamP2PAvailable ? host.accountId : 0,
+                    address = host.hostedTcpAddress, port = tcpRequired ? host.hostedTcpPort : 0 },
                 Request = new L2B_StartRoom
                 {
                     roomId = room.roomId, sessionId = sessionId, ownerAccountId = room.ownerAccountId, themeKey = room.themeKey,
                     players = room.players.Keys.ToArray(), saveGuids = room.players.ToDictionary(pair => pair.Key, pair => pair.Value.saveGuid),
                 },
-                Host = owner,
+                Host = host.connect,
+                TcpRequired = tcpRequired,
+                SteamRoutes = room.players.ToDictionary(pair => pair.Key, pair => pair.Value.steamP2PAvailable),
                 Deadline = NetworkTimer.Instance.TimeNow + ServerUtility.HostStartTimeout,
             };
             hostedSessions.Add(sessionId, session);
@@ -55,7 +65,8 @@ namespace Server
             room.startDeadline = session.Deadline;
             RoomData roomData = RoomData.CreateRoomData(room);
             foreach (Player player in room.players.Values) player.connect.Send(new L2C_RefreshRoomInfo { roomData = roomData });
-            owner.Send(new L2C_HostBattleStart { connection = session.Connection, room = session.Request });
+            session.Host.Send(new L2C_HostBattleStart { connection = session.Connection, room = session.Request,
+                tcpRequired = tcpRequired, steamMembers = session.SteamRoutes.Where(pair => pair.Value).Select(pair => pair.Key).ToArray() });
         }
 
         private void OnHostReady(IMessage message, Connect connect)
@@ -66,9 +77,12 @@ namespace Server
                 !roomList.TryGetValue(session.Request.roomId, out Room room) || room.startSessionId != session.Connection.sessionId)
                 return;
             B2L_StartRoomResult result = ready.result;
-            if (result.error != null || result.secretKeys == null || session.Deadline <= NetworkTimer.Instance.TimeNow ||
+            if (result.error != null || result.roomId != session.Request.roomId ||
+                !HostedBattlePolicy.IsReadyDescriptor(session.Connection, result.connection, session.TcpRequired) ||
+                result.secretKeys == null || session.Deadline <= NetworkTimer.Instance.TimeNow ||
                 session.Request.players.Any(id => !result.secretKeys.TryGetValue(id, out string ticket) || string.IsNullOrEmpty(ticket)))
             { CancelHostedStart(session); return; }
+            session.Connection = result.connection;
             session.Ready = true;
             session.Deadline = 0;
             foreach (Player player in room.players.Values)
@@ -76,7 +90,7 @@ namespace Server
                 player.roomId = 0;
                 player.start = true;
                 player.connect.Send(new L2C_StartTicket
-                { connection = session.Connection, ticket = result.secretKeys[player.accountId], reload = false });
+                { connection = session.Connection.ForTransport(session.SteamRoutes[player.accountId]), ticket = result.secretKeys[player.accountId], reload = false });
             }
             room.players.Clear();
             roomList.Remove(room.roomId);
@@ -126,6 +140,12 @@ namespace Server
             HostedSession session = hostedSessions.Values.FirstOrDefault(candidate => candidate.Ready &&
                 candidate.Request.saveGuids.ContainsKey(player.accountId));
             if (session == null) { CreatePlayer(player); return; }
+            if (session.SteamRoutes[player.accountId] != player.steamP2PAvailable)
+            {
+                player.connect.Send(new L2C_LoginLobbyResult { type = LobbyRequestType.LoginFail });
+                lobbyService.DisconnectAfterSend(player.connect);
+                return;
+            }
             if (session.Request.saveGuids[player.accountId] != player.saveGuid)
             {
                 player.connect.Send(new L2C_LoginLobbyResult { type = LobbyRequestType.LoginSaveMismatch });
@@ -137,11 +157,11 @@ namespace Server
             {
                 player.start = true;
                 CreatePlayer(player);
-                if (player.accountId == session.Connection.hostSteamId)
+                if (player.accountId == session.Connection.hostAccountId)
                 { session.Host = player.connect; session.Deadline = 0; }
                 return;
             }
-            if (player.accountId == session.Connection.hostSteamId)
+            if (player.accountId == session.Connection.hostAccountId)
             {
                 RemoveHostedSession(session); // 房主进程已重启，没有可迁移的权威 World。
                 CreatePlayer(player);
@@ -182,7 +202,8 @@ namespace Server
             }
             player.start = true;
             CreatePlayer(player);
-            player.connect.Send(new L2C_StartTicket { reload = true, connection = session.Connection, ticket = response.result.ticket });
+            player.connect.Send(new L2C_StartTicket { reload = true,
+                connection = session.Connection.ForTransport(session.SteamRoutes[player.accountId]), ticket = response.result.ticket });
         }
 
         private void OnHostedLobbyDisconnected(Connect connect)

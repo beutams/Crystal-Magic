@@ -22,6 +22,9 @@ public struct UnitSkillReleaseComponent : IComponentData
 // Synchronous input used while resolving a state-script skill command.
 public struct SkillReleaseRequest
 {
+    public uint CastFrame;
+    public int CastOrdinal;
+    public byte HasCastIdentity;
     public int SkillId;
     public Entity OriginEntity;
     public float3 OriginPosition;

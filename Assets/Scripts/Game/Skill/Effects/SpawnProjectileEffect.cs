@@ -1,3 +1,4 @@
+using CrystalMagic.Core;
 using System.Collections.Generic;
 using CrystalMagic.Game.Data.Effects;
 using CrystalMagic.Game.Unit;
@@ -30,17 +31,29 @@ namespace CrystalMagic.Game.Skill.Effects
             }
 
             Vector3 finalPosition = spawnPosition + direction * Data.SpawnOffsetDistance;
+            // The muzzle offset must not place a shot on the far side of a thin wall.
+            using (EntityQuery terrain = context.EntityManager.CreateEntityQuery(
+                       ComponentType.ReadOnly<DungeonNavigationMapComponent>(),
+                       ComponentType.ReadOnly<DungeonNavigationCollisionWord>()))
+            {
+                if (!terrain.IsEmptyIgnoreFilter)
+                {
+                    Entity terrainEntity = terrain.GetSingletonEntity();
+                    DungeonNavigationMapComponent map = context.EntityManager.GetComponentData<DungeonNavigationMapComponent>(terrainEntity);
+                    var words = context.EntityManager.GetBuffer<DungeonNavigationCollisionWord>(terrainEntity, true);
+                    if (ProjectileTerrainCollisionUtility.TryCast(in map, words.AsNativeArray(),
+                            new float2(spawnPosition.x, spawnPosition.y), new float2(finalPosition.x, finalPosition.y),
+                            math.max(Data.HitRadius, 0.01f), out float fraction))
+                        finalPosition = Vector3.Lerp(spawnPosition, finalPosition, fraction);
+                }
+            }
             SpawnProjectile(context, finalPosition, direction);
         }
 
         private bool TryGetSpawnPosition(SkillContent context, out Vector3 position)
         {
-            if (context.HasOriginEntity &&
-                context.OriginEntity != Entity.Null &&
-                context.EntityManager.Exists(context.OriginEntity) &&
-                context.EntityManager.HasComponent<LocalTransform>(context.OriginEntity))
+            if (SpriteEffectSpawnUtility.TryGetOriginPosition(context, out float3 entityPosition))
             {
-                float3 entityPosition = context.EntityManager.GetComponentData<LocalTransform>(context.OriginEntity).Position;
                 position = new Vector3(entityPosition.x, entityPosition.y, entityPosition.z);
                 return true;
             }
@@ -80,7 +93,12 @@ namespace CrystalMagic.Game.Skill.Effects
                 NetworkEntityPrefabType.Projectile,
                 projectileName,
                 startPosition);
-            if (!NetworkEntitySpawnUtility.TrySpawn(entityManager, entityInfo, out Entity projectileEntity))
+            bool predicted = GameWorldContextUtility.Get(entityManager).Role == GameWorldRole.Client;
+            Entity projectileEntity;
+            bool spawned = predicted
+                ? EntitySpawnRegistryUtility.TryInstantiateProjectile(entityManager, new Unity.Collections.FixedString128Bytes(projectileName), out projectileEntity)
+                : NetworkEntitySpawnUtility.TrySpawn(entityManager, entityInfo, out projectileEntity);
+            if (!spawned)
             {
                 Debug.LogError($"[SpawnProjectileEffect] Missing projectile prefab in registry: {projectileName}");
                 return;
@@ -95,12 +113,15 @@ namespace CrystalMagic.Game.Skill.Effects
                 LocalTransform.FromPositionRotationScale(position, rotation, 1f));
             SetOrAddComponentData(entityManager, projectileEntity, new SkillProjectileComponent
             {
+                Identity = context.EffectIdentity,
+                PreviousPosition = position,
                 Direction = math.normalizesafe(projectileDirection, new float3(1f, 0f, 0f)),
                 Speed = Data.Speed,
                 MaxRange = Data.MaxRange,
                 TraveledDistance = 0f,
                 HitRadius = math.max(Data.HitRadius, 0.01f),
                 CanPierce = Data.CanPierce ? (byte)1 : (byte)0,
+                RepeatHitIntervalSeconds = math.max(0f, Data.RepeatHitIntervalSeconds),
                 TriggerDestroyEffectsOnMaxRange = Data.TriggerDestroyEffectsOnMaxRange ? (byte)1 : (byte)0,
                 NetworkDirty = 1,
             });
@@ -120,8 +141,27 @@ namespace CrystalMagic.Game.Skill.Effects
                 entityManager.AddComponent<DestroyEntityFlag>(projectileEntity);
             entityManager.SetComponentEnabled<DestroyEntityFlag>(projectileEntity, false);
 
+            if (predicted)
+            {
+                SetOrAddComponentData(entityManager, projectileEntity, new ClientPredictedProjectileComponent
+                {
+                    Identity = context.EffectIdentity,
+                    VisualPrefab = new Unity.Collections.FixedString128Bytes(Data.VisualPrefabName ?? string.Empty),
+                    VisualScale = Data.VisualScale,
+                    VisualOffset = new float3(Data.VisualOffset.x, Data.VisualOffset.y, Data.VisualOffset.z),
+                });
+                if (!entityManager.HasComponent<DungeonRuntimeOwnedEntity>(projectileEntity))
+                    entityManager.AddComponent<DungeonRuntimeOwnedEntity>(projectileEntity);
+            }
             ApplyPayloadComponent(entityManager, projectileEntity, context);
             SpawnProjectileVisual(entityManager, projectileEntity, context, position, rotation);
+            if (predicted)
+            {
+                Entity visual = entityManager.HasComponent<SkillProjectileVisualLinkComponent>(projectileEntity)
+                    ? entityManager.GetComponentData<SkillProjectileVisualLinkComponent>(projectileEntity).VisualEntity : Entity.Null;
+                entityManager.World.GetOrCreateSystemManaged<ClientSkillVisualExecutionSystem>()
+                    .RecordProjectile(context, Data, projectileEntity, visual);
+            }
         }
 
         private void SpawnProjectileVisual(
@@ -146,7 +186,7 @@ namespace CrystalMagic.Game.Skill.Effects
                     0f,
                     true,
                     context.OriginEntity,
-                    context.SourceSkillId))
+                    context.SourceSkillId, context.EffectIdentity))
             {
                 return;
             }
@@ -177,6 +217,7 @@ namespace CrystalMagic.Game.Skill.Effects
                 entityManager,
                 projectileEntity,
                 new SkillProjectileVisualLinkComponent { VisualEntity = visualEntity });
+
         }
 
         private void ApplyPayloadComponent(

@@ -1,0 +1,32 @@
+Crystal Magic UI material pack v2 (24 sounds) - source credits
+
+Source creator: Kenney (www.kenney.nl)
+Source license: Creative Commons Zero (CC0)
+https://creativecommons.org/publicdomain/zero/1.0/
+
+RPG Audio: https://kenney.nl/assets/rpg-audio
+Impact Sounds: https://kenney.nl/assets/impact-sounds
+
+These WAVs are edited derivatives of the above assets, not original recordings.
+The six approved preview sounds below are unchanged (these are PREVIEW numbers,
+not the full pack's functional numbering):
+01 ui_v2_click.wav: Impact Sounds / impactWood_light_000.ogg
+02 ui_v2_cancel.wav: RPG Audio / cloth3.ogg; Impact Sounds / impactWood_light_001.ogg
+03 ui_v2_page_turn.wav: RPG Audio / bookFlip2.ogg
+04 ui_v2_item_place.wav: RPG Audio / dropLeather.ogg, bookPlace1.ogg
+05 ui_v2_equip.wav: RPG Audio / beltHandle2.ogg, metalLatch.ogg
+06 ui_v2_magic_socket.wav: Impact Sounds / impactWood_light_002.ogg,
+   impactGlass_light_000.ogg, impactGlass_light_001.ogg; procedural air layer.
+
+Processing: trimming, playback-rate changes, filtering, layering, transient
+saturation, gain adjustment, endpoint fades; mono, 48000 Hz, 16-bit PCM WAV.
+No existing UI playback bindings or v1 files were replaced.
+The other 18 files complete selection, panel open, adjustment, denied, success,
+book open/close, item grab, organize, coins, pickup, threat, warning, victory,
+defeat, member join/leave and departure. No melodies or reverb were added.
+UI_MaterialV2.manifest.json in this folder records all 24 functional IDs, file
+names, purposes, exact sources, processing parameters and source SHA-256 hashes.
+The approved six and original v1 WAVs/GUIDs are preserved.
+Full source assets and original license notices are preserved in
+output/audio/ui-v2-full/crystal-magic-ui-material-full24.zip.
+The original six-item preview remains in output/audio/ui-v2/.

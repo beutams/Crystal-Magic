@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
+using Server;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Transforms;
@@ -20,6 +21,7 @@ namespace CrystalMagic.UI
         private readonly Dictionary<Entity, ActiveBar> _activeBars = new();
         private readonly List<Entity> _cleanupEntities = new();
         private readonly List<UnitHealthBarBuffDisplayData> _buffDisplayBuffer = new();
+        private readonly HashSet<Guid> _presentedDamageUnits = new();
 
         private UnitHealthBarUI _rootView;
         private RectTransform _rootRect;
@@ -136,6 +138,8 @@ namespace CrystalMagic.UI
                 return;
 
             EntityManager entityManager = world.EntityManager;
+            FrameManagerUtility.TryGet(entityManager, out ClientFrameManager clientFrame);
+            DiscoverPresentedDamageBars(entityManager, clientFrame);
             DiscoverBarsWithVisibleBuffs(world, entityManager);
             _cleanupEntities.Clear();
             float now = Time.time;
@@ -151,6 +155,7 @@ namespace CrystalMagic.UI
 
                 Entity entity = pair.Key;
                 if (!entityManager.Exists(entity)
+                    || entityManager.HasComponent<Disabled>(entity)
                     || !IsEnemyUnit(entityManager, entity)
                     || !entityManager.HasComponent<LocalToWorld>(entity)
                     || !entityManager.HasComponent<UnitVitalityComponent>(entity)
@@ -181,6 +186,11 @@ namespace CrystalMagic.UI
                 }
 
                 UnitVitalityComponent vitality = entityManager.GetComponentData<UnitVitalityComponent>(entity);
+                float health = vitality.CurrentHealth;
+                if (clientFrame != null && entityManager.HasComponent<NetworkIdentityComponent>(entity) &&
+                    clientFrame.TryGetPresentedHealth(entityManager.GetComponentData<NetworkIdentityComponent>(entity).id,
+                        out float presentedHealth))
+                    health = presentedHealth;
                 LocalToWorld localToWorld = entityManager.GetComponentData<LocalToWorld>(entity);
                 Vector3 worldPosition = (Vector3)localToWorld.Position + Vector3.up * WorldYOffset;
                 Vector3 screenPosition = _currentCamera.WorldToScreenPoint(worldPosition);
@@ -193,7 +203,7 @@ namespace CrystalMagic.UI
                 // Overlay coordinates use no event camera; only the world projection uses the scene camera.
                 if (RectTransformUtility.ScreenPointToLocalPointInRectangle(_rootRect, screenPosition, null, out Vector2 localPoint))
                 {
-                    _rootView?.UpdateBar(bar.Handle, vitality.CurrentHealth, UnitModifierResolver.GetMaxHealth(entityManager, entity), localPoint, true);
+                    _rootView?.UpdateBar(bar.Handle, health, UnitModifierResolver.GetMaxHealth(entityManager, entity), localPoint, true);
                 }
             }
 
@@ -201,6 +211,28 @@ namespace CrystalMagic.UI
             {
                 ReleaseBar(_cleanupEntities[i]);
             }
+        }
+
+        private void DiscoverPresentedDamageBars(EntityManager entityManager, ClientFrameManager frame)
+        {
+            if (frame == null)
+                return;
+            frame.ConsumePresentedDamageUnits(_presentedDamageUnits);
+            if (_presentedDamageUnits.Count == 0)
+                return;
+
+            using EntityQuery query = entityManager.CreateEntityQuery(ComponentType.ReadOnly<NetworkIdentityComponent>());
+            using NativeArray<Entity> entities = query.ToEntityArray(Allocator.Temp);
+            foreach (Entity entity in entities)
+            {
+                Guid id = entityManager.GetComponentData<NetworkIdentityComponent>(entity).id;
+                if (!_presentedDamageUnits.Contains(id) || !IsEnemyUnit(entityManager, entity))
+                    continue;
+                ActiveBar bar = GetOrCreateBar(entity);
+                if (bar != null)
+                    bar.HideAtTime = Time.time + UIComponent.Instance.GetUnitHealthBarShowSeconds();
+            }
+            _presentedDamageUnits.Clear();
         }
 
         private static bool IsEnemyUnit(Entity entity)

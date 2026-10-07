@@ -2,7 +2,6 @@ using CrystalMagic.Game.Data.Effects;
 using CrystalMagic.Game.Unit;
 using Unity.Entities;
 using Unity.Mathematics;
-using Unity.Transforms;
 
 namespace CrystalMagic.Game.Skill.Effects
 {
@@ -23,7 +22,7 @@ namespace CrystalMagic.Game.Skill.Effects
             }
 
             EntityManager entityManager = context.EntityManager;
-            if (!TryGetOriginPosition(context, entityManager, out float3 originPosition))
+            if (!SpriteEffectSpawnUtility.TryGetOriginPosition(context, out float3 originPosition))
             {
                 return;
             }
@@ -54,7 +53,7 @@ namespace CrystalMagic.Game.Skill.Effects
                     Data.Duration,
                     Data.AlignToLineDirection,
                     context.OriginEntity,
-                    context.SourceSkillId))
+                    context.SourceSkillId, context.EffectIdentity))
             {
                 return;
             }
@@ -72,30 +71,6 @@ namespace CrystalMagic.Game.Skill.Effects
                     preservePrefabRotation: !Data.AlignToLineDirection,
                     out _);
             }
-        }
-
-        private static bool TryGetOriginPosition(SkillContent context, EntityManager entityManager, out float3 position)
-        {
-            if (context.HasOriginPositionSnapshot)
-            {
-                position = new float3(
-                    context.OriginPositionSnapshot.x,
-                    context.OriginPositionSnapshot.y,
-                    context.OriginPositionSnapshot.z);
-                return true;
-            }
-
-            if (context.HasOriginEntity &&
-                context.OriginEntity != Entity.Null &&
-                entityManager.Exists(context.OriginEntity) &&
-                entityManager.HasComponent<LocalTransform>(context.OriginEntity))
-            {
-                position = entityManager.GetComponentData<LocalTransform>(context.OriginEntity).Position;
-                return true;
-            }
-
-            position = float3.zero;
-            return false;
         }
     }
 }

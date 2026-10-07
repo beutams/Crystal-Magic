@@ -5,8 +5,6 @@ using CrystalMagic.Game.Config;
 using CrystalMagic.Game.Data;
 using Unity.Collections;
 using Unity.Entities;
-using Unity.Mathematics;
-using Unity.Transforms;
 using UnityEngine;
 using UnityEngine.Sprites;
 
@@ -14,7 +12,9 @@ using UnityEngine.Sprites;
 [UpdateInGroup(typeof(GamePresentationSystemGroup))]
 public partial class DropSpritePresentationSystem : SystemBase
 {
-    private const float SortingPrecision = 100f;
+    // Ground occupies -32000..-31001; actors/obstacles use -29999..29999.
+    // Drops stay in between, including while scattering through the air.
+    public const int SortingOrder = -31000;
     private const float BorderWidth = 0.065f;
     private static readonly int BorderColorId = Shader.PropertyToID("_BorderColor");
     private static readonly int BorderWidthId = Shader.PropertyToID("_BorderWidth");
@@ -57,22 +57,6 @@ public partial class DropSpritePresentationSystem : SystemBase
 
         commandBuffer.Playback(EntityManager);
         commandBuffer.Dispose();
-
-        foreach ((RefRO<LocalTransform> transformRef, Entity entity) in
-                 SystemAPI.Query<RefRO<LocalTransform>>()
-                     .WithAll<DropPresentationInitializedTag>()
-                     .WithEntityAccess())
-        {
-            if (!EntityManager.HasComponent<SpriteRenderer>(entity))
-                continue;
-
-            float sortingY = transformRef.ValueRO.Position.y;
-            if (EntityManager.HasComponent<DropScatterComponent>(entity))
-                sortingY = EntityManager.GetComponentData<DropScatterComponent>(entity).TargetPosition.y;
-
-            SpriteRenderer spriteRenderer = EntityManager.GetComponentObject<SpriteRenderer>(entity);
-            spriteRenderer.sortingOrder = Mathf.RoundToInt(-sortingY * SortingPrecision);
-        }
     }
 
     protected override void OnDestroy()
@@ -91,6 +75,7 @@ public partial class DropSpritePresentationSystem : SystemBase
 
     private void ConfigureSprite(SpriteRenderer spriteRenderer, in UnitInteractionData interaction)
     {
+        spriteRenderer.sortingOrder = SortingOrder;
         string iconPath = GetIconPath(interaction);
         Sprite sprite = GetOrLoadSprite(iconPath);
         spriteRenderer.sprite = sprite;

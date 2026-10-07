@@ -10,6 +10,8 @@ namespace Server
         public bool ready;
         public bool start;
         public bool steamP2PAvailable;
+        public string hostedTcpAddress;
+        public int hostedTcpPort;
 
         public Connect connect;
     }

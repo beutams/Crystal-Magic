@@ -6,6 +6,92 @@ namespace CrystalMagic.Core
 {
     public static class InventoryUtility
     {
+        public static bool SortBackpack(BackpackData backpackData)
+        {
+            if (backpackData == null)
+                return false;
+
+            EnsureBackpackSlots(backpackData);
+            return SortItems(backpackData.Items, true, id => DataComponent.Instance.Get<ItemData>(id));
+        }
+
+        public static bool SortStash(StashData stashData)
+        {
+            return stashData?.Items != null &&
+                   SortItems(stashData.Items, false, id => DataComponent.Instance.Get<ItemData>(id));
+        }
+
+        // Keep slot capacity, quantities and unknown items intact. Never touch equipped items.
+        // The resolver also makes these rules testable without a running game world.
+        public static bool SortItems(List<InventoryItemData> items, bool keepEmptySlots,
+            System.Func<int, ItemData> resolveItem)
+        {
+            if (items == null)
+                return false;
+
+            int slotCount = items.Count;
+            var definitions = new Dictionary<int, ItemData>();
+            var sorted = new List<InventoryItemData>(slotCount);
+            foreach (InventoryItemData item in items)
+            {
+                if (item == null || item.IsEmpty)
+                    continue;
+                if (!definitions.ContainsKey(item.ItemId))
+                    definitions.Add(item.ItemId, resolveItem(item.ItemId));
+                sorted.Add(new InventoryItemData
+                {
+                    ItemId = item.ItemId, Quantity = item.Quantity, ItemType = item.ItemType,
+                });
+            }
+
+            sorted.Sort((a, b) =>
+            {
+                ItemData da = definitions[a.ItemId], db = definitions[b.ItemId];
+                int order = (da?.ItemType ?? a.ItemType).CompareTo(db?.ItemType ?? b.ItemType);
+                if (order != 0) return order;
+                order = (db?.Rarity ?? 0).CompareTo(da?.Rarity ?? 0);
+                if (order != 0) return order;
+                order = a.ItemId.CompareTo(b.ItemId);
+                if (order != 0) return order;
+                order = a.ItemType.CompareTo(b.ItemType);
+                return order != 0 ? order : b.Quantity.CompareTo(a.Quantity);
+            });
+
+            var compacted = new List<InventoryItemData>(slotCount);
+            InventoryItemData partial = null;
+            foreach (InventoryItemData item in sorted)
+            {
+                int maxStack = System.Math.Max(1, definitions[item.ItemId]?.MaxStack ?? 1);
+                if (partial != null && partial.ItemId == item.ItemId && partial.ItemType == item.ItemType)
+                {
+                    int moved = System.Math.Min(item.Quantity, System.Math.Max(0, maxStack - partial.Quantity));
+                    partial.Quantity += moved;
+                    item.Quantity -= moved;
+                }
+                if (item.Quantity > 0)
+                {
+                    compacted.Add(item);
+                    partial = item;
+                }
+            }
+            if (keepEmptySlots)
+                while (compacted.Count < slotCount) compacted.Add(new InventoryItemData());
+
+            bool changed = items.Count != compacted.Count;
+            for (int i = 0; !changed && i < items.Count; i++)
+            {
+                InventoryItemData old = items[i], next = compacted[i];
+                changed = old == null || old.ItemId != next.ItemId || old.Quantity != next.Quantity ||
+                          old.ItemType != next.ItemType;
+            }
+            if (!changed)
+                return false;
+
+            items.Clear();
+            items.AddRange(compacted);
+            return true;
+        }
+
         public static void EnsureBackpackSlots(BackpackData backpackData)
         {
             if (backpackData == null)

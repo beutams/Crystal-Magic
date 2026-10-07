@@ -1,0 +1,27 @@
+Crystal Magic combat audition V1 — source credits
+
+This is an edited/layered sound-design audition, not output from a text-to-audio
+model. All third-party source audio selected here is published under CC0-1.0.
+Noise, turbulence, pressure envelopes and electrical discharge layers are
+procedurally synthesized by build_combat_v1.py. No speech, music or note sequences.
+
+Ice spells — bart; source recording by Stephan / pdsounds
+https://opengameart.org/content/ice-spells
+License on source page: CC0
+Original download: https://opengameart.org/sites/default/files/icespells.zip
+
+40 CC0 water / splash / slime SFX — rubberduck
+https://opengameart.org/content/40-cc0-water-splash-slime-sfx
+License on source page: CC0
+Original download: https://opengameart.org/sites/default/files/water-splash-slime-sfx.zip
+
+Catching fire — themightyglider, derived from qubodup
+https://opengameart.org/content/catching-fire
+License on source page: CC0
+Original download: https://opengameart.org/sites/default/files/flame_0.ogg
+Original upstream source: https://freesound.org/people/qubodup/sounds/159725/
+
+CC0: https://creativecommons.org/publicdomain/zero/1.0/
+Source-page license labels checked 2026-10-06.
+Exact source hashes, edits and synthesis seeds are retained in manifest.json.
+No third-party executables or scripts are downloaded or run.

@@ -5,14 +5,34 @@ namespace CrystalMagic.Core
 {
     public sealed class DungeonSettlementStateData
     {
-        public DungeonSettlementOutcome Outcome { get; set; }
+        public DungeonSettlementResult Result { get; private set; }
+        public LoadGameContext ReturnContext { get; private set; }
+        public bool IsSaved { get; private set; }
+
+        private DungeonSettlementStateData() { }
 
         public static DungeonSettlementStateData Create(DungeonSettlementOutcome outcome)
         {
-            return new DungeonSettlementStateData
+            // SetState exits DungeonState first, which destroys the player with the map.
+            // Settle and retain the return data while that player's inventory still exists.
+            DungeonSettlementResult result = SaveDataComponent.Instance.SettleDungeonRun(outcome);
+            LoadGameContext returnContext = SaveDataComponent.Instance.CreateLoadGameContext(SaveAreaType.Town);
+            returnContext.Character = PlayerCharacterUtility.Clone(returnContext.Character);
+            DungeonSettlementStateData data = new()
             {
-                Outcome = outcome,
+                Result = result,
+                ReturnContext = returnContext,
             };
+            // Commit both outcomes before the report opens or DungeonState destroys the player.
+            data.TrySave();
+            return data;
+        }
+
+        public bool TrySave()
+        {
+            if (!IsSaved)
+                IsSaved = SaveDataComponent.Instance.SaveDungeonSettlement(ReturnContext);
+            return IsSaved;
         }
     }
 
@@ -29,15 +49,12 @@ namespace CrystalMagic.Core
             _isReturningToTown = false;
             LockDungeon();
 
-            DungeonSettlementStateData data = StateData as DungeonSettlementStateData;
-            DungeonSettlementOutcome outcome = data?.Outcome ?? DungeonSettlementOutcome.Escaped;
-            DungeonSettlementResult result = SaveDataComponent.Instance.SettleDungeonRun(outcome);
+            DungeonSettlementStateData data = (DungeonSettlementStateData)StateData;
 
             _settlementUI = UIComponent.Instance.Open<DungeonSettlementUI>(new DungeonSettlementUIOpenData
             {
-                Title = GetTitle(result),
-                Summary = GetContent(result),
-                ConfirmLabel = "返回城镇",
+                Result = data.Result,
+                SaveFailed = !data.IsSaved,
                 ConfirmAction = ReturnToTown,
             });
 
@@ -54,29 +71,18 @@ namespace CrystalMagic.Core
             UnlockDungeon();
         }
 
-        private void ReturnToTown()
+        private bool ReturnToTown()
         {
             if (_isReturningToTown)
-                return;
+                return false;
+
+            DungeonSettlementStateData data = (DungeonSettlementStateData)StateData;
+            if (!data.TrySave())
+                return false;
 
             _isReturningToTown = true;
-            LoadGameContext context = SaveDataComponent.Instance.CreateLoadGameContext(SaveAreaType.Town);
-            GameFlowComponent.Instance.BeginTransition(TownState.CreateEnterTransitionData(context));
-        }
-
-        private static string GetTitle(DungeonSettlementResult result)
-        {
-            return result != null && result.IsSuccess ? "成功离开地下城" : "地下城战败";
-        }
-
-        private static string GetContent(DungeonSettlementResult result)
-        {
-            if (result == null)
-                return "本次地牢记录已结束。";
-
-            return result.IsSuccess
-                ? $"抵达层数：{result.ReachedFloor}\n角色当前携带的数据已带回城镇。"
-                : $"抵达层数：{result.ReachedFloor}\n本次地牢角色数据已丢弃。";
+            GameFlowComponent.Instance.BeginTransition(TownState.CreateEnterTransitionData(data.ReturnContext));
+            return true;
         }
 
         private static void LockDungeon()

@@ -10,6 +10,7 @@ using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
 using Unity.Jobs;
 using Unity.Mathematics;
+using Unity.Core;
 using Unity.Transforms;
 
 [WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation |
@@ -22,6 +23,8 @@ public partial class StateScriptSystem : SystemBase
     private UnitSourceDispatcher _sources;
     private EntityQuery _localPlayerQuery;
     private EntityQuery _managedCommandQueueQuery;
+    private BattleSimulationScope _scope;
+    private FixedList128Bytes<Entity> _clientInteractionTargets;
 
     protected override void OnCreate()
     {
@@ -38,37 +41,22 @@ public partial class StateScriptSystem : SystemBase
 
     protected override void OnUpdate()
     {
+        SystemAPI.TryGetSingleton(out _scope);
         BlobAssetReference<StateScriptRuntimeRegistryBlob> registry =
             SystemAPI.GetSingleton<StateScriptRuntimeRegistryComponent>().Value;
         if (!registry.IsCreated)
             return;
 
-        _sources.Update(this);
         GameWorldRole role = GameWorldContextUtility.Get(EntityManager).Role;
         GameWorldExecutionTarget executionTarget = GameWorldExecutionTargetUtility.FromRole(role);
         Entity localPlayer = Entity.Null;
         bool hasLocalPlayer = role != GameWorldRole.Client || TryGetLocalPlayer(out localPlayer);
+        if (role == GameWorldRole.Client && hasLocalPlayer && _scope.Pass == BattleSimulationPass.Players)
+            ClientPlayerPhysicsPredictionUtility.RestoreSimulationPosition(EntityManager, localPlayer);
+        _sources.Update(this);
         ClientFrameManager clientFrame = null;
-        if (role == GameWorldRole.Client)
+        if (role == GameWorldRole.Client && _scope.Pass != BattleSimulationPass.World)
             FrameManagerUtility.TryGet(EntityManager, out clientFrame);
-        UnitQueryTree queryTree = default;
-        int queryCapacity = 1;
-        if (SystemAPI.TryGetSingleton(out UnitQuerySingleton querySingleton) &&
-            querySingleton.TreeEntity != Entity.Null &&
-            EntityManager.Exists(querySingleton.TreeEntity) &&
-            EntityManager.HasBuffer<UnitQueryNode>(querySingleton.TreeEntity) &&
-            EntityManager.HasBuffer<UnitQueryEntry>(querySingleton.TreeEntity))
-        {
-            NativeArray<UnitQueryNode> nodes = EntityManager
-                .GetBuffer<UnitQueryNode>(querySingleton.TreeEntity, true)
-                .AsNativeArray();
-            NativeArray<UnitQueryEntry> entries = EntityManager
-                .GetBuffer<UnitQueryEntry>(querySingleton.TreeEntity, true)
-                .AsNativeArray();
-            queryTree = new UnitQueryTree(nodes, entries);
-            queryCapacity = math.max(1, entries.Length);
-        }
-
         if (role == GameWorldRole.Client && hasLocalPlayer && clientFrame != null &&
             clientFrame.TryConsumePredictionReplay(out uint authoritativeFrame))
         {
@@ -93,9 +81,16 @@ public partial class StateScriptSystem : SystemBase
                 localPlayer,
                 authoritativeFrame,
                 registry,
-                queryTree,
-                queryCapacity,
                 executionTarget);
+
+            if (EntityManager.HasComponent<ClientPlayerMovePresentationComponent>(localPlayer))
+            {
+                ClientPlayerMovePresentationComponent presentation =
+                    EntityManager.GetComponentData<ClientPlayerMovePresentationComponent>(localPlayer);
+                presentation.CompleteReconciliation(
+                    EntityManager.GetComponentData<UnitMoveComponent>(localPlayer).PredictedPosition);
+                EntityManager.SetComponentData(localPlayer, presentation);
+            }
 
             if (restoreCurrentInput && EntityManager.Exists(localPlayer))
                 EntityManager.SetComponentData(localPlayer, currentInput);
@@ -117,6 +112,7 @@ public partial class StateScriptSystem : SystemBase
         // global entity, so evaluate serially until writes can be safely partitioned.
         if (hasLocalPlayer)
         {
+            UnitQueryTree queryTree = GetQueryTree(out int queryCapacity);
             float deltaTime = math.max(0f, SystemAPI.Time.DeltaTime);
             Entity targetEntity = role == GameWorldRole.Client ? localPlayer : Entity.Null;
             Dependency = ScheduleEvaluation(
@@ -127,11 +123,26 @@ public partial class StateScriptSystem : SystemBase
                 deltaTime,
                 executionTarget,
                 targetEntity,
-                processInputEvents: true);
-            if (role == GameWorldRole.Client)
-                Dependency = ScheduleClientMovePrediction(Dependency, deltaTime);
+                processInputEvents: _scope.Pass != BattleSimulationPass.World,
+                evaluateClientInteractions: role == GameWorldRole.Client &&
+                                            _scope.Pass != BattleSimulationPass.Players);
         }
-        Dependency = new StateScriptDeathJob().ScheduleParallel(Dependency);
+        if (_scope.Pass != BattleSimulationPass.Players)
+            Dependency = new StateScriptDeathJob().ScheduleParallel(Dependency);
+    }
+
+    private UnitQueryTree GetQueryTree(out int capacity)
+    {
+        capacity = 1;
+        if (!SystemAPI.TryGetSingleton(out UnitQuerySingleton singleton) ||
+            singleton.TreeEntity == Entity.Null || !EntityManager.Exists(singleton.TreeEntity) ||
+            !EntityManager.HasBuffer<UnitQueryNode>(singleton.TreeEntity) ||
+            !EntityManager.HasBuffer<UnitQueryEntry>(singleton.TreeEntity))
+            return default;
+        NativeArray<UnitQueryNode> nodes = EntityManager.GetBuffer<UnitQueryNode>(singleton.TreeEntity, true).AsNativeArray();
+        NativeArray<UnitQueryEntry> entries = EntityManager.GetBuffer<UnitQueryEntry>(singleton.TreeEntity, true).AsNativeArray();
+        capacity = math.max(1, entries.Length);
+        return new UnitQueryTree(nodes, entries);
     }
 
     private JobHandle ScheduleEvaluation(
@@ -142,11 +153,15 @@ public partial class StateScriptSystem : SystemBase
         float deltaTime,
         GameWorldExecutionTarget executionTarget,
         Entity targetEntity,
-        bool processInputEvents)
+        bool processInputEvents,
+        bool evaluateClientInteractions = false)
     {
         DynamicBuffer<StateScriptManagedCommandElement> managedCommands =
             _managedCommandQueueQuery.GetSingletonBuffer<StateScriptManagedCommandElement>();
         managedCommands.Clear();
+        FixedList128Bytes<Entity> interactionTargets = evaluateClientInteractions
+            ? CollectClientInteractionTargets(targetEntity)
+            : default;
         NativeList<UnitQueryHit> queryResults = new(queryCapacity, Allocator.TempJob);
         NativeList<Entity> queryExclusions = new(queryCapacity, Allocator.TempJob);
         JobHandle evaluationHandle = new StateScriptEvaluationJob
@@ -163,6 +178,8 @@ public partial class StateScriptSystem : SystemBase
             DeltaTime = deltaTime,
             ExecutionTarget = executionTarget,
             TargetEntity = targetEntity,
+            ClientInteractionTargets = interactionTargets,
+            Scope = _scope,
             ProcessInputEventBuffer = processInputEvents ? (byte)1 : (byte)0,
         }.Schedule(dependency);
 
@@ -171,16 +188,37 @@ public partial class StateScriptSystem : SystemBase
         return JobHandle.CombineDependencies(queryResultsDisposeHandle, queryExclusionsDisposeHandle);
     }
 
-    private JobHandle ScheduleClientMovePrediction(JobHandle dependency, float deltaTime)
+    private FixedList128Bytes<Entity> CollectClientInteractionTargets(Entity localPlayer)
     {
-        return new ClientPlayerStateScriptMoveJob
+        FixedList128Bytes<Entity> targets = default;
+        // Keep a completed target for one more world tick. The player can acknowledge
+        // its transaction first; the target still needs to consume the UI completion
+        // and reset its monitor so the next interaction can start.
+        for (int index = 0; index < _clientInteractionTargets.Length; index++)
         {
-            DeltaTime = deltaTime,
-            Modifiers = GetComponentLookup<UnitModifierComponent>(true),
-            Deaths = GetComponentLookup<UnitDeathComponent>(true),
-            PlayerInputs = GetComponentLookup<PlayerInputComponent>(true),
-            BattlePlayerStatuses = GetComponentLookup<BattlePlayerStatusComponent>(true),
-        }.ScheduleParallel(dependency);
+            Entity previous = _clientInteractionTargets[index];
+            if (EntityManager.Exists(previous))
+                targets.Add(previous);
+        }
+        _clientInteractionTargets.Clear();
+        if (SystemAPI.TryGetSingletonEntity<GameInteractionComponent>(out Entity runtime) &&
+            EntityManager.HasBuffer<InteractionTransactionElement>(runtime))
+        {
+            DynamicBuffer<InteractionTransactionElement> transactions =
+                EntityManager.GetBuffer<InteractionTransactionElement>(runtime, true);
+            for (int index = 0; index < transactions.Length; index++)
+            {
+                InteractionTransactionElement transaction = transactions[index];
+                if (transaction.Actor != localPlayer || !EntityManager.Exists(transaction.Target))
+                    continue;
+                _clientInteractionTargets.Add(transaction.Target);
+                if (!targets.Contains(transaction.Target))
+                    targets.Add(transaction.Target);
+            }
+        }
+        // TryRequest permits one transaction per actor: at most the current target
+        // and the previous target being cleaned up. Keep the snapshot inline.
+        return targets;
     }
 
     private void ReplayClientPrediction(
@@ -188,8 +226,6 @@ public partial class StateScriptSystem : SystemBase
         Entity player,
         uint authoritativeFrame,
         BlobAssetReference<StateScriptRuntimeRegistryBlob> registry,
-        UnitQueryTree queryTree,
-        int queryCapacity,
         GameWorldExecutionTarget executionTarget)
     {
         if (authoritativeFrame >= frame.currentFrame ||
@@ -205,7 +241,11 @@ public partial class StateScriptSystem : SystemBase
              replayFrame++)
         {
             ApplyReplayInput(frame, player, replayFrame);
+            ClientPlayerPhysicsPredictionUtility.RestoreSimulationPosition(EntityManager, player);
             _sources.Update(this);
+            // Rollback setup and replayed input can add components or buffers.
+            // Never retain a DynamicBuffer view across those structural changes.
+            UnitQueryTree queryTree = GetQueryTree(out int queryCapacity);
             JobHandle replayDependency = ScheduleEvaluation(
                 default,
                 registry,
@@ -215,13 +255,27 @@ public partial class StateScriptSystem : SystemBase
                 executionTarget,
                 player,
                 processInputEvents: true);
-            replayDependency = ScheduleClientMovePrediction(replayDependency, fixedDeltaTime);
             replayDependency.Complete();
 
             ClientSkillVisualPredictionUtility.CaptureSkillRequests(
                 EntityManager,
                 player,
                 replayFrame);
+
+            // Replay the same movement and collision pipeline as a normal player tick.
+            // Recording velocity * dt here would let the replay pass through obstacles.
+            World.PushTime(new TimeData((replayFrame + 1d) * fixedDeltaTime, fixedDeltaTime));
+            try
+            {
+                World.GetExistingSystemManaged<StateScriptManagedCommandSystem>()?.ReplayClientSkills();
+                World.GetExistingSystem<UnitMoveSystem>().Update(World.Unmanaged);
+                World.GetExistingSystemManaged<FixedStepSimulationSystemGroup>().Update();
+                ClientPlayerPhysicsPredictionUtility.CaptureSimulationPosition(EntityManager, player);
+            }
+            finally
+            {
+                World.PopTime();
+            }
 
             frame.RecordPlayerStates(
                 replayFrame,
@@ -356,8 +410,18 @@ public partial struct StateScriptEvaluationJob : IJobEntity
     public GameWorldExecutionTarget ExecutionTarget;
 
     public Entity TargetEntity;
+    public FixedList128Bytes<Entity> ClientInteractionTargets;
+    public BattleSimulationScope Scope;
 
     public byte ProcessInputEventBuffer;
+
+    private bool IsClientInteractionTarget(Entity entity)
+    {
+        for (int index = 0; index < ClientInteractionTargets.Length; index++)
+            if (ClientInteractionTargets[index] == entity)
+                return true;
+        return false;
+    }
 
     private void Execute(
         Entity entity,
@@ -369,7 +433,8 @@ public partial struct StateScriptEvaluationJob : IJobEntity
         ref DynamicBuffer<StateScriptExternalResultElement> externalResults)
     {
         DynamicBuffer<StateScriptManagedCommandElement> managedCommands = ManagedCommands;
-        if (TargetEntity != Entity.Null && entity != TargetEntity)
+        if ((Scope.Pass != BattleSimulationPass.All && !Scope.Includes(PlayerInputs.HasComponent(entity))) ||
+            (TargetEntity != Entity.Null && entity != TargetEntity && !IsClientInteractionTarget(entity)))
             return;
 
         sourceCommands.Clear();
@@ -2007,78 +2072,6 @@ public partial struct StateScriptEvaluationJob : IJobEntity
         return math.abs(left - right) <= math.max(0.000001f * math.max(math.abs(left), math.abs(right)), 1.121039E-44f);
     }
 
-}
-
-[BurstCompile]
-[WithAll(typeof(NetworkPlayerComponent))]
-[WithNone(typeof(UnitInitializationPendingTag))]
-public partial struct ClientPlayerStateScriptMoveJob : IJobEntity
-{
-    public float DeltaTime;
-
-    [ReadOnly]
-    public ComponentLookup<UnitModifierComponent> Modifiers;
-
-    [ReadOnly]
-    public ComponentLookup<UnitDeathComponent> Deaths;
-
-    [ReadOnly]
-    public ComponentLookup<PlayerInputComponent> PlayerInputs;
-
-    [ReadOnly]
-    public ComponentLookup<BattlePlayerStatusComponent> BattlePlayerStatuses;
-
-    private void Execute(
-        Entity entity,
-        ref UnitMoveComponent move,
-        in LocalTransform transform)
-    {
-        if (move.HasPredictedPosition == 0)
-        {
-            move.PredictedPosition = transform.Position;
-            move.HasPredictedPosition = 1;
-        }
-
-        bool isDead = Deaths.HasComponent(entity) && Deaths.IsComponentEnabled(entity);
-        bool hasStatus = BattlePlayerStatuses.TryGetComponent(
-            entity,
-            out BattlePlayerStatusComponent status);
-        bool isWaitingForTransition = hasStatus && status.IsWaitingForTransition;
-        bool isSpectator = hasStatus && status.IsSpectator;
-        if (isWaitingForTransition)
-        {
-            move.Velocity = float2.zero;
-        }
-        else if (isSpectator)
-        {
-            float2 direction = status.ConnectionState == BattlePlayerConnectionState.Online &&
-                               PlayerInputs.TryGetComponent(entity, out PlayerInputComponent input)
-                ? input.Move
-                : float2.zero;
-            UnitModifierComponent identity = UnitModifierComponent.CreateIdentity();
-            move.Velocity = math.normalizesafe(direction) *
-                            UnitModifierResolver.GetMoveSpeed(in move, in identity);
-            move.PredictedPosition += new float3(move.Velocity, 0f) * DeltaTime;
-            move.PredictedPosition.z = 0f;
-        }
-        else if (isDead)
-        {
-            move.Velocity = float2.zero;
-        }
-        else
-        {
-            UnitModifierComponent modifier = Modifiers.TryGetComponent(
-                entity,
-                out UnitModifierComponent resolvedModifier)
-                ? resolvedModifier
-                : UnitModifierComponent.CreateIdentity();
-            UnitMoveSimulationUtility.ResolveDesiredVelocity(ref move, in modifier, DeltaTime);
-            move.PredictedPosition += new float3(move.Velocity, 0f) * DeltaTime;
-            move.PredictedPosition.z = 0f;
-        }
-
-        UnitMoveSimulationUtility.ClearFrameCommands(ref move);
-    }
 }
 
 [BurstCompile]

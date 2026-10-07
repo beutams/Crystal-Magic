@@ -102,25 +102,25 @@ public sealed class PlayerCharacterSyncTests
         NetworkPropUseData propUse = new() { unitId = unitId };
         server.OnReceiveMessage(new General_FrameStateData
         {
-            data = new NetworkFrameData
+            frames = new List<NetworkFrameData> { new NetworkFrameData
             {
                 frameId = 99,
                 datas = new List<NetworkStateData>
                 {
                     new NetworkPlayerInputStateData { unitId = unitId }, late, propUse,
                 },
-            },
+            } },
         }, connect);
         server.OnReceiveMessage(new General_FrameStateData
         {
-            data = new NetworkFrameData
+            frames = new List<NetworkFrameData> { new NetworkFrameData
             {
                 frameId = 110,
                 datas = new List<NetworkStateData>
                 {
                     future, new NetworkPlayerInputStateData { unitId = unitId },
                 },
-            },
+            } },
         }, connect);
         List<NetworkStateData> applied = new();
         server.onHandleReceive = (frame, states) =>
@@ -176,7 +176,7 @@ public sealed class PlayerCharacterSyncTests
         Assert.That(playerB.Revision, Is.Zero);
         first.OnReceiveMessage(new General_FrameStateData
         {
-            data = new NetworkFrameData { datas = new List<NetworkStateData> { new NetworkCharacterEditData() } },
+            frames = new List<NetworkFrameData> { new NetworkFrameData { datas = new List<NetworkStateData> { new NetworkCharacterEditData() } } },
         }, null);
         int count = 0;
         second.onHandleReceive = (_, _) => count++;
@@ -192,7 +192,7 @@ public sealed class PlayerCharacterSyncTests
     {
         General_FrameStateData message = new()
         {
-            data = new NetworkFrameData
+            frames = new List<NetworkFrameData> { new NetworkFrameData
             {
                 datas = new List<NetworkStateData>
                 {
@@ -209,17 +209,17 @@ public sealed class PlayerCharacterSyncTests
                     new NetworkCharacterStateData { revision = 7, accepted = true, characterData = new CharacterData() },
                     new NetworkPropUseData { slotIndex = 2, itemId = 3 },
                 },
-            },
+            } },
         };
         byte[] bytes = MessageCodec.ToJson(message);
         General_FrameStateData decoded = JsonConvert.DeserializeObject<General_FrameStateData>(
             System.Text.Encoding.UTF8.GetString(bytes), new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.Auto });
-        Assert.That(decoded.data.datas[0], Is.TypeOf<NetworkCharacterEditData>());
-        Assert.That(((NetworkCharacterEditData)decoded.data.datas[0]).characterData.Money, Is.EqualTo(55));
-        Assert.That(((NetworkCharacterEditData)decoded.data.datas[0]).characterData.SteamAccountId, Is.EqualTo(76561198000000001UL));
-        Assert.That(((NetworkCharacterEditData)decoded.data.datas[0]).characterData.Name, Is.EqualTo("Crystal Mage"));
-        Assert.That(((NetworkCharacterStateData)decoded.data.datas[1]).revision, Is.EqualTo(7));
-        Assert.That(decoded.data.datas[2], Is.TypeOf<NetworkPropUseData>());
+        Assert.That(decoded.frames[0].datas[0], Is.TypeOf<NetworkCharacterEditData>());
+        Assert.That(((NetworkCharacterEditData)decoded.frames[0].datas[0]).characterData.Money, Is.EqualTo(55));
+        Assert.That(((NetworkCharacterEditData)decoded.frames[0].datas[0]).characterData.SteamAccountId, Is.EqualTo(76561198000000001UL));
+        Assert.That(((NetworkCharacterEditData)decoded.frames[0].datas[0]).characterData.Name, Is.EqualTo("Crystal Mage"));
+        Assert.That(((NetworkCharacterStateData)decoded.frames[0].datas[1]).revision, Is.EqualTo(7));
+        Assert.That(decoded.frames[0].datas[2], Is.TypeOf<NetworkPropUseData>());
     }
 
     [Test]

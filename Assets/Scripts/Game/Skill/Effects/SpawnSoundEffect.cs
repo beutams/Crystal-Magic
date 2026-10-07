@@ -40,7 +40,7 @@ namespace CrystalMagic.Game.Skill.Effects
                     Data.Pitch,
                     Data.SpatialBlend,
                     Data.DelaySeconds,
-                    followSource != Entity.Null))
+                    followSource != Entity.Null, context.EffectIdentity))
             {
                 return;
             }

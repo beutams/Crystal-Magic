@@ -10,4 +10,5 @@ public struct ClientTransformInterpolationComponent : IComponentData
     public double StartRealtime;
     public float Duration;
     public byte Initialized;
+    public byte DestroyOnArrival;
 }

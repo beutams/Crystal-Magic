@@ -24,11 +24,6 @@ public class ConfirmUI : UIBase<ConfirmUIData>
         UI.Confirm_Click_Text.TextMeshProUGUI.text = value;
     }
 
-    public void SetCancelVisible(bool isVisible)
-    {
-        UI.Cancel.GameObject.SetActive(isVisible);
-    }
-
     public override void OnOpen()
     {
         UI.Confirm.ButtonPlus.onClick.AddListener(OnConfirmButtonClicked);

@@ -2,7 +2,7 @@ using CrystalMagic.Game.Data;
 using Unity.Collections;
 using Unity.Entities;
 
-[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation)]
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ClientSimulation)]
 [UpdateInGroup(typeof(GamePresentationSystemGroup))]
 [UpdateBefore(typeof(UnitAnimationSystem))]
 public partial struct SelfUnitAnimationSystem : ISystem

@@ -50,8 +50,7 @@ namespace CrystalMagic.Core
             if (runtimeRoot == null || terrainVisual?.Placements == null || terrainVisual.Placements.Count == 0)
                 return;
 
-            GameObject gridObject = new(RuntimeGridName);
-            gridObject.transform.SetParent(runtimeRoot.transform, false);
+            GameObject gridObject = PoolComponent.Instance.CreateTransient(RuntimeGridName, runtimeRoot.transform);
             gridObject.transform.localPosition = new Vector3(
                 terrainVisual.WorldOrigin.x,
                 terrainVisual.WorldOrigin.y,
@@ -333,8 +332,7 @@ namespace CrystalMagic.Core
             string name,
             int sortingOrder)
         {
-            GameObject mapObject = new(name);
-            mapObject.transform.SetParent(parent, false);
+            GameObject mapObject = PoolComponent.Instance.CreateTransient(name, parent);
             Tilemap tilemap = mapObject.AddComponent<Tilemap>();
             TilemapRenderer renderer = mapObject.AddComponent<TilemapRenderer>();
             renderer.mode = TilemapRenderer.Mode.Chunk;

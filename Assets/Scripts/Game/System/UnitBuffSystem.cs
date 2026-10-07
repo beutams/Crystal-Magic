@@ -3,6 +3,7 @@ using CrystalMagic.Game.Data;
 using CrystalMagic.Game.Skill;
 using Server;
 using Unity.Burst;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 
@@ -28,6 +29,8 @@ public partial struct UnitBuffSystem : ISystem
 
         state.Dependency = new UnitBuffJob
         {
+            Scope = SystemAPI.TryGetSingleton(out BattleSimulationScope scope) ? scope : default,
+            Players = SystemAPI.GetComponentLookup<PlayerInputComponent>(true),
             DeltaTime = SystemAPI.Time.DeltaTime,
             Registry = registry,
         }.ScheduleParallel(state.Dependency);
@@ -38,6 +41,8 @@ public partial struct UnitBuffSystem : ISystem
 public partial struct UnitBuffJob : IJobEntity
 {
     public float DeltaTime;
+    public BattleSimulationScope Scope;
+    [ReadOnly] public ComponentLookup<PlayerInputComponent> Players;
     public BlobAssetReference<BuffEffectRegistryBlob> Registry;
 
     private void Execute(
@@ -47,6 +52,8 @@ public partial struct UnitBuffJob : IJobEntity
         DynamicBuffer<UnitBuffHookRequestElement> hookRequests,
         DynamicBuffer<EffectEntry> effectRequests)
     {
+        if (Scope.Pass != BattleSimulationPass.All && !Scope.Includes(Players.HasComponent(entity)))
+            return;
         ProcessHookRequests(entity, ref component, buffs, hookRequests, effectRequests);
         UpdateBuffs(entity, ref component, buffs, effectRequests);
     }

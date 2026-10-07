@@ -2,7 +2,7 @@
   "Rows": [
     {
       "NameKey": "燃烧",
-      "IconPath": "Assets/Res/Sprites/UISprites/Icons/Sprites.png|fire",
+      "IconPath": "Assets/Res/Sprites/Buff/buff_00_burning.png",
       "CanStack": true,
       "MaxStacks": 5,
       "PropertyModifiers": [],
@@ -28,7 +28,7 @@
     },
     {
       "NameKey": "爆燃",
-      "IconPath": "Assets/Res/Sprites/UISprites/Icons/Sprites.png|fire",
+      "IconPath": "Assets/Res/Sprites/Buff/buff_01_deflagration.png",
       "CanStack": true,
       "MaxStacks": 5,
       "PropertyModifiers": [
@@ -44,9 +44,9 @@
     },
     {
       "NameKey": "潮湿",
-      "IconPath": "Assets/Res/Sprites/UISprites/Icons/Sprites.png|ys",
-      "CanStack": false,
-      "MaxStacks": 1,
+      "IconPath": "Assets/Res/Sprites/Buff/buff_02_wet.png",
+      "CanStack": true,
+      "MaxStacks": 5,
       "PropertyModifiers": [],
       "SkillModifiers": [],
       "TriggerEntries": [],
@@ -54,7 +54,7 @@
     },
     {
       "NameKey": "冻结",
-      "IconPath": "Assets/Res/Sprites/UISprites/Icons/Sprites.png|fz",
+      "IconPath": "Assets/Res/Sprites/Buff/buff_03_frozen.png",
       "CanStack": false,
       "MaxStacks": 1,
       "PropertyModifiers": [],
@@ -64,17 +64,28 @@
     },
     {
       "NameKey": "麻痹",
-      "IconPath": "Assets/Res/Sprites/UISprites/Icons/Sprites.png|sj",
+      "IconPath": "Assets/Res/Sprites/Buff/buff_04_paralysis.png",
       "CanStack": false,
       "MaxStacks": 1,
-      "PropertyModifiers": [],
+      "PropertyModifiers": [
+        {
+          "Channel": 0,
+          "Factor": -0.3,
+          "Bonus": 0
+        },
+        {
+          "Channel": 9,
+          "Factor": -0.25,
+          "Bonus": 0
+        }
+      ],
       "SkillModifiers": [],
       "TriggerEntries": [],
       "Id": 4
     },
     {
       "NameKey": "格挡Addition",
-      "IconPath": "Assets/Res/Sprites/UISprites/Icons/Sprites.png|op",
+      "IconPath": "Assets/Res/Sprites/Buff/buff_05_block_ward.png",
       "CanStack": false,
       "MaxStacks": 1,
       "PropertyModifiers": [
@@ -105,7 +116,7 @@
     },
     {
       "NameKey": "灵巧Addition",
-      "IconPath": "Assets/Res/Sprites/UISprites/Icons/Sprites.png|op",
+      "IconPath": "Assets/Res/Sprites/Buff/buff_06_agility.png",
       "CanStack": false,
       "MaxStacks": 1,
       "PropertyModifiers": [
@@ -129,7 +140,7 @@
     },
     {
       "NameKey": "缩时咏唱Addition",
-      "IconPath": "Assets/Res/Sprites/UISprites/Icons/Sprites.png|sj",
+      "IconPath": "Assets/Res/Sprites/Buff/buff_07_quick_chant.png",
       "CanStack": false,
       "MaxStacks": 1,
       "PropertyModifiers": [
@@ -153,7 +164,7 @@
     },
     {
       "NameKey": "反射Addition",
-      "IconPath": "Assets/Res/Sprites/UISprites/Icons/Sprites.png|op",
+      "IconPath": "Assets/Res/Sprites/Buff/buff_08_reflection.png",
       "CanStack": false,
       "MaxStacks": 1,
       "PropertyModifiers": [],
@@ -181,7 +192,7 @@
     },
     {
       "NameKey": "反转Addition",
-      "IconPath": "Assets/Res/Sprites/UISprites/Icons/Sprites.png|ys",
+      "IconPath": "Assets/Res/Sprites/Buff/buff_09_reversal.png",
       "CanStack": true,
       "MaxStacks": 2,
       "PropertyModifiers": [],
@@ -205,7 +216,7 @@
     },
     {
       "NameKey": "火盾",
-      "IconPath": "Assets/Res/Sprites/UISprites/Icons/Sprites.png|fire",
+      "IconPath": "Assets/Res/Sprites/Buff/buff_10_fire_shield.png",
       "CanStack": false,
       "MaxStacks": 1,
       "PropertyModifiers": [
@@ -239,7 +250,7 @@
     },
     {
       "NameKey": "减速",
-      "IconPath": "Assets/Res/Sprites/UISprites/Icons/Sprites.png|ys",
+      "IconPath": "Assets/Res/Sprites/Buff/buff_11_slow.png",
       "CanStack": false,
       "MaxStacks": 1,
       "PropertyModifiers": [
@@ -253,8 +264,8 @@
       "TriggerEntries": [],
       "Id": 11
     },
-{"NameKey":"Shield Guard","IconPath":"Assets/Res/Sprites/UISprites/Icons/Sprites.png|op","CanStack":false,"MaxStacks":1,"PropertyModifiers":[{"Channel":14,"Factor":-0.5,"Bonus":0}],"SkillModifiers":[],"TriggerEntries":[{"TriggerType":1,"TickIntervalSeconds":0,"HookType":5,"ConsumeStackOnTrigger":false,"Effects":[{"$type":"CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp","BuffId":13,"TargetSource":0,"DurationSeconds":0.75,"StackCount":1,"OnlyOncePerPersistentEffect":false,"Conditions":[]}]}],"Id":12},
-    {"NameKey":"Block Reaction","IconPath":"Assets/Res/Sprites/UISprites/Icons/Sprites.png|op","CanStack":false,"MaxStacks":1,"PropertyModifiers":[],"SkillModifiers":[],"TriggerEntries":[],"Id":13},
-    {"NameKey":"Werewolf Attack 02 Exposed","IconPath":"","CanStack":false,"MaxStacks":1,"PropertyModifiers":[],"SkillModifiers":[],"TriggerEntries":[{"TriggerType":1,"TickIntervalSeconds":0,"HookType":5,"ConsumeStackOnTrigger":false,"Effects":[{"$type":"CrystalMagic.Game.Data.Effects.StunEffectData, Assembly-CSharp","DurationSeconds":1,"Conditions":[]}]}],"Id":14}
+{"NameKey":"Shield Guard","IconPath":"Assets/Res/Sprites/Buff/buff_12_shield_guard.png","CanStack":false,"MaxStacks":1,"PropertyModifiers":[{"Channel":14,"Factor":-0.5,"Bonus":0}],"SkillModifiers":[],"TriggerEntries":[{"TriggerType":1,"TickIntervalSeconds":0,"HookType":5,"ConsumeStackOnTrigger":true,"Effects":[{"$type":"CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp","BuffId":13,"TargetSource":0,"DurationSeconds":0.75,"StackCount":1,"OnlyOncePerPersistentEffect":false,"Conditions":[]}]}],"Id":12},
+    {"NameKey":"Block Reaction","IconPath":"Assets/Res/Sprites/Buff/buff_13_block_reaction.png","CanStack":false,"MaxStacks":1,"PropertyModifiers":[],"SkillModifiers":[],"TriggerEntries":[],"Id":13},
+    {"NameKey":"Werewolf Attack 02 Exposed","IconPath":"Assets/Res/Sprites/Buff/buff_14_werewolf_exposed.png","CanStack":false,"MaxStacks":1,"PropertyModifiers":[],"SkillModifiers":[],"TriggerEntries":[{"TriggerType":1,"TickIntervalSeconds":0,"HookType":5,"ConsumeStackOnTrigger":false,"Effects":[{"$type":"CrystalMagic.Game.Data.Effects.StunEffectData, Assembly-CSharp","DurationSeconds":1,"Conditions":[]}]}],"Id":14}
   ]
 }

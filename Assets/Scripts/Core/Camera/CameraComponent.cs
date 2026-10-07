@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -19,16 +20,23 @@ namespace CrystalMagic.Core {
         private World _followQueryWorld;
         private Entity _followTargetEntity = Entity.Null;
         private float _screenShakeScale = 1f;
-        private Rect _worldBounds;
-        private int _worldBoundsOwnerId;
-        private bool _hasWorldBounds;
+        private readonly CameraWorldBoundsConstraint _worldBounds = new();
+        private readonly List<FollowTargetLease> _followOverrides = new();
+        private Vector3 _returnPosition;
+        private float _returnSmooth;
+        private bool _returningFromOverride;
+        private float _returnElapsed;
+        private Vector3 _returnStartPosition;
 
         /// <summary>当前活跃的场景相机</summary>
         public Camera Current => _current != null ? _current.Camera : Camera.main;
 
         public void Register(SceneCamera cam)
         {
+            if (_current != cam)
+                ClearFollowTargets();
             _current = cam;
+            _worldBounds.Apply(cam.Camera);
             Debug.Log($"[CameraComponent] Registered: {cam.gameObject.name}");
         }
 
@@ -36,6 +44,7 @@ namespace CrystalMagic.Core {
         {
             if (_current == cam)
             {
+                ClearFollowTargets();
                 _current = null;
                 Debug.Log($"[CameraComponent] Unregistered: {cam.gameObject.name}");
             }
@@ -43,27 +52,19 @@ namespace CrystalMagic.Core {
 
         public void SetWorldBounds(int ownerId, Rect worldBounds)
         {
-            if (ownerId == 0 || worldBounds.width <= 0f || worldBounds.height <= 0f)
-                return;
+            SetWorldBounds(ownerId, new Bounds(worldBounds.center, new Vector3(worldBounds.width, worldBounds.height, 0)));
+        }
 
-            _worldBounds = Rect.MinMaxRect(
-                Mathf.Min(worldBounds.xMin, worldBounds.xMax),
-                Mathf.Min(worldBounds.yMin, worldBounds.yMax),
-                Mathf.Max(worldBounds.xMin, worldBounds.xMax),
-                Mathf.Max(worldBounds.yMin, worldBounds.yMax));
-            _worldBoundsOwnerId = ownerId;
-            _hasWorldBounds = true;
-            ClampCameraToWorldBounds(Current);
+        public void SetWorldBounds(int ownerId, Bounds worldBounds)
+        {
+            RestoreShakeOffset();
+            _worldBounds.Set(ownerId, worldBounds);
+            _worldBounds.Apply(Current);
         }
 
         public void ClearWorldBounds(int ownerId)
         {
-            if (!_hasWorldBounds || ownerId == 0 || _worldBoundsOwnerId != ownerId)
-                return;
-
-            _worldBounds = default;
-            _worldBoundsOwnerId = 0;
-            _hasWorldBounds = false;
+            _worldBounds.Clear(ownerId);
         }
 
         private void LateUpdate()
@@ -75,7 +76,7 @@ namespace CrystalMagic.Core {
                 return;
 
             ApplyFollow(camera, Time.deltaTime);
-            ClampCameraToWorldBounds(camera);
+            _worldBounds.Apply(camera);
 
             if (_shakes.Count == 0)
                 return;
@@ -85,7 +86,7 @@ namespace CrystalMagic.Core {
             if (offset == Vector3.zero)
                 return;
 
-            Vector3 constrainedPosition = ClampCameraPosition(camera, basePosition + offset);
+            Vector3 constrainedPosition = _worldBounds.ClampPosition(camera, basePosition + offset);
             _lastShakeOffset = constrainedPosition - basePosition;
             if (_lastShakeOffset == Vector3.zero)
                 return;
@@ -174,74 +175,98 @@ namespace CrystalMagic.Core {
         #endregion
 
         #region Follow
+        /// <summary>
+        /// Temporarily follow an entity in its owning World. The newest live lease wins;
+        /// disposing an older lease never releases a newer speaker's lock.
+        /// </summary>
+        public IDisposable AcquireFollowTarget(World world, Entity target, float smooth = 8f)
+        {
+            if (!TryGetEntityTargetPosition(world, target, out _))
+                return null;
+            RestoreShakeOffset();
+            if (_followOverrides.Count == 0 && !_returningFromOverride)
+                _returnPosition = Current != null ? Current.transform.position : Vector3.zero;
+            smooth = float.IsNaN(smooth) || float.IsInfinity(smooth) ? 8f : Mathf.Clamp(smooth, 0f, 20f);
+            var lease = new FollowTargetLease(this, world, target, smooth);
+            _followOverrides.Add(lease);
+            _returnSmooth = smooth;
+            _returningFromOverride = false;
+            return lease;
+        }
+
+        private void ReleaseFollowTarget(FollowTargetLease lease)
+        {
+            if (_followOverrides.Remove(lease) && _followOverrides.Count == 0)
+            {
+                _returningFromOverride = true;
+                _returnElapsed = 0f;
+            }
+        }
+
+        private void ClearFollowTargets()
+        {
+            foreach (FollowTargetLease lease in _followOverrides)
+                lease.Owner = null;
+            _followOverrides.Clear();
+            _returningFromOverride = false;
+        }
+
+        private bool TryGetOverridePosition(out Vector3 position, out float smooth)
+        {
+            // Prune destroyed entities/disposed Worlds, including suspended older locks.
+            for (int i = _followOverrides.Count - 1; i >= 0; i--)
+                if (!TryGetEntityTargetPosition(_followOverrides[i].World, _followOverrides[i].Target, out _))
+                    _followOverrides[i].Dispose();
+            if (_followOverrides.Count > 0)
+            {
+                FollowTargetLease lease = _followOverrides[_followOverrides.Count - 1];
+                smooth = lease.Smooth;
+                return TryGetEntityTargetPosition(lease.World, lease.Target, out position);
+            }
+            position = default;
+            smooth = 0f;
+            return false;
+        }
+
         private void ApplyFollow(Camera camera, float deltaTime)
         {
-            if (_current == null || !_current.FollowPlayerTag)
-                return;
-
-            if (!TryGetPlayerTargetPosition(out Vector3 targetPosition))
-                return;
-
             Vector3 currentPosition = camera.transform.position;
-            Vector3 desiredPosition = _current.GetDesiredPosition(targetPosition, currentPosition);
-            float smooth = _current.FollowSmooth;
-            if (smooth <= 0f)
+            bool hasOverride = TryGetOverridePosition(out Vector3 targetPosition, out float smooth);
+            Vector3 desiredPosition;
+            if (hasOverride)
             {
-                camera.transform.position = desiredPosition;
+                desiredPosition = _current != null ? _current.GetDesiredPosition(targetPosition, currentPosition)
+                    : new Vector3(targetPosition.x, targetPosition.y, currentPosition.z);
+            }
+            else if (_current != null && _current.FollowPlayerTag && TryGetPlayerTargetPosition(out targetPosition))
+            {
+                desiredPosition = _current.GetDesiredPosition(targetPosition, currentPosition);
+                smooth = _returningFromOverride ? _returnSmooth : _current.FollowSmooth;
+            }
+            else if (_returningFromOverride)
+            {
+                // Static scene cameras return to their previous position, not to a player.
+                desiredPosition = _returnPosition;
+                smooth = _returnSmooth;
+            }
+            else
+                return;
+
+            desiredPosition = _worldBounds.ClampPosition(camera, desiredPosition);
+            if (!hasOverride && _returningFromOverride)
+            {
+                if (_returnElapsed == 0f)
+                    _returnStartPosition = currentPosition;
+                _returnElapsed += Mathf.Max(0f, deltaTime);
+                // A finite blend restores the original follow settings even while the
+                // player keeps moving. Distance-only convergence would keep extra lag forever.
+                float progress = smooth <= 0f ? 1f : Mathf.Clamp01(_returnElapsed * smooth / 4f);
+                camera.transform.position = Vector3.Lerp(_returnStartPosition, desiredPosition, Mathf.SmoothStep(0f, 1f, progress));
+                _returningFromOverride = progress < 1f;
                 return;
             }
-
-            float t = 1f - Mathf.Exp(-smooth * deltaTime);
+            float t = smooth <= 0f ? 1f : 1f - Mathf.Exp(-smooth * Mathf.Max(0f, deltaTime));
             camera.transform.position = Vector3.Lerp(currentPosition, desiredPosition, t);
-        }
-
-        private void ClampCameraToWorldBounds(Camera camera)
-        {
-            if (camera != null)
-                camera.transform.position = ClampCameraPosition(camera, camera.transform.position);
-        }
-
-        private Vector3 ClampCameraPosition(Camera camera, Vector3 position)
-        {
-            if (!_hasWorldBounds || camera == null || !TryGetCameraHalfViewSize(camera, position, out Vector2 halfViewSize))
-                return position;
-
-            position.x = ClampAxisToBounds(position.x, _worldBounds.xMin, _worldBounds.xMax, halfViewSize.x);
-            position.y = ClampAxisToBounds(position.y, _worldBounds.yMin, _worldBounds.yMax, halfViewSize.y);
-            return position;
-        }
-
-        private static bool TryGetCameraHalfViewSize(Camera camera, Vector3 position, out Vector2 halfViewSize)
-        {
-            float aspect = Mathf.Max(0.0001f, camera.aspect);
-            if (camera.orthographic)
-            {
-                float halfHeight = Mathf.Max(0f, camera.orthographicSize);
-                halfViewSize = new Vector2(halfHeight * aspect, halfHeight);
-                return true;
-            }
-
-            float distanceToMapPlane = Mathf.Abs(position.z);
-            if (distanceToMapPlane <= 0.0001f)
-            {
-                halfViewSize = default;
-                return false;
-            }
-
-            float halfVerticalFovRadians = camera.fieldOfView * Mathf.Deg2Rad * 0.5f;
-            float perspectiveHalfHeight = Mathf.Tan(halfVerticalFovRadians) * distanceToMapPlane;
-            halfViewSize = new Vector2(perspectiveHalfHeight * aspect, perspectiveHalfHeight);
-            return true;
-        }
-
-        private static float ClampAxisToBounds(float value, float minimum, float maximum, float halfViewSize)
-        {
-            float minimumCenter = minimum + halfViewSize;
-            float maximumCenter = maximum - halfViewSize;
-            if (minimumCenter > maximumCenter)
-                return (minimum + maximum) * 0.5f;
-
-            return Mathf.Clamp(value, minimumCenter, maximumCenter);
         }
 
         private bool TryGetPlayerTargetPosition(out Vector3 targetPosition)
@@ -273,10 +298,53 @@ namespace CrystalMagic.Core {
                 }
             }
 
-            LocalToWorld localToWorld = entityManager.GetComponentData<LocalToWorld>(_followTargetEntity);
+            return TryGetEntityTargetPosition(world, _followTargetEntity, out targetPosition);
+        }
+
+        private static bool TryGetEntityTargetPosition(World world, Entity target, out Vector3 targetPosition)
+        {
+            targetPosition = default;
+            if (world == null || !world.IsCreated || target == Entity.Null)
+                return false;
+            EntityManager entityManager = world.EntityManager;
+            if (!entityManager.Exists(target) || !entityManager.HasComponent<LocalToWorld>(target) ||
+                entityManager.HasComponent<DestroyEntityFlag>(target) && entityManager.IsComponentEnabled<DestroyEntityFlag>(target))
+                return false;
+            LocalToWorld localToWorld = entityManager.GetComponentData<LocalToWorld>(target);
             float3 position = localToWorld.Position;
+            if (entityManager.HasComponent<ClientPlayerMovePresentationComponent>(target))
+            {
+                ClientPlayerMovePresentationComponent presentation =
+                    entityManager.GetComponentData<ClientPlayerMovePresentationComponent>(target);
+                if (presentation.Initialized != 0)
+                    position = presentation.CurrentPosition;
+            }
             targetPosition = new Vector3(position.x, position.y, position.z);
             return true;
+        }
+
+        private sealed class FollowTargetLease : IDisposable
+        {
+            public CameraComponent Owner;
+            public readonly World World;
+            public readonly Entity Target;
+            public readonly float Smooth;
+
+            public FollowTargetLease(CameraComponent owner, World world, Entity target, float smooth)
+            {
+                Owner = owner;
+                World = world;
+                Target = target;
+                Smooth = smooth;
+            }
+
+            public void Dispose()
+            {
+                CameraComponent owner = Owner;
+                Owner = null;
+                if (owner != null)
+                    owner.ReleaseFollowTarget(this);
+            }
         }
 
         #endregion
@@ -285,12 +353,11 @@ namespace CrystalMagic.Core {
         {
             RestoreShakeOffset();
             _shakes.Clear();
+            ClearFollowTargets();
             _current = null;
             _followQueryWorld = null;
             _followTargetEntity = Entity.Null;
-            _worldBounds = default;
-            _worldBoundsOwnerId = 0;
-            _hasWorldBounds = false;
+            _worldBounds.Reset();
             base.Cleanup();
         }
 

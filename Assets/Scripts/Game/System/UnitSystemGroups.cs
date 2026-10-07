@@ -1,4 +1,5 @@
 using Unity.Entities;
+using Unity.Transforms;
 
 [UpdateInGroup(typeof(SimulationSystemGroup))]
 [UpdateBefore(typeof(UnitDecisionSystemGroup))]
@@ -40,6 +41,8 @@ public partial class ClientPlayerPredictionSystemGroup : ComponentSystemGroup
 }
 
 [UpdateInGroup(typeof(SimulationSystemGroup))]
+[UpdateAfter(typeof(BattleSimulationSystemGroup))]
+[UpdateBefore(typeof(TransformSystemGroup))]
 [UpdateBefore(typeof(GamePresentationSystemGroup))]
 public partial class ClientNetworkPresentationSystemGroup : ComponentSystemGroup
 {

@@ -36,7 +36,7 @@ namespace CrystalMagic.Core
                 TargetStateData = data,
                 TransitionUIName = "TransitionUI",
                 KeepCurrentMainScene = true,
-                ActiveSubSceneNames = new[] { SubSceneName },
+                ActiveSubSceneNames = new[] { DungeonState.RegistrySubSceneName, SubSceneName },
             };
         }
     }

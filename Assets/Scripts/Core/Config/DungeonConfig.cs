@@ -3,6 +3,7 @@ using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
 using CrystalMagic.Game.OpenField;
 using UnityEngine;
+using Unity.Mathematics;
 
 namespace CrystalMagic.Game.Config
 {
@@ -21,6 +22,17 @@ namespace CrystalMagic.Game.Config
         public int InitialThemeId;
 
         public const int LevelsPerTheme = 10;
+
+        [EditorLabel("Distance Sleep Enabled")]
+        public bool MonsterDistanceSleepEnabled = true;
+        [EditorLabel("Monster Wake Distance")]
+        public float MonsterWakeDistance = 30f;
+        [EditorLabel("Monster Sleep Distance")]
+        public float MonsterSleepDistance = 45f;
+        [EditorLabel("Monster Sleep Delay (Seconds)")]
+        public float MonsterSleepDelay = 5f;
+        [EditorLabel("Monster Distance Check Interval (Seconds)")]
+        public float MonsterDistanceCheckInterval = 0.5f;
 
         [EditorLabel("Chest Reward Count Range (Min / Max)")]
         public Vector2Int ChestRewardCountRange = new(3, 4);
@@ -66,6 +78,10 @@ namespace CrystalMagic.Game.Config
             MapWidth = Mathf.Max(8, MapWidth);
             MapHeight = Mathf.Max(8, MapHeight);
             InitialThemeId = Mathf.Max(0, InitialThemeId);
+            MonsterWakeDistance = math.isfinite(MonsterWakeDistance) ? Mathf.Max(1f, MonsterWakeDistance) : 30f;
+            MonsterSleepDistance = math.isfinite(MonsterSleepDistance) ? Mathf.Max(MonsterWakeDistance + 1f, MonsterSleepDistance) : Mathf.Max(45f, MonsterWakeDistance + 1f);
+            MonsterSleepDelay = math.isfinite(MonsterSleepDelay) ? Mathf.Max(0f, MonsterSleepDelay) : 5f;
+            MonsterDistanceCheckInterval = math.isfinite(MonsterDistanceCheckInterval) ? Mathf.Clamp(MonsterDistanceCheckInterval, 0.05f, 2f) : 0.5f;
             ChestRewardCountRange.x = Mathf.Max(1, ChestRewardCountRange.x);
             ChestRewardCountRange.y = Mathf.Max(ChestRewardCountRange.x, ChestRewardCountRange.y);
             CopperChestCounts = Vector3Int.Max(Vector3Int.zero, CopperChestCounts);

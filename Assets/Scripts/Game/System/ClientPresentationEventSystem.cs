@@ -1,5 +1,6 @@
 using CrystalMagic.Core;
 using CrystalMagic.Game.Skill.Effects;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -29,10 +30,18 @@ public partial class ClientPresentationEventSystem : SystemBase
             EntityManager.GetComponentData<ClientPresentationClockComponent>(eventEntity);
         DynamicBuffer<ClientPresentationEventElement> events =
             EntityManager.GetBuffer<ClientPresentationEventElement>(eventEntity);
+        if (events.Length == 0)
+            return;
+
+        // Playing/reconciling VFX can instantiate entities or add components.
+        // Copy and drain this batch before those structural changes; events queued
+        // by callbacks remain in the live buffer for the next update.
+        using NativeArray<ClientPresentationEventElement> pendingEvents = events.ToNativeArray(Allocator.Temp);
+        events.Clear();
         uint lastConsumedSequence = clock.LastConsumedEventSequence;
-        for (int index = 0; index < events.Length; index++)
+        for (int index = 0; index < pendingEvents.Length; index++)
         {
-            ClientPresentationEventElement presentationEvent = events[index];
+            ClientPresentationEventElement presentationEvent = pendingEvents[index];
             if (presentationEvent.Sequence == 0u || presentationEvent.Sequence <= lastConsumedSequence)
                 continue;
 
@@ -45,10 +54,13 @@ public partial class ClientPresentationEventSystem : SystemBase
             lastConsumedSequence = presentationEvent.Sequence;
         }
 
-        events.Clear();
-        if (lastConsumedSequence != clock.LastConsumedEventSequence)
+        if (lastConsumedSequence != clock.LastConsumedEventSequence &&
+            EntityManager.Exists(eventEntity) &&
+            EntityManager.HasComponent<ClientPresentationClockComponent>(eventEntity))
         {
-            clock.LastConsumedEventSequence = lastConsumedSequence;
+            // A callback may have applied a newer frame or removed the event entity.
+            clock = EntityManager.GetComponentData<ClientPresentationClockComponent>(eventEntity);
+            clock.LastConsumedEventSequence = math.max(clock.LastConsumedEventSequence, lastConsumedSequence);
             EntityManager.SetComponentData(eventEntity, clock);
         }
     }
@@ -57,6 +69,9 @@ public partial class ClientPresentationEventSystem : SystemBase
     {
         switch (presentationEvent.Type)
         {
+            case ClientPresentationEventType.ProjectileImpact:
+                ClientProjectilePredictionUtility.ApplyImpact(EntityManager, presentationEvent);
+                break;
             case ClientPresentationEventType.Damage:
                 PlayDamage(presentationEvent);
                 break;
@@ -197,7 +212,7 @@ public partial class ClientPresentationEventSystem : SystemBase
                 presentationEvent.Position,
                 presentationEvent.Rotation,
                 presentationEvent.Scale,
-                presentationEvent.Duration,
+                0f,
                 presentationEvent.FlagB != 0,
                 out Entity effectEntity))
         {
@@ -211,8 +226,9 @@ public partial class ClientPresentationEventSystem : SystemBase
             FromFrame = presentationEvent.Frame,
             TargetFrame = presentationEvent.Frame,
             StartRealtime = UnityEngine.Time.realtimeSinceStartupAsDouble,
-            Duration = math.max(0.001f, presentationEvent.Duration),
+            Duration = math.max(0f, presentationEvent.Duration),
             Initialized = 1,
+            DestroyOnArrival = 1,
         };
         if (EntityManager.HasComponent<ClientTransformInterpolationComponent>(effectEntity))
             EntityManager.SetComponentData(effectEntity, interpolation);

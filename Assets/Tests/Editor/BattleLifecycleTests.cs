@@ -99,7 +99,7 @@ public sealed class BattleLifecycleTests
         frame.OnReceiveMessage(new General_FrameStateData
         {
             sceneVersion = 1,
-            data = new NetworkFrameData
+            frames = new List<NetworkFrameData> { new NetworkFrameData
             {
                 frameId = 10,
                 datas = new List<NetworkStateData>
@@ -108,21 +108,21 @@ public sealed class BattleLifecycleTests
                     new NetworkSkillChainSelectData { unitId = unitId, skillChainIndex = 4 },
                     new NetworkCharacterEditData { unitId = unitId, characterData = new CharacterData() },
                 },
-            },
+            } },
         }, oldConnect);
         frame.RemoveConnect(oldConnect);
         frame.AddConnect(newConnect, unitId);
         frame.OnReceiveMessage(new General_FrameStateData
         {
             sceneVersion = 1,
-            data = new NetworkFrameData
+            frames = new List<NetworkFrameData> { new NetworkFrameData
             {
                 frameId = 10,
                 datas = new List<NetworkStateData>
                 {
                     new NetworkSkillChainSelectData { unitId = unitId, skillChainIndex = 2 },
                 },
-            },
+            } },
         }, newConnect);
         Queue<NetworkState> received = null;
         frame.onHandleReceive = (_, states) => received = states;
@@ -318,11 +318,11 @@ public sealed class BattleLifecycleTests
         General_FrameStateData message = new()
         {
             sceneVersion = 1,
-            data = new NetworkFrameData
+            frames = new List<NetworkFrameData> { new NetworkFrameData
             {
                 frameId = 3,
                 datas = new List<NetworkStateData> { new NetworkPlayerInputStateData() },
-            },
+            } },
         };
         manager.OnReceiveMessage(message, null);
         Assert.That(manager.receivedOrder, Is.Empty);

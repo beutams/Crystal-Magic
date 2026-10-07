@@ -77,7 +77,7 @@ namespace CrystalMagic.Core
 
     /// <summary>
     /// 菜单阶段仅创建一个空的 Bootstrap World 来满足 Entities 的默认 World 契约；
-    /// 它不包含系统，也不会加入 PlayerLoop。进入一局游戏后才由 GameWorldManager 显式创建 GameWorld。
+    /// 它不包含系统，也不会加入 PlayerLoop。预加载 World 独立准备，进入游戏后才接管默认 World。
     /// </summary>
     public sealed class GameWorldBootstrap : ICustomBootstrap
     {
@@ -90,8 +90,8 @@ namespace CrystalMagic.Core
 
     /// <summary>
     /// 管理客户端或单机当前游戏会话唯一的 ECS World。
-    /// 单机 Town、Dungeon、Training 共享同一个 World；进入联机战斗时会销毁 Standalone World 并创建 Client World，
-    /// 返回城镇时再反向重建。Battle Server 的 World 由各自 BattleRoom 独立持有，不经过这里。
+    /// 单机和联机分别复用预加载 World，切换角色时停放旧 World，保留系统和通用注册表。
+    /// Battle Server 的预加载 World 由 BattleRoom 取得并独立驱动。
     /// </summary>
     public static class GameWorldManager
     {
@@ -129,6 +129,18 @@ namespace CrystalMagic.Core
 
             DisposeBootstrapWorld();
 
+            if (!GameWorldPreload.TryTake(role, out _gameWorld))
+                _gameWorld = CreateConfiguredWorld(role, WorldName);
+            Role = role;
+            SceneMode = GameSceneMode.None;
+            World.DefaultGameObjectInjectionWorld = _gameWorld;
+            if (appendToPlayerLoop)
+                AppendGameWorldToPlayerLoop();
+            return _gameWorld;
+        }
+
+        internal static World CreateConfiguredWorld(GameWorldRole role, string name)
+        {
             WorldFlags worldFlags = role switch
             {
                 GameWorldRole.Server => WorldFlags.GameServer,
@@ -137,24 +149,23 @@ namespace CrystalMagic.Core
             };
             WorldSystemFilterFlags systemFilter = role switch
             {
-                GameWorldRole.Server => WorldSystemFilterFlags.Default | WorldSystemFilterFlags.ServerSimulation,
-                GameWorldRole.Client => WorldSystemFilterFlags.Default | WorldSystemFilterFlags.ClientSimulation | WorldSystemFilterFlags.Presentation,
-                _ => WorldSystemFilterFlags.Default | WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.Presentation,
+                // GetAllSystems expands Default to LocalSimulation | Presentation.
+                // Adding it to a network role also installs standalone input, loot,
+                // and projectile simulation alongside the network systems.
+                GameWorldRole.Server => WorldSystemFilterFlags.ServerSimulation,
+                GameWorldRole.Client => WorldSystemFilterFlags.ClientSimulation | WorldSystemFilterFlags.Presentation,
+                _ => WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.Presentation,
             };
 
-            _gameWorld = new World(WorldName, worldFlags);
-            Role = role;
-            SceneMode = GameSceneMode.None;
-            GameSingletonUtility.Create(_gameWorld.EntityManager, role, SceneMode);
-            World.DefaultGameObjectInjectionWorld = _gameWorld;
-
-            DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(
-                _gameWorld,
-                DefaultWorldInitialization.GetAllSystems(systemFilter));
-            if (appendToPlayerLoop)
-                AppendGameWorldToPlayerLoop();
-
-            return _gameWorld;
+            World world = new World(name, worldFlags);
+            try
+            {
+                GameSingletonUtility.Create(world.EntityManager, role, GameSceneMode.None);
+                DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(
+                    world, DefaultWorldInitialization.GetAllSystems(systemFilter));
+                return world;
+            }
+            catch { world.Dispose(); throw; }
         }
 
         internal static void CreateBootstrapWorld(string defaultWorldName)
@@ -221,7 +232,7 @@ namespace CrystalMagic.Core
             GameSceneMode targetMode = ResolveSceneMode(sceneName);
             if (targetMode == GameSceneMode.None)
             {
-                ShutdownGameWorld();
+                ReleaseGameWorld();
                 return;
             }
 
@@ -256,6 +267,7 @@ namespace CrystalMagic.Core
             if (_appendedToPlayerLoop)
                 ScriptBehaviourUpdateOrder.RemoveWorldFromCurrentPlayerLoop(_gameWorld);
 
+            GameWorldPreload.Forget(_gameWorld);
             _gameWorld.Dispose();
             _gameWorld = null;
             _appendedToPlayerLoop = false;
@@ -266,7 +278,26 @@ namespace CrystalMagic.Core
         public static void Shutdown()
         {
             ShutdownGameWorld();
+            GameWorldPreload.Dispose();
             DisposeBootstrapWorld();
+        }
+
+        public static void ReleaseGameWorld()
+        {
+            // Headless servers have no SceneComponent. Local/client presentation
+            // must release its entities while the owning World is still alive.
+            if (SceneComponent.TryGetInstance(out SceneComponent sceneComponent))
+                sceneComponent.MapPresentation.Clear();
+            if (!HasGameWorld) return;
+            RemoveGameWorldFromPlayerLoop();
+            World previous = _gameWorld;
+            if (World.DefaultGameObjectInjectionWorld == previous)
+                World.DefaultGameObjectInjectionWorld = null;
+            _gameWorld = null;
+            Role = GameWorldRole.None;
+            SceneMode = GameSceneMode.None;
+            if (!GameWorldPreload.TryReturn(previous))
+                previous.Dispose();
         }
 
         private static void DisposeBootstrapWorld()

@@ -37,6 +37,7 @@ public struct EffectRequestContext
     public Entity TargetEntity;
     public Entity OtherEntity;
     public int SourceSkillId;
+    public SkillEffectIdentity EffectIdentity;
     public float3 Position;
     public float3 OriginPositionSnapshot;
     public float TriggerValue;

@@ -2,8 +2,11 @@ using CrystalMagic.Game.Data;
 using Unity.Burst;
 using Unity.Entities;
 
+// Clients derive these values from replicated buff snapshots; UnitBuffSystem
+// remains authority-only and owns timers and triggered effects.
 [BurstCompile]
-[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation |
+                   WorldSystemFilterFlags.ClientSimulation)]
 [UpdateInGroup(typeof(UnitInitializationSystemGroup))]
 [UpdateAfter(typeof(UnitBuffSystem))]
 public partial struct UnitModifierSystem : ISystem

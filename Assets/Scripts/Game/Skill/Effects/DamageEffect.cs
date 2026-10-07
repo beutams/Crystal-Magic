@@ -52,6 +52,11 @@ namespace CrystalMagic.Game.Skill.Effects
                 entityManager.SetComponentEnabled<UnitDeathComponent>(target, true);
             }
 
+            // Also alert surviving squad members when this hit kills the victim.
+            // Buff damage keeps its origin but does not need to emit reactive buff hooks.
+            if (context.HasOriginEntity)
+                UnitDamageAggroUtility.NotifyDamage(entityManager, target, context.OriginEntity);
+
             if (!died && SendsOnDamagedHook)
             {
                 UnitBuffHookUtility.Dispatch(

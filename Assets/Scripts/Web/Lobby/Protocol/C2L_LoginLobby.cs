@@ -12,5 +12,7 @@ namespace Server
         public bool steamP2PAvailable;
         public int protocolVersion;
         public string activeSessionId;
+        public string hostedTcpAddress;
+        public int hostedTcpPort;
     }
 }

@@ -20,6 +20,8 @@ namespace CrystalMagic.UI
             View.CommodityBuyRequested += OnCommodityBuyRequested;
             View.InventorySellRequested += OnInventorySellRequested;
             View.CommodityHoverExited += OnCommodityHoverExited;
+            View.BackClicked += OnBackClicked;
+            View.InventorySortRequested += OnInventorySortRequested;
             BindEvent(new CrystalMagic.Core.CommonGameEvent(CrystalMagic.Core.SaveDataComponent.BackpackDataChangedEventName), _refreshHandler);
             BindEvent(new CrystalMagic.Core.CommonGameEvent(CrystalMagic.Core.SaveDataComponent.TownDataChangedEventName), _refreshHandler);
             Model.Refresh();
@@ -31,9 +33,24 @@ namespace CrystalMagic.UI
             View.CommodityBuyRequested -= OnCommodityBuyRequested;
             View.InventorySellRequested -= OnInventorySellRequested;
             View.CommodityHoverExited -= OnCommodityHoverExited;
+            View.BackClicked -= OnBackClicked;
+            View.InventorySortRequested -= OnInventorySortRequested;
             CloseItemInfoUI();
             CloseBuyUI();
             CloseSellUI();
+        }
+
+        private void OnBackClicked()
+        {
+            View.Close();
+        }
+
+        private void OnInventorySortRequested()
+        {
+            CloseItemInfoUI();
+            CloseBuyUI();
+            CloseSellUI();
+            PlayerCharacterUtility.TrySortBackpack();
         }
 
         private void OnCommodityHoverReady(ShopCommodityDisplayData data)

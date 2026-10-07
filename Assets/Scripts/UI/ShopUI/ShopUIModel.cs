@@ -10,7 +10,7 @@ namespace CrystalMagic.UI
         public override string ChangedEventName => DataChangedEventName;
 
         private readonly List<ShopCommodityDisplayData> _commodities = new();
-        private readonly ShopInventoryDisplayData[] _inventoryItems = new ShopInventoryDisplayData[32];
+        private ShopInventoryDisplayData[] _inventoryItems = new ShopInventoryDisplayData[32];
 
         private string _npcName;
         private int _inventorySlotCount = 32;
@@ -50,7 +50,7 @@ namespace CrystalMagic.UI
                     ShopDataId = shopData.Id,
                     ItemId = shopData.itemDataId,
                     Name = itemData != null ? itemData.Name : string.Empty,
-                    Description = itemData != null ? itemData.Description : string.Empty,
+                    Description = itemData != null ? itemData.DescriptionWithType : string.Empty,
                     Price = shopData.Price,
                     Grade = shopData.Grade,
                     IconPath = itemData != null ? itemData.IconPath : string.Empty,
@@ -65,6 +65,9 @@ namespace CrystalMagic.UI
             BackpackData backpackData = SaveDataComponent.Instance.GetBackpackData();
             InventoryUtility.EnsureBackpackSlots(backpackData);
             List<InventoryItemData> backpackItems = backpackData?.Items;
+            _inventorySlotCount = backpackItems?.Count ?? 0;
+            if (_inventoryItems.Length != _inventorySlotCount)
+                System.Array.Resize(ref _inventoryItems, _inventorySlotCount);
             if (backpackItems == null)
                 return;
 
@@ -82,7 +85,7 @@ namespace CrystalMagic.UI
                     ItemId = inventoryItem.ItemId,
                     Count = inventoryItem.Quantity,
                     Name = itemData != null ? itemData.Name : string.Empty,
-                    Description = itemData != null ? itemData.Description : string.Empty,
+                    Description = itemData != null ? itemData.DescriptionWithType : string.Empty,
                     SellPrice = itemData != null ? itemData.SellPrice : 0,
                     IconPath = itemData != null ? itemData.IconPath : string.Empty,
                 };

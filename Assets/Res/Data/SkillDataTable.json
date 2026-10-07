@@ -6,7 +6,7 @@
       "DescriptionKey": "释放火球，命中时会造成一次爆炸并施加点燃效果",
       "RuntimeType": "CommonSkill",
       "InputType": 2,
-      "MpCost": 100,
+      "MpCost": 10,
       "ChantDuration": 1.0,
       "CastingMoveMultiplier": 0.5,
       "IconPath": "Assets/Res/Sprites/Skill/fire_skill_01.png",
@@ -261,8 +261,30 @@
                 }
               ],
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/explosion_small.wav",
+              "Channel": 1,
+              "Volume": 0.8,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/fireball_release.wav",
+          "Channel": 1,
+          "Volume": 0.85,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -275,7 +297,7 @@
       "DescriptionKey": "释放火球，命中时造成爆炸并将目标的点燃效果转变成爆燃效果",
       "RuntimeType": "CommonSkill",
       "InputType": 2,
-      "MpCost": 200,
+      "MpCost": 20,
       "ChantDuration": 1.0,
       "CastingMoveMultiplier": 0.5,
       "IconPath": "Assets/Res/Sprites/Skill/fire_skill_04.png",
@@ -530,8 +552,30 @@
                 }
               ],
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/explosion_medium.wav",
+              "Channel": 1,
+              "Volume": 0.8,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/pyroblast_release.wav",
+          "Channel": 1,
+          "Volume": 0.85,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -544,7 +588,7 @@
       "DescriptionKey": "召唤一颗流星撞击地面，造成爆炸并将目标的点燃效果转变成爆燃效果",
       "RuntimeType": "CommonSkill",
       "InputType": 2,
-      "MpCost": 300,
+      "MpCost": 30,
       "ChantDuration": 1.5,
       "CastingMoveMultiplier": 0.5,
       "IconPath": "Assets/Res/Sprites/Skill/fire_skill_08.png",
@@ -694,8 +738,30 @@
                 }
               ],
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/explosion_large.wav",
+              "Channel": 1,
+              "Volume": 0.8,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/meteor_release.wav",
+          "Channel": 1,
+          "Volume": 0.85,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -708,7 +774,7 @@
       "DescriptionKey": "对指定位置最近的敌人施加2层点燃效果",
       "RuntimeType": "CommonSkill",
       "InputType": 2,
-      "MpCost": 100,
+      "MpCost": 10,
       "ChantDuration": 0.3,
       "CastingMoveMultiplier": 1.0,
       "IconPath": "Assets/Res/Sprites/Skill/fire_skill_13.png",
@@ -812,6 +878,17 @@
             }
           ],
           "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/ignite_release.wav",
+          "Channel": 1,
+          "Volume": 0.85,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
+          "Conditions": []
         }
       ],
       "Id": 3,
@@ -823,7 +900,7 @@
       "DescriptionKey": "持续召唤火焰攻击范围内敌人，每个敌人仅会被点燃一次",
       "RuntimeType": "CommonSkill",
       "InputType": 2,
-      "MpCost": 200,
+      "MpCost": 20,
       "ChantDuration": 1.0,
       "CastingMoveMultiplier": 0.5,
       "IconPath": "Assets/Res/Sprites/Skill/fire_skill_05.png",
@@ -961,9 +1038,31 @@
                 }
               ],
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/scorched_tick.wav",
+              "Channel": 1,
+              "Volume": 0.55,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
           "OnEndEffects": [],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/scorched_release.wav",
+          "Channel": 1,
+          "Volume": 0.85,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -976,7 +1075,7 @@
       "DescriptionKey": "引爆目标的点燃效果和爆燃效果",
       "RuntimeType": "CommonSkill",
       "InputType": 2,
-      "MpCost": 200,
+      "MpCost": 20,
       "ChantDuration": 0.3,
       "CastingMoveMultiplier": 1.0,
       "IconPath": "Assets/Res/Sprites/Skill/fire_skill_11.png",
@@ -1141,8 +1240,30 @@
                 }
               ],
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/explosion_medium.wav",
+              "Channel": 1,
+              "Volume": 0.4,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/detonate_release.wav",
+          "Channel": 1,
+          "Volume": 0.85,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -1155,10 +1276,10 @@
       "DescriptionKey": "对直线上的敌人造成伤害，并施加一层点燃效果",
       "RuntimeType": "CommonSkill",
       "InputType": 2,
-      "MpCost": 200,
+      "MpCost": 20,
       "ChantDuration": 1.0,
       "CastingMoveMultiplier": 0.5,
-      "IconPath": "",
+      "IconPath": "Assets/Res/Sprites/Skill/fire_skill_06.png",
       "Conditions": [],
       "EffectChain": [
         {
@@ -1331,6 +1452,17 @@
             }
           ],
           "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/firepath_release.wav",
+          "Channel": 1,
+          "Volume": 0.85,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
+          "Conditions": []
         }
       ],
       "Id": 6,
@@ -1342,7 +1474,7 @@
       "DescriptionKey": "形成火盾，提供减伤并且对伤害自己的目标造成点燃效果",
       "RuntimeType": "CommonSkill",
       "InputType": 1,
-      "MpCost": 100,
+      "MpCost": 10,
       "ChantDuration": 0.5,
       "CastingMoveMultiplier": 0.5,
       "IconPath": "Assets/Res/Sprites/Skill/fire_skill_17.png",
@@ -1370,6 +1502,17 @@
           },
           "AlignToTargetForward": false,
           "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/fireshield_release.wav",
+          "Channel": 1,
+          "Volume": 0.85,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
+          "Conditions": []
         }
       ],
       "Id": 7,
@@ -1381,12 +1524,132 @@
       "DescriptionKey": "释放水球，命中时会造成一次爆炸并施加潮湿效果",
       "RuntimeType": "CommonSkill",
       "InputType": 2,
-      "MpCost": 100,
+      "MpCost": 10,
       "ChantDuration": 0.5,
       "CastingMoveMultiplier": 0.5,
-      "IconPath": "",
+      "IconPath": "Assets/Res/Sprites/Skill/water_skill_15.png",
       "Conditions": [],
-      "EffectChain": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnProjectileEffectData, Assembly-CSharp",
+          "ProjectilePrefabName": "Projectile",
+          "VisualPrefabName": "Water_Projectile",
+          "VisualScale": 1,
+          "VisualOffset": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "Speed": 11,
+          "MaxRange": 16,
+          "SpawnOffsetDistance": 0.5,
+          "HitRadius": 0.65,
+          "CanPierce": false,
+          "RepeatHitIntervalSeconds": 0,
+          "CollisionTargetConditions": [
+            {
+              "ConditionType": 0,
+              "CompareType": "IsTrue",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "SourceTarget": 0,
+                  "GetterKey": "unit.faction.isEnemyTo",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "SourceTarget": 0,
+                      "GetterKey": "effect.context.originEntity",
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "TriggerDestroyEffectsOnMaxRange": true,
+          "OnCollisionEffects": [],
+          "OnDestoryEffects": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnVfxEffectData, Assembly-CSharp",
+              "VfxPrefabName": "Water_Impact_Water",
+              "Duration": 0.6666666666666666,
+              "Scale": 1.25,
+              "SpawnOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "AlignToCasterForward": false,
+              "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
+              "Radius": 1.5,
+              "CenterOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "TargetConditions": [
+                {
+                  "ConditionType": 0,
+                  "CompareType": "IsTrue",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "SourceTarget": 0,
+                      "GetterKey": "unit.faction.isEnemyTo",
+                      "Inputs": [
+                        {
+                          "Kind": 1,
+                          "SourceTarget": 0,
+                          "GetterKey": "effect.context.originEntity",
+                          "Inputs": []
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "OnlyNearestTarget": false,
+              "OnAfterSearch": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
+                  "BuffId": 2,
+                  "TargetSource": 0,
+                  "DurationSeconds": 8,
+                  "StackCount": 1,
+                  "OnlyOncePerPersistentEffect": false,
+                  "Conditions": []
+                },
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+                  "TargetSource": 0,
+                  "ValueSource": 0,
+                  "DamageCoefficient": 1,
+                  "FlatDamageBonus": 0,
+                  "Element": 1,
+                  "Conditions": []
+                }
+              ],
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/waterbolt_release.wav",
+          "Channel": 1,
+          "Volume": 0.85,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
+          "Conditions": []
+        }
+      ],
       "Id": 8,
       "EffectiveRuntimeType": "CommonSkill"
     },
@@ -1396,12 +1659,172 @@
       "DescriptionKey": "在目标地点生成水潭，减速范围内的敌人并造成潮湿效果",
       "RuntimeType": "CommonSkill",
       "InputType": 2,
-      "MpCost": 200,
+      "MpCost": 20,
       "ChantDuration": 2.0,
       "CastingMoveMultiplier": 0.5,
-      "IconPath": "",
+      "IconPath": "Assets/Res/Sprites/Skill/water_skill_07.png",
       "Conditions": [],
-      "EffectChain": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.PersistentEffectData, Assembly-CSharp",
+          "Element": 0,
+          "TotalDuration": 5,
+          "TickIntervalSeconds": 1,
+          "PlacementCount": 1,
+          "PlacementRadius": 0,
+          "ValidatePlacementPosition": false,
+          "PlacementClearanceRadius": 0,
+          "PlacementValidationAttempts": 32,
+          "OnStartEffects": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnVfxEffectData, Assembly-CSharp",
+              "VfxPrefabName": "Water_Puddle",
+              "Duration": 5,
+              "Scale": 1.6,
+              "SpawnOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "AlignToCasterForward": false,
+              "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
+              "Radius": 2.5,
+              "CenterOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "TargetConditions": [
+                {
+                  "ConditionType": 0,
+                  "CompareType": "IsTrue",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "SourceTarget": 0,
+                      "GetterKey": "unit.faction.isEnemyTo",
+                      "Inputs": [
+                        {
+                          "Kind": 1,
+                          "SourceTarget": 0,
+                          "GetterKey": "effect.context.originEntity",
+                          "Inputs": []
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "OnlyNearestTarget": false,
+              "OnAfterSearch": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
+                  "BuffId": 11,
+                  "TargetSource": 0,
+                  "DurationSeconds": 1.2,
+                  "StackCount": 1,
+                  "OnlyOncePerPersistentEffect": false,
+                  "Conditions": []
+                },
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
+                  "BuffId": 2,
+                  "TargetSource": 0,
+                  "DurationSeconds": 8,
+                  "StackCount": 1,
+                  "OnlyOncePerPersistentEffect": false,
+                  "Conditions": []
+                }
+              ],
+              "Conditions": []
+            }
+          ],
+          "OnTickEffects": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
+              "Radius": 2.5,
+              "CenterOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "TargetConditions": [
+                {
+                  "ConditionType": 0,
+                  "CompareType": "IsTrue",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "SourceTarget": 0,
+                      "GetterKey": "unit.faction.isEnemyTo",
+                      "Inputs": [
+                        {
+                          "Kind": 1,
+                          "SourceTarget": 0,
+                          "GetterKey": "effect.context.originEntity",
+                          "Inputs": []
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "OnlyNearestTarget": false,
+              "OnAfterSearch": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
+                  "BuffId": 11,
+                  "TargetSource": 0,
+                  "DurationSeconds": 1.2,
+                  "StackCount": 1,
+                  "OnlyOncePerPersistentEffect": false,
+                  "Conditions": []
+                },
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
+                  "BuffId": 2,
+                  "TargetSource": 0,
+                  "DurationSeconds": 8,
+                  "StackCount": 1,
+                  "OnlyOncePerPersistentEffect": false,
+                  "Conditions": []
+                }
+              ],
+              "Conditions": []
+            }
+          ],
+          "OnEndEffects": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnVfxEffectData, Assembly-CSharp",
+              "VfxPrefabName": "Water_Puddle_End",
+              "Duration": 0.25,
+              "Scale": 1.6,
+              "SpawnOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "AlignToCasterForward": false,
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/pool_release.wav",
+          "Channel": 1,
+          "Volume": 0.85,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
+          "Conditions": []
+        }
+      ],
       "Id": 9,
       "EffectiveRuntimeType": "CommonSkill"
     },
@@ -1411,12 +1834,118 @@
       "DescriptionKey": "召唤一个缓慢飞行的泡沫，对碰到的敌人造成伤害并施加击退和潮湿效果",
       "RuntimeType": "CommonSkill",
       "InputType": 2,
-      "MpCost": 100,
+      "MpCost": 10,
       "ChantDuration": 0.5,
       "CastingMoveMultiplier": 0.5,
-      "IconPath": "",
+      "IconPath": "Assets/Res/Sprites/Skill/water_skill_16.png",
       "Conditions": [],
-      "EffectChain": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnProjectileEffectData, Assembly-CSharp",
+          "ProjectilePrefabName": "Projectile",
+          "VisualPrefabName": "Water_Bubble_Projectile_2",
+          "VisualScale": 1,
+          "VisualOffset": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "Speed": 3,
+          "MaxRange": 12,
+          "SpawnOffsetDistance": 0.5,
+          "HitRadius": 0.8,
+          "CanPierce": true,
+          "RepeatHitIntervalSeconds": 0,
+          "CollisionTargetConditions": [
+            {
+              "ConditionType": 0,
+              "CompareType": "IsTrue",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "SourceTarget": 0,
+                  "GetterKey": "unit.faction.isEnemyTo",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "SourceTarget": 0,
+                      "GetterKey": "effect.context.originEntity",
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "TriggerDestroyEffectsOnMaxRange": true,
+          "OnCollisionEffects": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
+              "BuffId": 2,
+              "TargetSource": 0,
+              "DurationSeconds": 8,
+              "StackCount": 1,
+              "OnlyOncePerPersistentEffect": false,
+              "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.KnockbackEffectData, Assembly-CSharp",
+              "Force": 5,
+              "DurationSeconds": 0.2,
+              "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "TargetSource": 0,
+              "ValueSource": 0,
+              "DamageCoefficient": 0.7,
+              "FlatDamageBonus": 0,
+              "Element": 1,
+              "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnVfxEffectData, Assembly-CSharp",
+              "VfxPrefabName": "Water_Bubble_Pop",
+              "Duration": 0.25,
+              "Scale": 0.8,
+              "SpawnOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "AlignToCasterForward": false,
+              "Conditions": []
+            }
+          ],
+          "OnDestoryEffects": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnVfxEffectData, Assembly-CSharp",
+              "VfxPrefabName": "Water_Bubble_Projectile_2_End",
+              "Duration": 0.25,
+              "Scale": 1,
+              "SpawnOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "AlignToCasterForward": false,
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/foam_release.wav",
+          "Channel": 1,
+          "Volume": 0.85,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
+          "Conditions": []
+        }
+      ],
       "Id": 10,
       "EffectiveRuntimeType": "CommonSkill"
     },
@@ -1426,12 +1955,44 @@
       "DescriptionKey": "少量恢复自己的魔法值",
       "RuntimeType": "CommonSkill",
       "InputType": 1,
-      "MpCost": 100,
+      "MpCost": 0,
       "ChantDuration": 1.0,
       "CastingMoveMultiplier": 1.0,
-      "IconPath": "",
+      "IconPath": "Assets/Res/Sprites/Skill/water_skill_18.png",
       "Conditions": [],
-      "EffectChain": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.RestoreManaEffectData, Assembly-CSharp",
+          "ManaRestoreCoefficient": 0,
+          "FlatManaRestoreBonus": 100,
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnFollowVfxEffectData, Assembly-CSharp",
+          "VfxPrefabName": "Water_Heal",
+          "FollowTarget": 0,
+          "Duration": 1.3333333333333333,
+          "Scale": 1,
+          "SpawnOffset": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "AlignToTargetForward": false,
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/mana_release.wav",
+          "Channel": 1,
+          "Volume": 0.85,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
+          "Conditions": []
+        }
+      ],
       "Id": 11,
       "EffectiveRuntimeType": "CommonSkill"
     },
@@ -1441,12 +2002,102 @@
       "DescriptionKey": "直线方向释放水流，对敌人造成伤害，潮湿，击退效果",
       "RuntimeType": "CommonSkill",
       "InputType": 2,
-      "MpCost": 100,
+      "MpCost": 10,
       "ChantDuration": 0.3,
       "CastingMoveMultiplier": 1.0,
-      "IconPath": "",
+      "IconPath": "Assets/Res/Sprites/Skill/water_skill_01.png",
       "Conditions": [],
-      "EffectChain": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnLineVfxEffectData, Assembly-CSharp",
+          "VfxPrefabName": "Water_Projectile_Large",
+          "Length": 8,
+          "SegmentSpacing": 0.8,
+          "OriginOffsetDistance": 0.5,
+          "Duration": 0.3333333,
+          "Scale": 0.8,
+          "AlignToLineDirection": true,
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.ForwardRectSearchEffectData, Assembly-CSharp",
+          "Length": 8,
+          "Width": 1.5,
+          "OriginOffsetDistance": 0.5,
+          "TargetConditions": [
+            {
+              "ConditionType": 0,
+              "CompareType": "IsTrue",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "SourceTarget": 0,
+                  "GetterKey": "unit.faction.isEnemyTo",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "SourceTarget": 0,
+                      "GetterKey": "effect.context.originEntity",
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "OnAfterSearch": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
+              "BuffId": 2,
+              "TargetSource": 0,
+              "DurationSeconds": 8,
+              "StackCount": 1,
+              "OnlyOncePerPersistentEffect": false,
+              "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.KnockbackEffectData, Assembly-CSharp",
+              "Force": 5,
+              "DurationSeconds": 0.2,
+              "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "TargetSource": 0,
+              "ValueSource": 0,
+              "DamageCoefficient": 0.9,
+              "FlatDamageBonus": 0,
+              "Element": 1,
+              "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnVfxEffectData, Assembly-CSharp",
+              "VfxPrefabName": "Water_Impact_Water_2",
+              "Duration": 0.4166666666666667,
+              "Scale": 0.7,
+              "SpawnOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "AlignToCasterForward": false,
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/waterjet_release.wav",
+          "Channel": 1,
+          "Volume": 0.85,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
+          "Conditions": []
+        }
+      ],
       "Id": 12,
       "EffectiveRuntimeType": "CommonSkill"
     },
@@ -1456,12 +2107,100 @@
       "DescriptionKey": "生成持续性的雨，每隔一段时间就对范围内的单位施加一次潮湿效果",
       "RuntimeType": "CommonSkill",
       "InputType": 2,
-      "MpCost": 300,
+      "MpCost": 30,
       "ChantDuration": 1.5,
       "CastingMoveMultiplier": 0.5,
-      "IconPath": "",
+      "IconPath": "Assets/Res/Sprites/Skill/water_skill_10.png",
       "Conditions": [],
-      "EffectChain": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.PersistentEffectData, Assembly-CSharp",
+          "Element": 0,
+          "TotalDuration": 6,
+          "TickIntervalSeconds": 1,
+          "PlacementCount": 1,
+          "PlacementRadius": 0,
+          "ValidatePlacementPosition": false,
+          "PlacementClearanceRadius": 0,
+          "PlacementValidationAttempts": 32,
+          "OnStartEffects": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnVfxEffectData, Assembly-CSharp",
+              "VfxPrefabName": "Water_Rain",
+              "Duration": 6,
+              "Scale": 2,
+              "SpawnOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "AlignToCasterForward": false,
+              "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
+              "Radius": 3,
+              "CenterOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "TargetConditions": [],
+              "OnlyNearestTarget": false,
+              "OnAfterSearch": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
+                  "BuffId": 2,
+                  "TargetSource": 0,
+                  "DurationSeconds": 8,
+                  "StackCount": 1,
+                  "OnlyOncePerPersistentEffect": false,
+                  "Conditions": []
+                }
+              ],
+              "Conditions": []
+            }
+          ],
+          "OnTickEffects": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
+              "Radius": 3,
+              "CenterOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "TargetConditions": [],
+              "OnlyNearestTarget": false,
+              "OnAfterSearch": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
+                  "BuffId": 2,
+                  "TargetSource": 0,
+                  "DurationSeconds": 8,
+                  "StackCount": 1,
+                  "OnlyOncePerPersistentEffect": false,
+                  "Conditions": []
+                }
+              ],
+              "Conditions": []
+            }
+          ],
+          "OnEndEffects": [],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/rain_release.wav",
+          "Channel": 1,
+          "Volume": 0.85,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
+          "Conditions": []
+        }
+      ],
       "Id": 13,
       "EffectiveRuntimeType": "CommonSkill"
     },
@@ -1471,12 +2210,151 @@
       "DescriptionKey": "对附近的所有单位释放，根据其潮湿效果的层数，造成伤害并转换成冻结效果",
       "RuntimeType": "CommonSkill",
       "InputType": 1,
-      "MpCost": 200,
+      "MpCost": 20,
       "ChantDuration": 0.3,
       "CastingMoveMultiplier": 0.5,
-      "IconPath": "",
+      "IconPath": "Assets/Res/Sprites/Skill/ice_skill_08.png",
       "Conditions": [],
-      "EffectChain": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
+          "Radius": 4,
+          "CenterOffset": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "TargetConditions": [
+            {
+              "ConditionType": 0,
+              "CompareType": "IsTrue",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "SourceTarget": 0,
+                  "GetterKey": "unit.faction.isEnemyTo",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "SourceTarget": 0,
+                      "GetterKey": "effect.context.originEntity",
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "ConditionType": 0,
+              "CompareType": "IsTrue",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "SourceTarget": 0,
+                  "GetterKey": "unit.buffs.has",
+                  "Inputs": [
+                    {
+                      "Kind": 0,
+                      "Literal": {
+                        "Type": 2,
+                        "Int": 2
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "OnlyNearestTarget": false,
+          "OnAfterSearch": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.ReadBuffStackEffectData, Assembly-CSharp",
+              "BuffId": 2,
+              "PerStackModifiers": [
+                {
+                  "Channel": 101,
+                  "Factor": 0,
+                  "Bonus": 12
+                },
+                {
+                  "Channel": 104,
+                  "Factor": 0,
+                  "Bonus": 0.3
+                },
+                {
+                  "Channel": 402,
+                  "Factor": 0,
+                  "Bonus": 0.3
+                },
+                {
+                  "Channel": 400,
+                  "Factor": 0,
+                  "Bonus": 0.3
+                }
+              ],
+              "OnAfterRead": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
+                  "BuffId": 3,
+                  "TargetSource": 0,
+                  "DurationSeconds": 0.5,
+                  "StackCount": 1,
+                  "OnlyOncePerPersistentEffect": false,
+                  "Conditions": []
+                },
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.StunEffectData, Assembly-CSharp",
+                  "DurationSeconds": 0.5,
+                  "Conditions": []
+                },
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.SpawnFollowVfxEffectData, Assembly-CSharp",
+                  "VfxPrefabName": "Water_Bubble_Sphere",
+                  "FollowTarget": 1,
+                  "Duration": 0.5,
+                  "Scale": 0.8,
+                  "SpawnOffset": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "AlignToTargetForward": false,
+                  "Conditions": []
+                },
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+                  "TargetSource": 0,
+                  "ValueSource": 0,
+                  "DamageCoefficient": 0,
+                  "FlatDamageBonus": 0,
+                  "Element": 1,
+                  "Conditions": []
+                },
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.RemoveBuffEffectData, Assembly-CSharp",
+                  "BuffId": 2,
+                  "RemoveAllStacks": true,
+                  "RemoveStackCount": 1,
+                  "Conditions": []
+                }
+              ],
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/freeze_release.wav",
+          "Channel": 1,
+          "Volume": 0.85,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
+          "Conditions": []
+        }
+      ],
       "Id": 14,
       "EffectiveRuntimeType": "CommonSkill"
     },
@@ -1486,12 +2364,167 @@
       "DescriptionKey": "发射一道闪电，对命中的目标造成伤害，如果附近有携带潮湿效果的目标则会蔓延，消耗其潮湿效果并且造成更高伤害。",
       "RuntimeType": "CommonSkill",
       "InputType": 2,
-      "MpCost": 100,
+      "MpCost": 10,
       "ChantDuration": 0.1,
       "CastingMoveMultiplier": 1.0,
-      "IconPath": "",
+      "IconPath": "Assets/Res/Sprites/Skill/lightning_skill_03.png",
       "Conditions": [],
-      "EffectChain": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnProjectileEffectData, Assembly-CSharp",
+          "ProjectilePrefabName": "Projectile",
+          "VisualPrefabName": "Lightning_Projectile_3_Y",
+          "VisualScale": 1,
+          "VisualOffset": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "Speed": 24,
+          "MaxRange": 18,
+          "SpawnOffsetDistance": 0.5,
+          "HitRadius": 0.6,
+          "CanPierce": false,
+          "RepeatHitIntervalSeconds": 0,
+          "CollisionTargetConditions": [
+            {
+              "ConditionType": 0,
+              "CompareType": "IsTrue",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "SourceTarget": 0,
+                  "GetterKey": "unit.faction.isEnemyTo",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "SourceTarget": 0,
+                      "GetterKey": "effect.context.originEntity",
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "TriggerDestroyEffectsOnMaxRange": true,
+          "OnCollisionEffects": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnVfxEffectData, Assembly-CSharp",
+              "VfxPrefabName": "Lightning_Impact_1_Y",
+              "Duration": 0.5,
+              "Scale": 1,
+              "SpawnOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "AlignToCasterForward": false,
+              "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.ChainSearchEffectData, Assembly-CSharp",
+              "Radius": 4,
+              "MaxJumps": 3,
+              "TargetConditions": [
+                {
+                  "ConditionType": 0,
+                  "CompareType": "IsTrue",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "SourceTarget": 0,
+                      "GetterKey": "unit.faction.isEnemyTo",
+                      "Inputs": [
+                        {
+                          "Kind": 1,
+                          "SourceTarget": 0,
+                          "GetterKey": "effect.context.originEntity",
+                          "Inputs": []
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "ConditionType": 0,
+                  "CompareType": "IsTrue",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "SourceTarget": 0,
+                      "GetterKey": "unit.buffs.has",
+                      "Inputs": [
+                        {
+                          "Kind": 0,
+                          "Literal": {
+                            "Type": 2,
+                            "Int": 2
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "OnAfterSearch": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.SpawnVfxEffectData, Assembly-CSharp",
+                  "VfxPrefabName": "Lightning_Bolt_Y",
+                  "Duration": 0.4,
+                  "Scale": 0.8,
+                  "SpawnOffset": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "AlignToCasterForward": false,
+                  "Conditions": []
+                },
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.RemoveBuffEffectData, Assembly-CSharp",
+                  "BuffId": 2,
+                  "RemoveAllStacks": true,
+                  "RemoveStackCount": 1,
+                  "Conditions": []
+                },
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+                  "TargetSource": 0,
+                  "ValueSource": 0,
+                  "DamageCoefficient": 1.5,
+                  "FlatDamageBonus": 0,
+                  "Element": 3,
+                  "Conditions": []
+                }
+              ],
+              "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "TargetSource": 0,
+              "ValueSource": 0,
+              "DamageCoefficient": 1,
+              "FlatDamageBonus": 0,
+              "Element": 3,
+              "Conditions": []
+            }
+          ],
+          "OnDestoryEffects": [],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/lightning_release.wav",
+          "Channel": 1,
+          "Volume": 0.85,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
+          "Conditions": []
+        }
+      ],
       "Id": 15,
       "EffectiveRuntimeType": "CommonSkill"
     },
@@ -1501,12 +2534,358 @@
       "DescriptionKey": "生成一片持续闪电的区域，对其中的单位造成持续伤害，并对携带潮湿效果的单位，消耗潮湿效果进行击晕",
       "RuntimeType": "CommonSkill",
       "InputType": 2,
-      "MpCost": 300,
+      "MpCost": 30,
       "ChantDuration": 1.0,
       "CastingMoveMultiplier": 0.5,
-      "IconPath": "",
+      "IconPath": "Assets/Res/Sprites/Skill/lightning_skill_16.png",
       "Conditions": [],
-      "EffectChain": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.PersistentEffectData, Assembly-CSharp",
+          "Element": 0,
+          "TotalDuration": 4,
+          "TickIntervalSeconds": 0.5,
+          "PlacementCount": 1,
+          "PlacementRadius": 0,
+          "ValidatePlacementPosition": false,
+          "PlacementClearanceRadius": 0,
+          "PlacementValidationAttempts": 32,
+          "OnStartEffects": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnVfxEffectData, Assembly-CSharp",
+              "VfxPrefabName": "Lightning_Orb_Y",
+              "Duration": 4,
+              "Scale": 2.4,
+              "SpawnOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "AlignToCasterForward": false,
+              "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
+              "Radius": 3,
+              "CenterOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "TargetConditions": [
+                {
+                  "ConditionType": 0,
+                  "CompareType": "IsTrue",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "SourceTarget": 0,
+                      "GetterKey": "unit.faction.isEnemyTo",
+                      "Inputs": [
+                        {
+                          "Kind": 1,
+                          "SourceTarget": 0,
+                          "GetterKey": "effect.context.originEntity",
+                          "Inputs": []
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "OnlyNearestTarget": false,
+              "OnAfterSearch": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.StunEffectData, Assembly-CSharp",
+                  "DurationSeconds": 0.6,
+                  "Conditions": [
+                    {
+                      "ConditionType": 0,
+                      "CompareType": "IsTrue",
+                      "Inputs": [
+                        {
+                          "Kind": 1,
+                          "SourceTarget": 0,
+                          "GetterKey": "unit.buffs.has",
+                          "Inputs": [
+                            {
+                              "Kind": 0,
+                              "Literal": {
+                                "Type": 2,
+                                "Int": 2
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.SpawnFollowVfxEffectData, Assembly-CSharp",
+                  "VfxPrefabName": "Lightning_Status_Paralyzed_Y",
+                  "FollowTarget": 1,
+                  "Duration": 0.5,
+                  "Scale": 0.75,
+                  "SpawnOffset": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "AlignToTargetForward": false,
+                  "Conditions": [
+                    {
+                      "ConditionType": 0,
+                      "CompareType": "IsTrue",
+                      "Inputs": [
+                        {
+                          "Kind": 1,
+                          "SourceTarget": 0,
+                          "GetterKey": "unit.buffs.has",
+                          "Inputs": [
+                            {
+                              "Kind": 0,
+                              "Literal": {
+                                "Type": 2,
+                                "Int": 2
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.RemoveBuffEffectData, Assembly-CSharp",
+                  "BuffId": 2,
+                  "RemoveAllStacks": false,
+                  "RemoveStackCount": 1,
+                  "Conditions": [
+                    {
+                      "ConditionType": 0,
+                      "CompareType": "IsTrue",
+                      "Inputs": [
+                        {
+                          "Kind": 1,
+                          "SourceTarget": 0,
+                          "GetterKey": "unit.buffs.has",
+                          "Inputs": [
+                            {
+                              "Kind": 0,
+                              "Literal": {
+                                "Type": 2,
+                                "Int": 2
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+                  "TargetSource": 0,
+                  "ValueSource": 0,
+                  "DamageCoefficient": 0.35,
+                  "FlatDamageBonus": 0,
+                  "Element": 3,
+                  "Conditions": []
+                },
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.SpawnVfxEffectData, Assembly-CSharp",
+                  "VfxPrefabName": "Lightning_Impact_1_Y",
+                  "Duration": 0.3,
+                  "Scale": 0.65,
+                  "SpawnOffset": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "AlignToCasterForward": false,
+                  "Conditions": []
+                }
+              ],
+              "Conditions": []
+            }
+          ],
+          "OnTickEffects": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
+              "Radius": 3,
+              "CenterOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "TargetConditions": [
+                {
+                  "ConditionType": 0,
+                  "CompareType": "IsTrue",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "SourceTarget": 0,
+                      "GetterKey": "unit.faction.isEnemyTo",
+                      "Inputs": [
+                        {
+                          "Kind": 1,
+                          "SourceTarget": 0,
+                          "GetterKey": "effect.context.originEntity",
+                          "Inputs": []
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "OnlyNearestTarget": false,
+              "OnAfterSearch": [
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.StunEffectData, Assembly-CSharp",
+                  "DurationSeconds": 0.6,
+                  "Conditions": [
+                    {
+                      "ConditionType": 0,
+                      "CompareType": "IsTrue",
+                      "Inputs": [
+                        {
+                          "Kind": 1,
+                          "SourceTarget": 0,
+                          "GetterKey": "unit.buffs.has",
+                          "Inputs": [
+                            {
+                              "Kind": 0,
+                              "Literal": {
+                                "Type": 2,
+                                "Int": 2
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.SpawnFollowVfxEffectData, Assembly-CSharp",
+                  "VfxPrefabName": "Lightning_Status_Paralyzed_Y",
+                  "FollowTarget": 1,
+                  "Duration": 0.5,
+                  "Scale": 0.75,
+                  "SpawnOffset": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "AlignToTargetForward": false,
+                  "Conditions": [
+                    {
+                      "ConditionType": 0,
+                      "CompareType": "IsTrue",
+                      "Inputs": [
+                        {
+                          "Kind": 1,
+                          "SourceTarget": 0,
+                          "GetterKey": "unit.buffs.has",
+                          "Inputs": [
+                            {
+                              "Kind": 0,
+                              "Literal": {
+                                "Type": 2,
+                                "Int": 2
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.RemoveBuffEffectData, Assembly-CSharp",
+                  "BuffId": 2,
+                  "RemoveAllStacks": false,
+                  "RemoveStackCount": 1,
+                  "Conditions": [
+                    {
+                      "ConditionType": 0,
+                      "CompareType": "IsTrue",
+                      "Inputs": [
+                        {
+                          "Kind": 1,
+                          "SourceTarget": 0,
+                          "GetterKey": "unit.buffs.has",
+                          "Inputs": [
+                            {
+                              "Kind": 0,
+                              "Literal": {
+                                "Type": 2,
+                                "Int": 2
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+                  "TargetSource": 0,
+                  "ValueSource": 0,
+                  "DamageCoefficient": 0.35,
+                  "FlatDamageBonus": 0,
+                  "Element": 3,
+                  "Conditions": []
+                },
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.SpawnVfxEffectData, Assembly-CSharp",
+                  "VfxPrefabName": "Lightning_Impact_1_Y",
+                  "Duration": 0.3,
+                  "Scale": 0.65,
+                  "SpawnOffset": {
+                    "x": 0.0,
+                    "y": 0.0,
+                    "z": 0.0
+                  },
+                  "AlignToCasterForward": false,
+                  "Conditions": []
+                }
+              ],
+              "Conditions": []
+            }
+          ],
+          "OnEndEffects": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnVfxEffectData, Assembly-CSharp",
+              "VfxPrefabName": "Lightning_Orb_End_Y",
+              "Duration": 0.25,
+              "Scale": 2.4,
+              "SpawnOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "AlignToCasterForward": false,
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/thunderfield_release.wav",
+          "Channel": 1,
+          "Volume": 0.85,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
+          "Conditions": []
+        }
+      ],
       "Id": 16,
       "EffectiveRuntimeType": "CommonSkill"
     },
@@ -1516,12 +2895,182 @@
       "DescriptionKey": "生成一个缓慢飞行的闪电球，对碰撞的单位持续造成伤害，如果有潮湿效果则消耗潮湿造成更高伤害",
       "RuntimeType": "CommonSkill",
       "InputType": 2,
-      "MpCost": 200,
+      "MpCost": 20,
       "ChantDuration": 0.3,
       "CastingMoveMultiplier": 1.0,
-      "IconPath": "",
+      "IconPath": "Assets/Res/Sprites/Skill/lightning_skill_07.png",
       "Conditions": [],
-      "EffectChain": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnProjectileEffectData, Assembly-CSharp",
+          "ProjectilePrefabName": "Projectile",
+          "VisualPrefabName": "Lightning_Orb_Y",
+          "VisualScale": 1,
+          "VisualOffset": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "Speed": 2,
+          "MaxRange": 12,
+          "SpawnOffsetDistance": 0.5,
+          "HitRadius": 1.2,
+          "CanPierce": true,
+          "RepeatHitIntervalSeconds": 0.5,
+          "CollisionTargetConditions": [
+            {
+              "ConditionType": 0,
+              "CompareType": "IsTrue",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "SourceTarget": 0,
+                  "GetterKey": "unit.faction.isEnemyTo",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "SourceTarget": 0,
+                      "GetterKey": "effect.context.originEntity",
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "TriggerDestroyEffectsOnMaxRange": true,
+          "OnCollisionEffects": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "TargetSource": 0,
+              "ValueSource": 0,
+              "DamageCoefficient": 0.7,
+              "FlatDamageBonus": 0,
+              "Element": 3,
+              "Conditions": [
+                {
+                  "ConditionType": 0,
+                  "CompareType": "IsTrue",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "SourceTarget": 0,
+                      "GetterKey": "unit.buffs.has",
+                      "Inputs": [
+                        {
+                          "Kind": 0,
+                          "Literal": {
+                            "Type": 2,
+                            "Int": 2
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "TargetSource": 0,
+              "ValueSource": 0,
+              "DamageCoefficient": 0.35,
+              "FlatDamageBonus": 0,
+              "Element": 3,
+              "Conditions": [
+                {
+                  "ConditionType": 0,
+                  "CompareType": "IsFalse",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "SourceTarget": 0,
+                      "GetterKey": "unit.buffs.has",
+                      "Inputs": [
+                        {
+                          "Kind": 0,
+                          "Literal": {
+                            "Type": 2,
+                            "Int": 2
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.RemoveBuffEffectData, Assembly-CSharp",
+              "BuffId": 2,
+              "RemoveAllStacks": false,
+              "RemoveStackCount": 1,
+              "Conditions": [
+                {
+                  "ConditionType": 0,
+                  "CompareType": "IsTrue",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "SourceTarget": 0,
+                      "GetterKey": "unit.buffs.has",
+                      "Inputs": [
+                        {
+                          "Kind": 0,
+                          "Literal": {
+                            "Type": 2,
+                            "Int": 2
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnVfxEffectData, Assembly-CSharp",
+              "VfxPrefabName": "Lightning_Impact_2_Y",
+              "Duration": 0.25,
+              "Scale": 0.65,
+              "SpawnOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "AlignToCasterForward": false,
+              "Conditions": []
+            }
+          ],
+          "OnDestoryEffects": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnVfxEffectData, Assembly-CSharp",
+              "VfxPrefabName": "Lightning_Orb_End_Y",
+              "Duration": 0.25,
+              "Scale": 1,
+              "SpawnOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "AlignToCasterForward": false,
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/lightningball_release.wav",
+          "Channel": 1,
+          "Volume": 0.85,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
+          "Conditions": []
+        }
+      ],
       "Id": 17,
       "EffectiveRuntimeType": "CommonSkill"
     },
@@ -1531,12 +3080,103 @@
       "DescriptionKey": "召唤一道强力雷击轰击目标区域，造成伤害并对其中的单位施加麻痹效果",
       "RuntimeType": "CommonSkill",
       "InputType": 2,
-      "MpCost": 200,
+      "MpCost": 20,
       "ChantDuration": 1.0,
       "CastingMoveMultiplier": 0.5,
-      "IconPath": "",
+      "IconPath": "Assets/Res/Sprites/Skill/lightning_skill_09.png",
       "Conditions": [],
-      "EffectChain": [],
+      "EffectChain": [
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnVfxEffectData, Assembly-CSharp",
+          "VfxPrefabName": "Lightning_Thunderbolt_Y",
+          "Duration": 0.8333333333333334,
+          "Scale": 1.8,
+          "SpawnOffset": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "AlignToCasterForward": false,
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.AreaSearchEffectData, Assembly-CSharp",
+          "Radius": 2.5,
+          "CenterOffset": {
+            "x": 0.0,
+            "y": 0.0,
+            "z": 0.0
+          },
+          "TargetConditions": [
+            {
+              "ConditionType": 0,
+              "CompareType": "IsTrue",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "SourceTarget": 0,
+                  "GetterKey": "unit.faction.isEnemyTo",
+                  "Inputs": [
+                    {
+                      "Kind": 1,
+                      "SourceTarget": 0,
+                      "GetterKey": "effect.context.originEntity",
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "OnlyNearestTarget": false,
+          "OnAfterSearch": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
+              "BuffId": 4,
+              "TargetSource": 0,
+              "DurationSeconds": 3,
+              "StackCount": 1,
+              "OnlyOncePerPersistentEffect": false,
+              "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnFollowVfxEffectData, Assembly-CSharp",
+              "VfxPrefabName": "Lightning_Status_Paralyzed_Y",
+              "FollowTarget": 1,
+              "Duration": 0.75,
+              "Scale": 0.8,
+              "SpawnOffset": {
+                "x": 0.0,
+                "y": 0.0,
+                "z": 0.0
+              },
+              "AlignToTargetForward": false,
+              "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
+              "TargetSource": 0,
+              "ValueSource": 0,
+              "DamageCoefficient": 2.2,
+              "FlatDamageBonus": 0,
+              "Element": 3,
+              "Conditions": []
+            }
+          ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/thunder_release.wav",
+          "Channel": 1,
+          "Volume": 0.85,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
+          "Conditions": []
+        }
+      ],
       "Id": 18,
       "EffectiveRuntimeType": "CommonSkill"
     },
@@ -1636,8 +3276,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/slime_attack.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -1740,8 +3402,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/slime_attack.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -1844,8 +3528,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/blade_swing.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -1948,8 +3654,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/blade_swing.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -2067,8 +3795,30 @@
               "StackCount": 1,
               "OnlyOncePerPersistentEffect": false,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/heavy_swing.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -2171,8 +3921,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/blade_swing.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -2275,8 +4047,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/blade_swing.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -2385,8 +4179,30 @@
               "Force": 2.0,
               "DurationSeconds": 0.25,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/heavy_swing.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -2489,8 +4305,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/heavy_swing.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -2593,8 +4431,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/heavy_swing.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -2697,8 +4557,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/blade_swing.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -2801,8 +4683,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/blade_swing.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -2905,8 +4809,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/heavy_swing.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -3009,8 +4935,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/heavy_swing.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -3113,8 +5061,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/heavy_swing.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -3124,12 +5094,12 @@
     {
       "NameKey": "Shield Guard",
       "IsMonsterSkill": true,
-      "DescriptionKey": "Maintain a shield guard posture while not attacking.",
+      "DescriptionKey": "Block one hit while not attacking. Rearm after the monster-specific block cooldown.",
       "RuntimeType": "CommonSkill",
       "InputType": 1,
       "MpCost": 0,
-      "ChantDuration": 0.0,
-      "CastingMoveMultiplier": 0.0,
+      "ChantDuration": 0,
+      "CastingMoveMultiplier": 0,
       "IconPath": "",
       "Conditions": [],
       "EffectChain": [
@@ -3137,10 +5107,107 @@
           "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
           "BuffId": 12,
           "TargetSource": 0,
-          "DurationSeconds": -1.0,
+          "DurationSeconds": -1,
           "StackCount": 1,
           "OnlyOncePerPersistentEffect": false,
-          "Conditions": []
+          "Conditions": [
+            {
+              "ConditionType": 0,
+              "CompareType": "IsFalse",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "SourceTarget": 0,
+                  "GetterKey": "unit.variables.getBool",
+                  "Inputs": [
+                    {
+                      "Kind": 0,
+                      "Literal": {
+                        "Type": 7,
+                        "String": "ai.block.coolingDown"
+                      },
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "ConditionType": 0,
+              "CompareType": "IsFalse",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "SourceTarget": 0,
+                  "GetterKey": "unit.buffs.has",
+                  "Inputs": [
+                    {
+                      "Kind": 0,
+                      "Literal": {
+                        "Type": 2,
+                        "Int": 13
+                      },
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/shield_guard.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0,
+          "FollowCaster": true,
+          "Conditions": [
+            {
+              "ConditionType": 0,
+              "CompareType": "IsFalse",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "SourceTarget": 0,
+                  "GetterKey": "unit.variables.getBool",
+                  "Inputs": [
+                    {
+                      "Kind": 0,
+                      "Literal": {
+                        "Type": 7,
+                        "String": "ai.block.coolingDown"
+                      },
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "ConditionType": 0,
+              "CompareType": "IsFalse",
+              "Inputs": [
+                {
+                  "Kind": 1,
+                  "SourceTarget": 0,
+                  "GetterKey": "unit.buffs.has",
+                  "Inputs": [
+                    {
+                      "Kind": 0,
+                      "Literal": {
+                        "Type": 2,
+                        "Int": 13
+                      },
+                      "Inputs": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
         }
       ],
       "Id": 34,
@@ -3242,8 +5309,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/blade_swing.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -3346,8 +5435,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/blade_swing.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -3450,8 +5561,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/heavy_swing.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -3551,8 +5684,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/heavy_swing.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -3652,8 +5807,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/heavy_swing.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -3753,8 +5930,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/bat_attack.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -3854,8 +6053,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/bat_attack.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -3955,8 +6176,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/slime_heavy.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -4065,8 +6308,30 @@
               "StackCount": 1,
               "OnlyOncePerPersistentEffect": false,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/claw_swipe.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -4166,8 +6431,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/claw_swipe.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -4273,8 +6560,30 @@
               "Force": 2.0,
               "DurationSeconds": 0.25,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/beast_slam.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -4374,8 +6683,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/claw_swipe.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -4475,8 +6806,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/claw_swipe.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -4502,6 +6855,17 @@
           "DurationSeconds": 1.0,
           "StackCount": 1,
           "OnlyOncePerPersistentEffect": false,
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/exposed.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -4608,9 +6972,31 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/arrow_hit.wav",
+              "Channel": 1,
+              "Volume": 0.65,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
           "OnDestoryEffects": [],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/bow_release.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -4713,8 +7099,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/blade_swing.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -4817,8 +7225,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/blade_swing.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -4921,8 +7351,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/heavy_swing.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -5025,8 +7477,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/blade_swing.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -5129,8 +7603,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/blade_swing.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -5237,9 +7733,31 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/arrow_hit.wav",
+              "Channel": 1,
+              "Volume": 0.65,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
           "OnDestoryEffects": [],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/bow_release.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -5354,6 +7872,17 @@
               "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/holy_strike.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -5586,6 +8115,17 @@
             }
           ],
           "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/heal_release.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
+          "Conditions": []
         }
       ],
       "Id": 57,
@@ -5687,8 +8227,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/spear_thrust.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -5791,8 +8353,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/spear_thrust.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -5895,8 +8479,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/spear_thrust.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -5999,8 +8605,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/blade_swing.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -6103,8 +8731,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/blade_swing.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -6207,8 +8857,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/heavy_swing.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -6311,8 +8983,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/heavy_swing.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -6415,8 +9109,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/heavy_swing.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -6519,8 +9235,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/heavy_swing.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -6627,9 +9365,31 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/arrow_hit.wav",
+              "Channel": 1,
+              "Volume": 0.65,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
           "OnDestoryEffects": [],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/bow_release.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -6736,9 +9496,31 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/arrow_hit.wav",
+              "Channel": 1,
+              "Volume": 0.65,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
           "OnDestoryEffects": [],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/bow_release.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -6841,8 +9623,30 @@
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
+            },
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+              "AudioPath": "Combat/melee_hit.wav",
+              "Channel": 1,
+              "Volume": 0.45,
+              "Pitch": 1,
+              "SpatialBlend": 0.85,
+              "DelaySeconds": 0.0,
+              "FollowCaster": false,
+              "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/dark_strike.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],
@@ -6974,6 +9778,17 @@
               "Conditions": []
             }
           ],
+          "Conditions": []
+        },
+        {
+          "$type": "CrystalMagic.Game.Data.Effects.SpawnSoundEffectData, Assembly-CSharp",
+          "AudioPath": "Combat/dark_field.wav",
+          "Channel": 1,
+          "Volume": 0.65,
+          "Pitch": 1,
+          "SpatialBlend": 0.85,
+          "DelaySeconds": 0.0,
+          "FollowCaster": true,
           "Conditions": []
         }
       ],

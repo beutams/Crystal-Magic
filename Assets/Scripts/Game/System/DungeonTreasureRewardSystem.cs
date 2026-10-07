@@ -9,7 +9,7 @@ using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
 
-[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation)]
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 public partial struct DungeonTreasureRewardSystem : ISystem
 {
@@ -32,6 +32,8 @@ public partial struct DungeonTreasureRewardSystem : ISystem
 
     public void OnUpdate(ref SystemState state)
     {
+        if (SystemAPI.TryGetSingleton(out BattleSimulationScope scope) && scope.Pass == BattleSimulationPass.Players)
+            return;
         DungeonConfig config = ConfigComponent.Instance.Get<DungeonConfig>();
         config.EnsureValid();
         EntityManager entityManager = state.EntityManager;

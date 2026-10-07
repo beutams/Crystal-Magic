@@ -61,6 +61,14 @@ public partial class ClientPlayerPredictionSystem : SystemBase
         if (player == Entity.Null)
             return false;
 
+        if (_frameManager.HasReconciledPlayerFrame &&
+            authoritativeFrame <= _frameManager.LastReconciledPlayerFrame)
+        {
+            // A delayed/repeated move must not rewind prediction after its history was retired.
+            ApplyStates(context, states, skipMove: true);
+            return true;
+        }
+
         bool hasSnapshot = _frameManager.playerStates.TryGetValue(
             authoritativeFrame,
             out ClientPlayerPredictionSnapshot snapshot);
@@ -80,9 +88,19 @@ public partial class ClientPlayerPredictionSystem : SystemBase
             ApplyStates(context, states, skipMove: false);
             if (restored && authoritativeFrame < _frameManager.currentFrame)
                 _frameManager.RequestPredictionReplay(authoritativeFrame);
+            else if (!_frameManager.HasPendingPredictionReplay &&
+                     EntityManager.HasComponent<ClientPlayerMovePresentationComponent>(player))
+            {
+                ClientPlayerMovePresentationComponent presentation =
+                    EntityManager.GetComponentData<ClientPlayerMovePresentationComponent>(player);
+                presentation.CompleteReconciliation(
+                    EntityManager.GetComponentData<UnitMoveComponent>(player).PredictedPosition);
+                EntityManager.SetComponentData(player, presentation);
+            }
         }
 
         _frameManager.RemovePredictionHistoryThrough(authoritativeFrame);
+        _frameManager.RecordReconciledPlayerFrame(authoritativeFrame);
         return true;
     }
 
@@ -100,6 +118,8 @@ public partial class ClientPlayerPredictionSystem : SystemBase
         EntityManager.AddComponentData(player, new ClientPlayerMovePresentationComponent
         {
             CurrentPosition = position,
+            PreviousPredictionPosition = position,
+            LatestPredictionPosition = position,
             Initialized = 1,
         });
     }

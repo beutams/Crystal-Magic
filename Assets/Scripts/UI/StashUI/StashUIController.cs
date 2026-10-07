@@ -20,6 +20,9 @@
             View.PropsCategoryRequested += OnPropsCategoryRequested;
             View.InventoryStoreRequested += OnInventoryStoreRequested;
             View.StashWithdrawRequested += OnStashWithdrawRequested;
+            View.BackClicked += OnBackClicked;
+            View.InventorySortRequested += OnInventorySortRequested;
+            View.StashSortRequested += OnStashSortRequested;
             BindEvent(new CrystalMagic.Core.CommonGameEvent(CrystalMagic.Core.SaveDataComponent.StashDataChangedEventName), _refreshHandler);
             BindEvent(new CrystalMagic.Core.CommonGameEvent(CrystalMagic.Core.SaveDataComponent.BackpackDataChangedEventName), _refreshHandler);
             BindEvent(new CrystalMagic.Core.CommonGameEvent(CrystalMagic.Core.SaveDataComponent.TownDataChangedEventName), _refreshHandler);
@@ -34,6 +37,9 @@
             View.PropsCategoryRequested -= OnPropsCategoryRequested;
             View.InventoryStoreRequested -= OnInventoryStoreRequested;
             View.StashWithdrawRequested -= OnStashWithdrawRequested;
+            View.BackClicked -= OnBackClicked;
+            View.InventorySortRequested -= OnInventorySortRequested;
+            View.StashSortRequested -= OnStashSortRequested;
             CloseInteractUI();
         }
 
@@ -41,6 +47,20 @@
         private void OnSkillCategoryRequested() => Model.SetCategory(StashCategory.Skill);
         private void OnEquipCategoryRequested() => Model.SetCategory(StashCategory.Equip);
         private void OnPropsCategoryRequested() => Model.SetCategory(StashCategory.Props);
+        private void OnBackClicked() => View.Close();
+
+        private void OnInventorySortRequested()
+        {
+            CloseInteractUI();
+            PlayerCharacterUtility.TrySortBackpack();
+        }
+
+        private void OnStashSortRequested()
+        {
+            CloseInteractUI();
+            if (CrystalMagic.Core.InventoryUtility.SortStash(CrystalMagic.Core.SaveDataComponent.Instance.GetStashData()))
+                CrystalMagic.Core.SaveDataComponent.Instance.NotifyStashDataChanged();
+        }
 
         private void OnInventoryStoreRequested(StashInventoryDisplayData data)
         {

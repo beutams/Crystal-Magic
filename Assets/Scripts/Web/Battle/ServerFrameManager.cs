@@ -129,39 +129,41 @@ namespace Server
 
         public override void OnReceiveMessage(IMessage message, Connect connect)
         {
-            if (message is not General_FrameStateData frameMessage || frameMessage.data?.datas == null ||
+            if (message is not General_FrameStateData frameMessage || frameMessage.frames == null ||
                 frameMessage.sceneVersion != sceneVersion || !connects.Contains(connect))
                 return;
 
             connect?.RecordBattleFrameReceive(frameMessage.clientFrameSequence);
-            // 每个客户端每帧只发送一个包，TCP 保持顺序；重复帧不能重复执行事件。
-            if (lastReceivedInputFrames.TryGetValue(connect, out uint lastFrame) &&
-                frameMessage.data.frameId <= lastFrame)
-                return;
-            lastReceivedInputFrames[connect] = frameMessage.data.frameId;
-            foreach (NetworkStateData data in frameMessage.data.datas)
+            foreach (NetworkFrameData inputFrame in frameMessage.frames)
             {
-                if (data == null || !playerUnitIds.TryGetValue(connect, out Guid playerUnitId) ||
-                    data.unitId != playerUnitId)
-                {
-                    Debug.LogWarning(
-                        $"[Battle][Input] Rejected state from {connect?.RemoteEndpoint}: unit={data?.unitId}.");
+                if (inputFrame?.datas == null ||
+                    (lastReceivedInputFrames.TryGetValue(connect, out uint lastFrame) && inputFrame.frameId <= lastFrame))
                     continue;
-                }
-
-                if (frameMessage.data.frameId < currentFrame)
+                lastReceivedInputFrames[connect] = inputFrame.frameId;
+                foreach (NetworkStateData data in inputFrame.datas)
                 {
-                    RejectExpiredRequest(data);
-                    continue;
-                }
+                    if (data == null || !playerUnitIds.TryGetValue(connect, out Guid playerUnitId) ||
+                        data.unitId != playerUnitId)
+                    {
+                        Debug.LogWarning(
+                            $"[Battle][Input] Rejected state from {connect?.RemoteEndpoint}: unit={data?.unitId}.");
+                        continue;
+                    }
 
-                // 连续输入和一次性操作都只在消息指定的逻辑帧执行。
-                if (!receivedOrder.TryGetValue(frameMessage.data.frameId, out Queue<NetworkState> states))
-                {
-                    states = new Queue<NetworkState>();
-                    receivedOrder.Add(frameMessage.data.frameId, states);
+                    if (inputFrame.frameId < currentFrame)
+                    {
+                        RejectExpiredRequest(data);
+                        continue;
+                    }
+
+                    // 连续输入和一次性操作都只在消息指定的逻辑帧执行。
+                    if (!receivedOrder.TryGetValue(inputFrame.frameId, out Queue<NetworkState> states))
+                    {
+                        states = new Queue<NetworkState>();
+                        receivedOrder.Add(inputFrame.frameId, states);
+                    }
+                    states.Enqueue(new NetworkState { data = data });
                 }
-                states.Enqueue(new NetworkState { data = data });
             }
         }
 
@@ -172,13 +174,13 @@ namespace Server
             lastReceivedInputFrames.Clear();
         }
 
-        protected override void SendFrame(NetworkFrameData data)
+        protected override void SendFrames(List<NetworkFrameData> frames)
         {
             foreach (Connect connect in connects)
             {
                 connect.Send(new General_FrameStateData
                 {
-                    data = data,
+                    frames = frames,
                     acknowledgedClientFrameSequence = connect.LastReceivedBattleFrameSequence,
                     sceneVersion = sceneVersion,
                 });
@@ -188,7 +190,7 @@ namespace Server
             {
                 connect.Send(new General_FrameStateData
                 {
-                    data = data,
+                    frames = frames,
                     sceneVersion = sceneVersion,
                 });
             }

@@ -60,6 +60,7 @@ namespace CrystalMagic.Game.Skill
         public Vector3 OriginPositionSnapshot { get; set; }
 
         public int SourceSkillId { get; set; } = -1;
+        public SkillEffectIdentity EffectIdentity { get; set; }
 
         public bool HasTargetEntity { get; set; }
 
@@ -91,6 +92,7 @@ namespace CrystalMagic.Game.Skill
             HasOriginPositionSnapshot = source.HasOriginPositionSnapshot;
             OriginPositionSnapshot = source.OriginPositionSnapshot;
             SourceSkillId = source.SourceSkillId;
+            EffectIdentity = source.EffectIdentity;
             HasTargetEntity = source.HasTargetEntity;
             TargetEntity = source.TargetEntity;
             HasTarget = source.HasTarget;
@@ -125,6 +127,7 @@ namespace CrystalMagic.Game.Skill
             HasOriginPositionSnapshot = false;
             OriginPositionSnapshot = Vector3.zero;
             SourceSkillId = -1;
+            EffectIdentity = default;
             HasTargetEntity = false;
             TargetEntity = Entity.Null;
             HasTarget = false;

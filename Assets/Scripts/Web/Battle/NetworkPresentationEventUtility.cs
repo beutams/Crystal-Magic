@@ -1,3 +1,4 @@
+using CrystalMagic.Game.Skill;
 using System;
 using CrystalMagic.Core;
 using Unity.Entities;
@@ -5,6 +6,18 @@ using Unity.Mathematics;
 
 public static class NetworkPresentationEventUtility
 {
+    public static void EnqueueProjectileImpact(EntityManager manager, Entity projectile, SkillEffectIdentity identity,
+        float3 position, bool hasHit, bool endsProjectile)
+    {
+        TryEnqueue(manager, new NetworkPresentationEventStateData
+        {
+            eventType = ClientPresentationEventType.ProjectileImpact, identity = identity,
+            targetUnitId = GetNetworkId(manager, projectile), positionX = position.x,
+            positionY = position.y, positionZ = position.z,
+            flagA = endsProjectile ? (byte)1 : (byte)0, flagB = hasHit ? (byte)1 : (byte)0,
+        });
+    }
+
     public static bool TryEnqueueDamage(
         EntityManager entityManager,
         Entity target,
@@ -35,7 +48,7 @@ public static class NetworkPresentationEventUtility
         float duration,
         bool preservePrefabRotation = false,
         Entity source = default,
-        int sourceSkillId = -1)
+        int sourceSkillId = -1, SkillEffectIdentity identity = default)
     {
         return TryEnqueue(entityManager, CreateVfxEvent(
             entityManager,
@@ -47,7 +60,7 @@ public static class NetworkPresentationEventUtility
             duration,
             preservePrefabRotation,
             source,
-            sourceSkillId));
+            sourceSkillId, identity));
     }
 
     public static bool TryEnqueueFollowVfx(
@@ -61,7 +74,7 @@ public static class NetworkPresentationEventUtility
         float duration,
         bool alignRotation,
         Entity source = default,
-        int sourceSkillId = -1)
+        int sourceSkillId = -1, SkillEffectIdentity identity = default)
     {
         NetworkPresentationEventStateData state = CreateVfxEvent(
             entityManager,
@@ -73,7 +86,7 @@ public static class NetworkPresentationEventUtility
             duration,
             false,
             source,
-            sourceSkillId);
+            sourceSkillId, identity);
         state.targetUnitId = GetNetworkId(entityManager, target);
         state.secondaryX = offset.x;
         state.secondaryY = offset.y;
@@ -94,7 +107,7 @@ public static class NetworkPresentationEventUtility
         float duration,
         bool alignRotation,
         Entity source = default,
-        int sourceSkillId = -1)
+        int sourceSkillId = -1, SkillEffectIdentity identity = default)
     {
         NetworkPresentationEventStateData state = CreateVfxEvent(
             entityManager,
@@ -106,7 +119,7 @@ public static class NetworkPresentationEventUtility
             duration,
             !alignRotation,
             source,
-            sourceSkillId);
+            sourceSkillId, identity);
         state.secondaryX = direction.x;
         state.secondaryY = direction.y;
         state.valueA = length;
@@ -124,7 +137,7 @@ public static class NetworkPresentationEventUtility
         float duration,
         bool preservePrefabRotation,
         Entity source = default,
-        int sourceSkillId = -1)
+        int sourceSkillId = -1, SkillEffectIdentity identity = default)
     {
         NetworkPresentationEventStateData state = CreateVfxEvent(
             entityManager,
@@ -136,7 +149,7 @@ public static class NetworkPresentationEventUtility
             duration,
             preservePrefabRotation,
             source,
-            sourceSkillId);
+            sourceSkillId, identity);
         state.secondaryX = endPosition.x;
         state.secondaryY = endPosition.y;
         state.secondaryZ = endPosition.z;
@@ -153,11 +166,12 @@ public static class NetworkPresentationEventUtility
         float pitch,
         float spatialBlend,
         float delaySeconds,
-        bool followSource)
+        bool followSource, SkillEffectIdentity identity = default)
     {
         return TryEnqueue(entityManager, new NetworkPresentationEventStateData
         {
             eventType = ClientPresentationEventType.Sound,
+            identity = identity,
             sourceUnitId = GetNetworkId(entityManager, source),
             assetName = assetPath,
             positionX = position.x,
@@ -179,11 +193,12 @@ public static class NetworkPresentationEventUtility
         float amplitude,
         float frequency,
         bool useDistanceAttenuation,
-        float radius)
+        float radius, SkillEffectIdentity identity = default)
     {
         return TryEnqueue(entityManager, new NetworkPresentationEventStateData
         {
             eventType = ClientPresentationEventType.CameraShake,
+            identity = identity,
             positionX = position.x,
             positionY = position.y,
             positionZ = position.z,
@@ -231,13 +246,14 @@ public static class NetworkPresentationEventUtility
         float duration,
         bool preservePrefabRotation,
         Entity source,
-        int sourceSkillId)
+        int sourceSkillId, SkillEffectIdentity identity)
     {
         return new NetworkPresentationEventStateData
         {
             eventType = type,
             sourceUnitId = GetNetworkId(entityManager, source),
             sourceSkillId = sourceSkillId,
+            identity = identity,
             assetName = prefabName,
             positionX = position.x,
             positionY = position.y,

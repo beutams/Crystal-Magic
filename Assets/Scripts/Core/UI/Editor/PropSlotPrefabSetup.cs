@@ -31,6 +31,12 @@ namespace CrystalMagic.Editor.UI
         {
             const string path = "Assets/Res/UI/CharacterUI.prefab";
             GameObject root = PrefabUtility.LoadPrefabContents(path);
+            // The book page already owns its authored prop slots. Do not recreate the legacy bar.
+            if (root.transform.Find("Equip/PropSlot1") != null)
+            {
+                PrefabUtility.UnloadPrefabContents(root);
+                return;
+            }
             Transform existing = root.transform.Find("PropSlots");
             if (existing != null)
                 Object.DestroyImmediate(existing.gameObject);
@@ -50,7 +56,11 @@ namespace CrystalMagic.Editor.UI
             GameObject root = PrefabUtility.LoadPrefabContents(path);
             Transform existing = root.transform.Find("PropShortcuts");
             if (existing != null)
-                Object.DestroyImmediate(existing.gameObject);
+            {
+                // Preserve the authored HUD background, slot layout and bindings.
+                PrefabUtility.UnloadPrefabContents(root);
+                return;
+            }
 
             RectTransform bar = CreateBar(root.transform, "PropShortcuts", new Vector2(1f, 0f), new Vector2(-190f, 92f));
             CreateBattleSlot(bar, "PropSlot1", "Z", 0);

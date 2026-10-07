@@ -493,7 +493,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: ys
+      name: ysh
       rect:
         serializedVersion: 2
         x: 576
@@ -515,7 +515,7 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Sprites_19
+      name: ysl
       rect:
         serializedVersion: 2
         x: 608
@@ -7248,7 +7248,6 @@ TextureImporter:
       Sprites_187: 2131092365
       Sprites_188: 1971078576
       Sprites_189: 1295147900
-      Sprites_19: 2064793928
       Sprites_190: 1466046891
       Sprites_191: 854771080
       Sprites_192: -296141516
@@ -7471,7 +7470,8 @@ TextureImporter:
       fz: 1954128151
       op: -153133045
       sj: -87959490
-      ys: -15186355
+      ysh: -15186355
+      ysl: 2064793928
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

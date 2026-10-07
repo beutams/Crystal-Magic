@@ -5,6 +5,7 @@ using CrystalMagic.UI;
 using UnityEngine;
 using UnityEngine.UI;
 
+[DefaultExecutionOrder(200)]
 public class BattleUI : UIBase<BattleUIData, BattleUIModel>
 {
     [SerializeField, Min(0f)] private float _chantFadeDuration = 0.2f;
@@ -55,9 +56,8 @@ public class BattleUI : UIBase<BattleUIData, BattleUIModel>
         base.OnClose();
     }
 
-    public override void OnUpdate()
+    private void LateUpdate()
     {
-        base.OnUpdate();
         Model?.RefreshRuntime();
         SyncChantBarWidth();
         UpdateChantVisibility(Time.unscaledDeltaTime);
@@ -230,24 +230,24 @@ public class BattleUI : UIBase<BattleUIData, BattleUIModel>
     private void RenderPropShortcuts(IReadOnlyList<BattlePropShortcutDisplayData> items)
     {
         RenderPropShortcut(
-            UI.PropShortcuts_PropSlot1_IconMask_Icon,
+            UI.PropShortcuts_PropSlot1_Icon,
             UI.PropShortcuts_PropSlot1_Count,
             UI.PropShortcuts_PropSlot1_Key,
-            UI.PropShortcuts_PropSlot1_IconMask_Cooldown,
+            UI.PropShortcuts_PropSlot1_Cooldown,
             items != null && items.Count > 0 ? items[0] : null,
             "Z");
         RenderPropShortcut(
-            UI.PropShortcuts_PropSlot2_IconMask_Icon,
+            UI.PropShortcuts_PropSlot2_Icon,
             UI.PropShortcuts_PropSlot2_Count,
             UI.PropShortcuts_PropSlot2_Key,
-            UI.PropShortcuts_PropSlot2_IconMask_Cooldown,
+            UI.PropShortcuts_PropSlot2_Cooldown,
             items != null && items.Count > 1 ? items[1] : null,
             "X");
         RenderPropShortcut(
-            UI.PropShortcuts_PropSlot3_IconMask_Icon,
+            UI.PropShortcuts_PropSlot3_Icon,
             UI.PropShortcuts_PropSlot3_Count,
             UI.PropShortcuts_PropSlot3_Key,
-            UI.PropShortcuts_PropSlot3_IconMask_Cooldown,
+            UI.PropShortcuts_PropSlot3_Cooldown,
             items != null && items.Count > 2 ? items[2] : null,
             "C");
     }

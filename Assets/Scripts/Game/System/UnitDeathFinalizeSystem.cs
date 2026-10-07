@@ -59,6 +59,10 @@ partial class UnitDeathFinalizeSystem : SystemBase
             GameInteractionUtility.FailTarget(EntityManager, _interactionEntity, entity);
             EventComponent.Instance?.Publish(new UnitDiedEvent(entity));
 
+            // A local defeat can synchronously leave the dungeon and destroy this entity.
+            if (!EntityManager.Exists(entity))
+                continue;
+
             if (_isServer && EntityManager.HasComponent<BattlePlayerStatusComponent>(entity))
             {
                 BattlePlayerStatusComponent status =

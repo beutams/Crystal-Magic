@@ -1,51 +1,86 @@
 ﻿using CrystalMagic.Core;
 
-public class LoadUI_SaveItemView : UISubView<LoadUI_SaveItemData>
+using System.Globalization;
+using UnityEngine;
+using UnityEngine.EventSystems;
+
+public class LoadUI_SaveItemView : UISubView<LoadUI_SaveItemData>, IPointerEnterHandler, IPointerExitHandler
 {
     public event System.Action<int> Clicked;
     public event System.Action<int> DeleteClicked;
 
     public int SlotIndex { get; private set; }
 
-    private bool _hasRecord;
-    private bool _buttonEventsBound;
+    private SaveRecord _record;
+    public bool HasRecord => _record != null;
+
+    private void OnEnable()
+    {
+        UI.Open_Read.ButtonPlus.onClick.AddListener(OnClicked);
+        UI.Open_Delete.ButtonPlus.onClick.AddListener(OnDeleteClicked);
+        LocalizationComponent.LanguageChanged += RefreshValues;
+        UI.Highlight.GameObject.SetActive(false);
+    }
+
+    private void OnDisable()
+    {
+        UI.Open_Read.ButtonPlus.onClick.RemoveListener(OnClicked);
+        UI.Open_Delete.ButtonPlus.onClick.RemoveListener(OnDeleteClicked);
+        LocalizationComponent.LanguageChanged -= RefreshValues;
+        UI.Highlight.GameObject.SetActive(false);
+    }
 
     public void Render(int slotIndex, SaveRecord record)
     {
-        Rebind();
-        EnsureButtonEventsBound();
         SlotIndex = slotIndex;
-        _hasRecord = record != null;
+        _record = record;
 
-        UI.Open.GameObject.SetActive(_hasRecord);
-        UI.Close.GameObject.SetActive(!_hasRecord);
-
-        if (!_hasRecord)
-            return;
-
-        UI.Open_Index.TextMeshProUGUI.text = (record.SaveIndex + 1).ToString("00");
-        UI.Open_CreateTime.TextMeshProUGUI.text = string.Empty;
-        UI.Open_Money.TextMeshProUGUI.text = record.StashMoney.ToString();
+        UI.Open.GameObject.SetActive(HasRecord);
+        UI.Close.GameObject.SetActive(!HasRecord);
+        UI.Badge_Occupied.GameObject.SetActive(HasRecord);
+        UI.Badge_Empty.GameObject.SetActive(!HasRecord);
+        UI.Badge_Index.TextMeshProUGUI.text = (slotIndex + 1).ToString("00");
+        UI.Badge_Index.TextMeshProUGUI.color = HasRecord
+            ? new Color32(73, 51, 45, 255)
+            : new Color32(120, 96, 70, 255);
+        UI.Highlight.GameObject.SetActive(false);
+        RefreshValues();
     }
 
-    private void EnsureButtonEventsBound()
+    private void RefreshValues()
     {
-        if (_buttonEventsBound)
+        if (!HasRecord)
             return;
 
-        GetComponent<ButtonPlus>().onClick.AddListener(OnClicked);
-        UI.Open_Delete.ButtonPlus.onClick.AddListener(OnDeleteClicked);
-        _buttonEventsBound = true;
+        UI.Open_MaxFloor.TextMeshProUGUI.text = FormatStatistic(_record.MaxFloor, "ui.load.floor_value");
+        UI.Open_TotalRuns.TextMeshProUGUI.text = FormatStatistic(_record.TotalRuns, "ui.load.run_value");
+        UI.Open_Money.TextMeshProUGUI.text = _record.StashMoney.ToString("N0", CultureInfo.CurrentCulture);
+    }
+
+    private static string FormatStatistic(int value, string key)
+    {
+        return value < 0 ? "—" : string.Format(CultureInfo.CurrentCulture, LocalizationComponent.Resolve(key), value);
+    }
+
+    public void OnPointerEnter(PointerEventData eventData)
+    {
+        UI.Highlight.GameObject.SetActive(HasRecord);
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        UI.Highlight.GameObject.SetActive(false);
     }
 
     private void OnClicked()
     {
-        Clicked?.Invoke(SlotIndex);
+        if (HasRecord)
+            Clicked?.Invoke(SlotIndex);
     }
 
     private void OnDeleteClicked()
     {
-        if (!_hasRecord)
+        if (!HasRecord)
             return;
 
         DeleteClicked?.Invoke(SlotIndex);

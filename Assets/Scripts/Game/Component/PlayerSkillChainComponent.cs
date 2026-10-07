@@ -87,7 +87,7 @@ public static class PlayerSkillChainUtility
         {
             SkillChainData sourceChain = sourceChains[chainId];
             int slotStart = slots.Length;
-            int slotCount = sourceChain?.Slots?.Count ?? 0;
+            int slotCount = System.Math.Min(sourceChain?.Slots?.Count ?? 0, SkillChainData.MaxLength);
             for (int slotIndex = 0; slotIndex < slotCount; slotIndex++)
             {
                 SkillChainSlotData sourceSlot = sourceChain.Slots[slotIndex];

@@ -1,5 +1,4 @@
 using CrystalMagic.Core;
-using CrystalMagic.Game.Config;
 
 namespace CrystalMagic.UI
 {
@@ -8,14 +7,14 @@ namespace CrystalMagic.UI
         public const string SaveRecordsChangedEventName = "SaveUIModel.SaveRecordsChanged";
         public override string ChangedEventName => SaveRecordsChangedEventName;
 
-        private SaveRecord[] _saveRecords = System.Array.Empty<SaveRecord>();
+        public const int SlotCount = 3;
+        private readonly SaveRecord[] _saveRecords = new SaveRecord[SlotCount];
 
         public int SlotCountValue => _saveRecords.Length;
         public SaveRecord[] SaveRecords => _saveRecords;
 
         public void SetSaveRecords(System.Collections.Generic.IEnumerable<SaveRecord> records)
         {
-            EnsureSlotArray();
             System.Array.Clear(_saveRecords, 0, _saveRecords.Length);
 
             if (records != null)
@@ -35,12 +34,5 @@ namespace CrystalMagic.UI
             EventComponent.Instance.Publish(new CommonGameEvent(SaveRecordsChangedEventName, this));
         }
 
-        private void EnsureSlotArray()
-        {
-            int slotCount = UnityEngine.Mathf.Max(1, ConfigComponent.Instance.Get<GameConfig>().MaxSaveSlots);
-
-            if (_saveRecords.Length != slotCount)
-                _saveRecords = new SaveRecord[slotCount];
-        }
     }
 }

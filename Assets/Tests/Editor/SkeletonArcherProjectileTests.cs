@@ -19,12 +19,13 @@ public sealed class SkeletonArcherProjectileTests
     public void ArcherGraphsCompileAndAttackRequestsArrowSkill()
     {
         JToken script = Row("StateScript", ArcherId);
-        StateScriptData scriptData = script.ToObject<StateScriptData>();
+        var serializer = JsonSerializer.Create(new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.Auto });
+        StateScriptData scriptData = script.ToObject<StateScriptData>(serializer);
         Assert.That(StateScriptCompiler.TryBuildRegistry(new[] { scriptData }, out var scripts, out string error),
             Is.True, error);
         scripts.Dispose();
 
-        BehaviorTreeData tree = Row("BehaviorTree", ArcherId).ToObject<BehaviorTreeData>();
+        BehaviorTreeData tree = Row("BehaviorTree", ArcherId).ToObject<BehaviorTreeData>(serializer);
         Assert.That(BehaviorTreeCompiler.TryBuildRegistry(new[] { tree }, out var trees, out error), Is.True, error);
         trees.Dispose();
 

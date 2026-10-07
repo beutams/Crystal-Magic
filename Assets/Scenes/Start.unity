@@ -401,6 +401,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   debugRole: 0
   debugFrameSpeedAdjustment: 1
+  battleHosting: 1
 --- !u!1 &285146997
 GameObject:
   m_ObjectHideFlags: 0
@@ -669,7 +670,7 @@ Transform:
   m_GameObject: {fileID: 511103163}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -15}
+  m_LocalPosition: {x: -0.16, y: 0.78, z: -15}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -778,7 +779,7 @@ Transform:
   m_GameObject: {fileID: 561637542}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -0.16, y: 0.78, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -942,7 +943,7 @@ Transform:
   m_GameObject: {fileID: 782463843}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -0.16, y: 0.78, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -981,18 +982,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ab0a3b32f4bd44c479903edb590a7dc4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &1987361290
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 782463843}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fd7b8f8789a84dedb61cdaaf3d1b4ea7, type: 3}
-  m_Name:
-  m_EditorClassIdentifier:
 --- !u!1 &810376142
 GameObject:
   m_ObjectHideFlags: 0
@@ -1085,7 +1074,7 @@ Transform:
   m_GameObject: {fileID: 810376142}
   serializedVersion: 2
   m_LocalRotation: {x: 0.40821788, y: -0.23456968, z: 0.10938163, w: 0.8754261}
-  m_LocalPosition: {x: 0, y: 37.8, z: 0}
+  m_LocalPosition: {x: -0.16, y: 38.579998, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1387,7 +1376,7 @@ MonoBehaviour:
   _coneArcSegmentCount: 24
   _maxShapesPerFrame: 64
   _zOffset: -0.05
-  _drawHitMarkers: 1
+  _drawHitMarkers: 0
   _hitMarkerSize: 0.12
   _circleColor: {r: 0, g: 1, b: 1, a: 1}
   _forwardRectColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
@@ -1440,7 +1429,7 @@ Transform:
   m_GameObject: {fileID: 1287474425}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 3.56881, y: 2.02645, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1629,6 +1618,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3deb53e7f173ed1489d0c45f47c863b0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1987361290
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 782463843}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fd7b8f8789a84dedb61cdaaf3d1b4ea7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &2098710000

@@ -16,8 +16,18 @@ public sealed class NetworkEntityDespawnStateData : NetworkStateData
         if (!context.IsClient || !context.TryGetEntity(unitId, out Entity entity))
             return;
 
+        if (context.EntityManager.HasComponent<ClientPredictedProjectileLinkComponent>(entity))
+            ClientProjectilePredictionUtility.Release(context.EntityManager,
+                context.EntityManager.GetComponentData<ClientPredictedProjectileLinkComponent>(entity).Prediction);
+
         if (hasPosition)
-            context.ApplyPosition(entity, new float3(positionX, positionY, positionZ));
+        {
+            float3 position = new(positionX, positionY, positionZ);
+            if (context.EntityManager.HasComponent<SkillProjectileComponent>(entity))
+                context.ApplyProjectilePosition(entity, position, finalPosition: true);
+            else
+                context.ApplyPosition(entity, position);
+        }
 
         ClientEntityLifetimePresentationComponent lifetime = context.EntityManager
             .HasComponent<ClientEntityLifetimePresentationComponent>(entity)

@@ -13,6 +13,14 @@ public sealed class ClientPlayerPredictionSnapshot
     public StateScriptGraphStateElement[] GraphStates = Array.Empty<StateScriptGraphStateElement>();
     public StateScriptNodeStateElement[] NodeStates = Array.Empty<StateScriptNodeStateElement>();
     public bool HasStateScript;
+    public UnitVariableElement[] Variables = Array.Empty<UnitVariableElement>();
+    public StateScriptExternalResultElement[] ExternalResults = Array.Empty<StateScriptExternalResultElement>();
+    public PlayerCurrentSkillComponent CurrentSkill;
+    public UnitManaComponent Mana;
+    public bool HasVariables;
+    public bool HasExternalResults;
+    public bool HasCurrentSkill;
+    public bool HasMana;
 
     public static ClientPlayerPredictionSnapshot Capture(
         EntityManager entityManager,
@@ -46,6 +54,29 @@ public sealed class ClientPlayerPredictionSnapshot
             snapshot.GraphStates[index] = graphs[index];
         for (int index = 0; index < nodes.Length; index++)
             snapshot.NodeStates[index] = nodes[index];
+
+        snapshot.HasVariables = entityManager.HasBuffer<UnitVariableElement>(entity);
+        if (snapshot.HasVariables)
+        {
+            DynamicBuffer<UnitVariableElement> variables = entityManager.GetBuffer<UnitVariableElement>(entity, true);
+            snapshot.Variables = new UnitVariableElement[variables.Length];
+            for (int index = 0; index < variables.Length; index++)
+                snapshot.Variables[index] = variables[index];
+        }
+        snapshot.HasCurrentSkill = entityManager.HasComponent<PlayerCurrentSkillComponent>(entity);
+        snapshot.HasExternalResults = entityManager.HasBuffer<StateScriptExternalResultElement>(entity);
+        if (snapshot.HasExternalResults)
+        {
+            var results = entityManager.GetBuffer<StateScriptExternalResultElement>(entity, true);
+            snapshot.ExternalResults = new StateScriptExternalResultElement[results.Length];
+            for (int index = 0; index < results.Length; index++)
+                snapshot.ExternalResults[index] = results[index];
+        }
+        if (snapshot.HasCurrentSkill)
+            snapshot.CurrentSkill = entityManager.GetComponentData<PlayerCurrentSkillComponent>(entity);
+        snapshot.HasMana = entityManager.HasComponent<UnitManaComponent>(entity);
+        if (snapshot.HasMana)
+            snapshot.Mana = entityManager.GetComponentData<UnitManaComponent>(entity);
         return snapshot;
     }
 
@@ -71,6 +102,26 @@ public sealed class ClientPlayerPredictionSnapshot
             graphs[index] = GraphStates[index];
         for (int index = 0; index < nodes.Length; index++)
             nodes[index] = NodeStates[index];
+
+        // 咏唱状态写在变量、当前技能和蓝量里，必须和图节点恢复到同一帧。
+        if (HasVariables && entityManager.HasBuffer<UnitVariableElement>(entity))
+        {
+            DynamicBuffer<UnitVariableElement> variables = entityManager.GetBuffer<UnitVariableElement>(entity);
+            variables.ResizeUninitialized(Variables.Length);
+            for (int index = 0; index < variables.Length; index++)
+                variables[index] = Variables[index];
+        }
+        if (HasCurrentSkill && entityManager.HasComponent<PlayerCurrentSkillComponent>(entity))
+            entityManager.SetComponentData(entity, CurrentSkill);
+        if (HasExternalResults && entityManager.HasBuffer<StateScriptExternalResultElement>(entity))
+        {
+            var results = entityManager.GetBuffer<StateScriptExternalResultElement>(entity);
+            results.ResizeUninitialized(ExternalResults.Length);
+            for (int index = 0; index < results.Length; index++)
+                results[index] = ExternalResults[index];
+        }
+        if (HasMana && entityManager.HasComponent<UnitManaComponent>(entity))
+            entityManager.SetComponentData(entity, Mana);
         return true;
     }
 

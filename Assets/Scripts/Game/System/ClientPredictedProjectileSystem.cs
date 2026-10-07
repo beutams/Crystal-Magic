@@ -1,3 +1,6 @@
+using CrystalMagic.Core;
+using Unity.Collections;
+using Unity.Jobs;
 using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -10,42 +13,46 @@ using Unity.Transforms;
 [UpdateBefore(typeof(ClientPresentationEventSystem))]
 public partial struct ClientPredictedProjectileSystem : ISystem
 {
-    [BurstCompile]
+    private UnitSourceDispatcher _sources;
+    private EntityQuery _terrainQuery;
     public void OnCreate(ref SystemState state)
     {
+        _sources.InitializeReadOnly(ref state);
+        _terrainQuery = state.GetEntityQuery(ComponentType.ReadOnly<DungeonNavigationMapComponent>(),
+            ComponentType.ReadOnly<DungeonNavigationCollisionWord>());
         state.RequireForUpdate<ClientPredictedProjectileComponent>();
+        state.RequireForUpdate<UnitQuerySingleton>();
     }
 
-    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
-        state.Dependency = new ClientPredictedProjectileJob
+        UnitQuerySingleton query = SystemAPI.GetSingleton<UnitQuerySingleton>();
+        BufferLookup<UnitQueryNode> nodes = SystemAPI.GetBufferLookup<UnitQueryNode>(true);
+        BufferLookup<UnitQueryEntry> entries = SystemAPI.GetBufferLookup<UnitQueryEntry>(true);
+        if (!nodes.TryGetBuffer(query.TreeEntity, out DynamicBuffer<UnitQueryNode> treeNodes) ||
+            !entries.TryGetBuffer(query.TreeEntity, out DynamicBuffer<UnitQueryEntry> treeEntries))
         {
-            DeltaTime = math.max(0f, SystemAPI.Time.DeltaTime),
-        }.ScheduleParallel(state.Dependency);
-    }
-}
-
-[BurstCompile]
-[WithOptions(EntityQueryOptions.IgnoreComponentEnabledState)]
-public partial struct ClientPredictedProjectileJob : IJobEntity
-{
-    public float DeltaTime;
-
-    private void Execute(
-        ref ClientPredictedProjectileComponent projectile,
-        ref LocalTransform transform,
-        EnabledRefRW<DestroyEntityFlag> destroyFlag)
-    {
-        if (destroyFlag.ValueRO)
             return;
+        }
 
-        float moveDistance = projectile.Speed * DeltaTime;
-        transform.Position += projectile.Direction * moveDistance;
-        float2 planar = math.normalizesafe(projectile.Direction.xy, new float2(1f, 0f));
-        transform.Rotation = quaternion.RotateZ(math.atan2(planar.y, planar.x));
-        projectile.TraveledDistance += math.abs(moveDistance);
-        if (projectile.MaxRange > 0f && projectile.TraveledDistance >= projectile.MaxRange)
-            destroyFlag.ValueRW = true;
+        _sources.Update(ref state);
+        ComponentLookup<ClientPredictedProjectileComponent> predictions = SystemAPI.GetComponentLookup<ClientPredictedProjectileComponent>(true);
+        JobHandle movementHandle = new SkillProjectileMovementJob
+        {
+            DeltaTime = SystemAPI.Time.DeltaTime,
+            Predictions = predictions,
+        }.ScheduleParallel(state.Dependency);
+        Entity terrainEntity = _terrainQuery.IsEmptyIgnoreFilter ? Entity.Null : _terrainQuery.GetSingletonEntity();
+        state.Dependency = new SkillProjectileCollisionJob
+        {
+            DeltaTime = SystemAPI.Time.DeltaTime,
+            Tree = new UnitQueryTree(treeNodes.AsNativeArray(), treeEntries.AsNativeArray()),
+            Variables = SystemAPI.GetComponentLookup<UnitVariableComponent>(true),
+            Sources = _sources,
+            Predictions = predictions,
+            TerrainEntity = terrainEntity,
+            TerrainMap = terrainEntity == Entity.Null ? default : SystemAPI.GetComponent<DungeonNavigationMapComponent>(terrainEntity),
+            TerrainWords = SystemAPI.GetBufferLookup<DungeonNavigationCollisionWord>(true),
+        }.ScheduleParallel(movementHandle);
     }
 }

@@ -27,7 +27,7 @@ namespace CrystalMagic.Game.Skill.Effects
                     Data.Scale,
                     Data.Duration,
                     source: context.OriginEntity,
-                    sourceSkillId: context.SourceSkillId))
+                    sourceSkillId: context.SourceSkillId, identity: context.EffectIdentity))
             {
                 return;
             }

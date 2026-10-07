@@ -29,6 +29,7 @@ namespace CrystalMagic.Core
         private readonly Dictionary<string, GameObject> _resourcePoolPrefabs = new();
 
         private Transform _poolContainer;
+        private readonly HashSet<GameObject> _transientObjects = new();
 
         public override int Priority => 12;
 
@@ -37,6 +38,7 @@ namespace CrystalMagic.Core
             base.Initialize();
             GameObject containerObj = new GameObject("[ObjectPoolContainer]");
             _poolContainer = containerObj.transform;
+            _poolContainer.SetParent(transform, false);
         }
 
         public GameObject Get(string assetPath)
@@ -53,6 +55,16 @@ namespace CrystalMagic.Core
                 _objectInstanceToPoolName[obj.GetInstanceID()] = assetPath;
 
             return obj;
+        }
+
+        // Procedural hierarchies cannot reuse arbitrary components safely. Keep
+        // their creation and destruction in the same ownership layer as prefabs.
+        public GameObject CreateTransient(string name, Transform parent = null)
+        {
+            GameObject instance = new GameObject(name);
+            instance.transform.SetParent(parent != null ? parent : _poolContainer, false);
+            _transientObjects.Add(instance);
+            return instance;
         }
 
         public GameObject Get(string assetPath, string ownerKey)
@@ -119,6 +131,13 @@ namespace CrystalMagic.Core
             obj.SetActive(false);
             RemoveOwnerObject(obj);
 
+            if (_transientObjects.Contains(obj))
+            {
+                _transientObjects.RemoveWhere(child => child == null || child == obj || child.transform.IsChildOf(obj.transform));
+                Object.Destroy(obj);
+                return;
+            }
+
             int objectInstanceId = obj.GetInstanceID();
             if (_objectInstanceToPoolName.TryGetValue(objectInstanceId, out string mappedPoolName) &&
                 _pools.TryGetValue(mappedPoolName, out GameObjectPool mappedPool))
@@ -168,6 +187,10 @@ namespace CrystalMagic.Core
 
             pool.Clear();
             _pools.Remove(poolName);
+            List<int> releasedIds = new();
+            foreach (var entry in _objectInstanceToPoolName)
+                if (entry.Value == poolName) releasedIds.Add(entry.Key);
+            foreach (int id in releasedIds) _objectInstanceToPoolName.Remove(id);
 
             if (_resourcePoolPrefabs.TryGetValue(poolName, out GameObject prefab))
             {
@@ -180,6 +203,12 @@ namespace CrystalMagic.Core
 
         public void ClearAllPools()
         {
+            GameObject[] transientSnapshot = new GameObject[_transientObjects.Count];
+            _transientObjects.CopyTo(transientSnapshot);
+            foreach (GameObject instance in transientSnapshot)
+                if (instance != null && _transientObjects.Contains(instance)) Release(instance);
+            _transientObjects.Clear();
+
             foreach (GameObjectPool pool in _pools.Values)
                 pool.Clear();
 

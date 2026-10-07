@@ -136,8 +136,6 @@ namespace CrystalMagic.Core
         {
 #if CRYSTAL_MAGIC_LOBBY_SERVER
             return "LobbyServer";
-#elif CRYSTAL_MAGIC_BATTLE_SERVER
-            return "BattleServer";
 #elif CRYSTAL_MAGIC_CLIENT
             return "Client";
 #else

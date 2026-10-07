@@ -16,7 +16,6 @@ namespace CrystalMagic.Core
         private static readonly ProfilerMarker UiInputLockUpdateMarker = new("BattleState.UIInputLock");
         private UIBase _battleUI;
         private CharacterUI _characterUI;
-        private GameMenuUI _gameMenuUI;
         private UnitHealthBarManager _unitHealthBarManager;
         private DamageNumberManager _damageNumberManager;
         private NotificationUI _notificationUI;
@@ -46,18 +45,23 @@ namespace CrystalMagic.Core
         {
             using (BattleUpdateMarker.Auto())
                 OnUpdateBattle();
-            if (_characterUI != null && _characterUI.gameObject.activeSelf &&
+            if (_characterUI != null && _characterUI.gameObject.activeSelf && !_characterUI.IsSettingsPage &&
                 GameRuntimeStateUtility.TryGetPlayerEntity(out EntityManager entityManager, out Entity player) &&
                 PlayerCharacterUtility.IsEditLocked(entityManager, player))
                 _characterUI.Close();
-            using (HealthBarUpdateMarker.Auto())
-                _unitHealthBarManager?.Tick();
-            using (DamageNumberUpdateMarker.Auto())
-                _damageNumberManager?.Tick();
             using (InteractionPromptUpdateMarker.Auto())
                 _interactionPromptManager?.Tick();
             using (UiInputLockUpdateMarker.Auto())
                 RefreshUIInputLock();
+        }
+
+        public sealed override void OnLateUpdate()
+        {
+            // ECS simulation and NetworkComponent.LateUpdate have completed.
+            using (HealthBarUpdateMarker.Auto())
+                _unitHealthBarManager?.Tick();
+            using (DamageNumberUpdateMarker.Auto())
+                _damageNumberManager?.Tick();
         }
 
         public sealed override void OnExit()
@@ -74,10 +78,8 @@ namespace CrystalMagic.Core
             ReleaseUIInputLock();
             UnbindInput();
             OnExitBattle();
-            ReleaseManagedUI(_gameMenuUI);
             ReleaseManagedUI(_characterUI);
             ReleaseManagedUI(_battleUI);
-            _gameMenuUI = null;
             _characterUI = null;
             _battleUI = null;
         }
@@ -151,16 +153,14 @@ namespace CrystalMagic.Core
 
         private void HandleUnhandledEscape()
         {
-            if (_gameMenuUI == null || !UIComponent.Instance.IsManaged(_gameMenuUI))
+            if (_characterUI == null || !UIComponent.Instance.IsManaged(_characterUI))
             {
-                _gameMenuUI = UIComponent.Instance.Open<GameMenuUI>();
+                _characterUI = UIComponent.Instance.Open<CharacterUI>(CharacterPage.Setting);
                 return;
             }
 
-            if (_gameMenuUI.gameObject.activeSelf)
-                return;
-
-            UIComponent.Instance.ShowUI(_gameMenuUI);
+            UIComponent.Instance.ShowUI(_characterUI);
+            _characterUI.ShowSettings();
         }
 
         private void RefreshUIInputLock()

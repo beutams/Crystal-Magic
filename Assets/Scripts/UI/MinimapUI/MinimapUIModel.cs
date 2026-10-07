@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using CrystalMagic.Core;
 using CrystalMagic.Game.OpenField;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -23,8 +25,10 @@ namespace CrystalMagic.UI
         private float _cellWorldSize = 1f;
         private int _textureWidth;
         private int _textureHeight;
-        private bool _hasExit;
-        private Vector2 _exitPosition;
+        private readonly HashSet<int> _interestPointIds = new();
+        private readonly HashSet<int> _clearedInterestPointIds = new();
+        private World _interestPointQueryWorld;
+        private EntityQuery _interestPointQuery;
         private bool _hasPlayer;
         private Vector2 _playerPosition;
         private float _playerRotationDegrees;
@@ -33,8 +37,6 @@ namespace CrystalMagic.UI
         public bool HasMap => _terrainSprite != null;
         public Sprite TerrainSprite => _terrainSprite;
         public OpenFieldDungeonLayout Layout => _layout;
-        public bool HasExit => _hasExit;
-        public Vector2 ExitPosition => _exitPosition;
         public bool HasPlayer => _hasPlayer;
         public Vector2 PlayerPosition => _playerPosition;
         public float PlayerRotationDegrees => _playerRotationDegrees;
@@ -43,6 +45,7 @@ namespace CrystalMagic.UI
         {
             bool changed = EnsureMap();
             changed |= RefreshPlayerMarker();
+            changed |= RefreshInterestPointStates();
             if (changed)
                 PublishChanged();
         }
@@ -73,7 +76,6 @@ namespace CrystalMagic.UI
 
                 ReleaseMapVisual();
                 _layout = null;
-                _hasExit = false;
                 _hasPlayer = false;
                 _cachedPlayerEntity = Entity.Null;
                 return true;
@@ -84,10 +86,11 @@ namespace CrystalMagic.UI
 
             ReleaseMapVisual();
             _layout = layout;
+            foreach (OpenFieldInterestPoint point in layout.InterestPoints)
+                _interestPointIds.Add(point.EncounterId);
             _cachedPlayerEntity = Entity.Null;
             ConfigureWorldSpace(mapData.SceneData, layout);
             BuildTerrainSprite(layout);
-            ConfigureExitMarker(layout);
             _hasPlayer = false;
             return true;
         }
@@ -134,15 +137,6 @@ namespace CrystalMagic.UI
             _terrainSprite.hideFlags = HideFlags.DontSave;
         }
 
-        private void ConfigureExitMarker(OpenFieldDungeonLayout layout)
-        {
-            OpenFieldInterestPoint exitPoint = layout.ExitInterestPoint;
-            _hasExit = exitPoint != null;
-            _exitPosition = _hasExit
-                ? ToTextureNormalized(new Vector2(exitPoint.Center.X + 0.5f, exitPoint.Center.Y + 0.5f))
-                : Vector2.zero;
-        }
-
         private bool RefreshPlayerMarker()
         {
             if (!HasMap)
@@ -175,7 +169,7 @@ namespace CrystalMagic.UI
         private bool TryGetPlayerPose(out Vector3 position, out float rotationDegrees)
         {
             position = Vector3.zero;
-            rotationDegrees = 0f;
+            rotationDegrees = _playerRotationDegrees;
 
             World world = World.DefaultGameObjectInjectionWorld;
             if (world == null || !world.IsCreated)
@@ -192,7 +186,8 @@ namespace CrystalMagic.UI
 
             float2 direction = entityManager.GetComponentData<UnitFacingComponent>(player).Direction;
             if (math.lengthsq(direction) > 0.0001f)
-                rotationDegrees = math.degrees(math.atan2(direction.y, direction.x)) - 90f;
+                // The existing BookV1 triangle sprite points down at zero rotation.
+                rotationDegrees = math.degrees(math.atan2(direction.y, direction.x)) + 90f;
             return true;
         }
 
@@ -231,22 +226,60 @@ namespace CrystalMagic.UI
                 Mathf.Clamp((mapCellPosition.y + 1f) / _textureHeight, 1f / _textureHeight, 1f - 1f / _textureHeight));
         }
 
-        public void GetInterestPointAnchorRange(
-            OpenFieldInterestPoint point,
-            out Vector2 anchorMin,
-            out Vector2 anchorMax)
+        public Vector2 GetInterestPointPosition(OpenFieldInterestPoint point)
         {
-            int radius = Mathf.Max(1, point.Radius);
-            anchorMin = new Vector2(
-                Mathf.Clamp01((point.Center.X - radius + 1f) / _textureWidth),
-                Mathf.Clamp01((point.Center.Y - radius + 1f) / _textureHeight));
-            anchorMax = new Vector2(
-                Mathf.Clamp01((point.Center.X + radius + 2f) / _textureWidth),
-                Mathf.Clamp01((point.Center.Y + radius + 2f) / _textureHeight));
+            return ToTextureNormalized(new Vector2(point.Center.X + 0.5f, point.Center.Y + 0.5f));
+        }
+
+        public bool IsInterestPointCleared(int encounterId)
+        {
+            return _clearedInterestPointIds.Contains(encounterId);
+        }
+
+        private bool RefreshInterestPointStates()
+        {
+            if (!HasMap)
+                return false;
+
+            World world = World.DefaultGameObjectInjectionWorld;
+            if (world == null || !world.IsCreated)
+                return false;
+
+            if (_interestPointQueryWorld != world)
+            {
+                ReleaseInterestPointQuery();
+                _interestPointQueryWorld = world;
+                _interestPointQuery = world.EntityManager.CreateEntityQuery(
+                    ComponentType.ReadOnly<DungeonInterestPointComponent>());
+            }
+
+            bool changed = false;
+            EntityManager entityManager = world.EntityManager;
+            using NativeArray<Entity> points = _interestPointQuery.ToEntityArray(Allocator.Temp);
+            foreach (Entity entity in points)
+            {
+                int id = entityManager.GetComponentData<DungeonInterestPointComponent>(entity).EncounterId;
+                // Use the encounter's authoritative terminal state, not its current guard count.
+                if (_interestPointIds.Contains(id) && DungeonPatrolRuntimeUtility.IsEncounterDead(entityManager, entity))
+                    changed |= _clearedInterestPointIds.Add(id);
+            }
+
+            return changed;
+        }
+
+        private void ReleaseInterestPointQuery()
+        {
+            if (_interestPointQueryWorld != null && _interestPointQueryWorld.IsCreated)
+                _interestPointQuery.Dispose();
+            _interestPointQueryWorld = null;
+            _interestPointQuery = default;
         }
 
         private void ReleaseMapVisual()
         {
+            ReleaseInterestPointQuery();
+            _interestPointIds.Clear();
+            _clearedInterestPointIds.Clear();
             if (_terrainSprite != null)
                 Object.Destroy(_terrainSprite);
             if (_terrainTexture != null)

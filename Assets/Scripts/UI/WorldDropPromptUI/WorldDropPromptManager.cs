@@ -1,6 +1,5 @@
 using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
-using TMPro;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -18,11 +17,10 @@ namespace CrystalMagic.UI
 
         private RectTransform _rootRect;
         private Camera _currentCamera;
-        private RectTransform _promptRoot;
-        private RectTransform _labelRect;
-        private TextMeshProUGUI _label;
-        private World _runtimeQueryWorld;
-        private EntityQuery _runtimeQuery;
+        private InteractionPromptUI _view;
+        private InteractionPromptUIModel _model;
+        private World _playerWorld;
+        private Entity _cachedPlayer;
         private Entity _cachedTarget;
         private UnitInteractionData _cachedInteraction;
         private string _cachedDisplayName;
@@ -39,16 +37,28 @@ namespace CrystalMagic.UI
             EnsurePromptView();
             SetVisible(false);
             LocalizationComponent.LanguageChanged += HandleLanguageChanged;
+            // Project only after camera follow, shake and companion transforms have updated.
+            Canvas.preWillRenderCanvases += RefreshPrompt;
             _initialized = true;
         }
 
         public void Tick()
         {
+            if (_initialized && _view == null)
+            {
+                ResolveFloatingRoot();
+                EnsurePromptView();
+            }
+        }
+
+        private void RefreshPrompt()
+        {
             if (!_initialized)
                 return;
 
-            if (((_rootRect == null || _currentCamera == null) && !ResolveFloatingRoot())
-                || !EnsurePromptView())
+            // A live scene may replace its camera without destroying the previous one.
+            _currentCamera = CameraComponent.Instance.Current;
+            if (_rootRect == null || _currentCamera == null || _model == null)
             {
                 SetVisible(false);
                 return;
@@ -73,23 +83,21 @@ namespace CrystalMagic.UI
                 return;
             }
 
-            if (!string.Equals(_label.text, displayName, System.StringComparison.Ordinal))
-                _label.text = displayName;
-            _labelRect.anchoredPosition = localPoint;
-            SetVisible(true);
+            _model.SetDisplay(displayName, localPoint, true);
         }
 
         public void Dispose()
         {
             LocalizationComponent.LanguageChanged -= HandleLanguageChanged;
-            ReleaseRuntimeQuery();
+            Canvas.preWillRenderCanvases -= RefreshPrompt;
+            _playerWorld = null;
+            _cachedPlayer = Entity.Null;
 
-            if (_promptRoot != null)
-                Object.Destroy(_promptRoot.gameObject);
+            if (_view != null)
+                UIComponent.Instance.ReleaseUI(_view);
 
-            _promptRoot = null;
-            _labelRect = null;
-            _label = null;
+            _view = null;
+            _model = null;
             _rootRect = null;
             _currentCamera = null;
             InvalidateCachedDisplay();
@@ -109,50 +117,19 @@ namespace CrystalMagic.UI
 
         private bool EnsurePromptView()
         {
-            if (_promptRoot != null && _labelRect != null && _label != null)
+            if (_view != null)
                 return true;
 
             if (_rootRect == null)
                 return false;
 
-            GameObject rootObject = new("InteractionPrompt", typeof(RectTransform));
-            _promptRoot = rootObject.GetComponent<RectTransform>();
-            _promptRoot.SetParent(_rootRect, false);
-            _promptRoot.anchorMin = Vector2.zero;
-            _promptRoot.anchorMax = Vector2.one;
-            _promptRoot.offsetMin = Vector2.zero;
-            _promptRoot.offsetMax = Vector2.zero;
-            _promptRoot.pivot = new Vector2(0.5f, 0.5f);
-            _promptRoot.localScale = Vector3.one;
-            _promptRoot.localRotation = Quaternion.identity;
+            _view = UIComponent.Instance.Open<InteractionPromptUI>();
+            if (_view == null)
+                return false;
 
-            GameObject labelObject = new("Label", typeof(RectTransform), typeof(LocalizedTextMeshProUGUI));
-            _labelRect = labelObject.GetComponent<RectTransform>();
-            _labelRect.SetParent(_promptRoot, false);
-            _labelRect.anchorMin = new Vector2(0.5f, 0.5f);
-            _labelRect.anchorMax = new Vector2(0.5f, 0.5f);
-            _labelRect.pivot = new Vector2(0.5f, 0.5f);
-            _labelRect.sizeDelta = new Vector2(320f, 40f);
-            _labelRect.localScale = Vector3.one;
-            _labelRect.localRotation = Quaternion.identity;
-
-            _label = labelObject.GetComponent<TextMeshProUGUI>();
-            TMP_FontAsset fontAsset = TMP_Settings.defaultFontAsset;
-            if (fontAsset == null)
-                fontAsset = Resources.Load<TMP_FontAsset>("Fonts & Materials/LiberationSans SDF");
-
-            if (fontAsset != null)
-                _label.font = fontAsset;
-            _label.fontSize = 24f;
-            _label.fontStyle = FontStyles.Bold;
-            _label.alignment = TextAlignmentOptions.Center;
-            _label.color = Color.white;
-            _label.textWrappingMode = TextWrappingModes.NoWrap;
-            _label.outlineWidth = 0.18f;
-            _label.outlineColor = new Color(0f, 0f, 0f, 0.9f);
-            _label.raycastTarget = false;
-
-            return true;
+            UIComponent.Instance.SetLifetime(_view, UILifetime.Manual);
+            _model = UIComponent.Instance.GetModel<InteractionPromptUIModel>(_view);
+            return _model != null;
         }
 
         private bool TryGetPromptTarget(out float3 worldPosition, out string displayName, out float worldYOffset)
@@ -162,14 +139,12 @@ namespace CrystalMagic.UI
             worldYOffset = DefaultWorldYOffset;
 
             World world = World.DefaultGameObjectInjectionWorld;
-            if (!EnsureRuntimeQuery(world))
-                return false;
-
-            if (_runtimeQuery.IsEmptyIgnoreFilter)
+            if (world == null || !world.IsCreated)
                 return false;
 
             EntityManager entityManager = world.EntityManager;
-            Entity player = _runtimeQuery.GetSingletonEntity();
+            if (!TryGetPromptPlayer(entityManager, out Entity player))
+                return false;
             if (!UnitVariableSource.TryGetValue(
                     entityManager,
                     player,
@@ -207,8 +182,23 @@ namespace CrystalMagic.UI
             if (string.IsNullOrWhiteSpace(displayName))
                 return false;
 
-            worldPosition = localToWorld.Position;
+            SpriteRenderer renderer = entityManager.HasComponent<SpriteRenderer>(target)
+                ? entityManager.GetComponentObject<SpriteRenderer>(target)
+                : null;
+            worldPosition = ResolveAnchor(renderer, localToWorld, worldYOffset);
+            worldYOffset = 0f;
             return true;
+        }
+
+        internal static Vector3 ResolveAnchor(SpriteRenderer renderer, LocalToWorld transform, float baseHeight)
+        {
+            // Keep the original scale-one offset; sprite padding and animation bounds
+            // do not describe the intended interaction label height.
+            Vector3 position = renderer != null ? renderer.transform.position : (Vector3)transform.Position;
+            float scale = renderer != null
+                ? Mathf.Abs(renderer.transform.lossyScale.y)
+                : math.length(transform.Value.c1.xyz);
+            return position + Vector3.up * (baseHeight * scale);
         }
 
         private bool TryResolveDisplayName(
@@ -265,34 +255,61 @@ namespace CrystalMagic.UI
             _hasCachedDisplay = false;
         }
 
-        private bool EnsureRuntimeQuery(World world)
+        private bool TryGetPromptPlayer(EntityManager entityManager, out Entity player)
         {
-            if (world == null || !world.IsCreated)
+            player = Entity.Null;
+            if (!GameWorldContextUtility.TryGet(entityManager, out GameWorldContextComponent context))
                 return false;
 
-            if (_runtimeQueryWorld == world)
-                return true;
+            if (_playerWorld != entityManager.World)
+            {
+                _playerWorld = entityManager.World;
+                _cachedPlayer = Entity.Null;
+                InvalidateCachedDisplay();
+            }
 
-            ReleaseRuntimeQuery();
-            _runtimeQueryWorld = world;
-            _runtimeQuery = world.EntityManager.CreateEntityQuery(
-                ComponentType.ReadOnly<PlayerInputComponent>(),
-                ComponentType.ReadOnly<UnitVariableComponent>());
+            if (IsPromptPlayer(entityManager, _cachedPlayer, context))
+            {
+                player = _cachedPlayer;
+                return true;
+            }
+
+            _cachedPlayer = Entity.Null;
+            if (!GameRuntimeStateUtility.TryGetPlayerEntity(entityManager, out Entity selected) ||
+                !IsPromptPlayer(entityManager, selected, context))
+                return false;
+
+            _cachedPlayer = player = selected;
             return true;
         }
 
-        private void ReleaseRuntimeQuery()
+        private static bool IsPromptPlayer(
+            EntityManager entityManager, Entity player, in GameWorldContextComponent context)
         {
-            if (_runtimeQueryWorld == null || !_runtimeQueryWorld.IsCreated)
-            {
-                _runtimeQueryWorld = null;
-                _runtimeQuery = default;
-                return;
-            }
+            if (player == Entity.Null || !entityManager.Exists(player) ||
+                !entityManager.HasComponent<PlayerInputComponent>(player) ||
+                !entityManager.HasComponent<UnitVariableComponent>(player) ||
+                entityManager.HasComponent<Disabled>(player) ||
+                entityManager.HasComponent<UnitInitializationPendingTag>(player) ||
+                entityManager.HasComponent<BattleSpectatorComponent>(player) ||
+                (entityManager.HasComponent<UnitDeathComponent>(player) &&
+                 entityManager.IsComponentEnabled<UnitDeathComponent>(player)) ||
+                (entityManager.HasComponent<DestroyEntityFlag>(player) &&
+                 entityManager.IsComponentEnabled<DestroyEntityFlag>(player)))
+                return false;
 
-            _runtimeQuery.Dispose();
-            _runtimeQueryWorld = null;
-            _runtimeQuery = default;
+            if (context.Role == GameWorldRole.Client)
+                return entityManager.HasComponent<NetworkPlayerComponent>(player);
+
+            if (!entityManager.HasComponent<UnitFactionComponent>(player) ||
+                !UnitFactionUtility.IsPlayer(entityManager.GetComponentData<UnitFactionComponent>(player).Value))
+                return false;
+
+            if (context.SceneMode == GameSceneMode.None)
+                return true;
+
+            bool combatScene = context.SceneMode is GameSceneMode.Dungeon or GameSceneMode.Training;
+            return entityManager.HasComponent<UnitSkillReleaseComponent>(player) == combatScene;
         }
 
         private static bool TryBuildDisplayName(
@@ -353,10 +370,7 @@ namespace CrystalMagic.UI
 
         private void SetVisible(bool visible)
         {
-            if (_promptRoot == null || _promptRoot.gameObject.activeSelf == visible)
-                return;
-
-            _promptRoot.gameObject.SetActive(visible);
+            _model?.SetVisible(visible);
         }
     }
 }

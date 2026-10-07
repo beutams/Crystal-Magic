@@ -8,7 +8,7 @@ namespace CrystalMagic.Core {
     /// 完整存档数据容器
     /// </summary>
     [System.Serializable]
-    public class SaveData
+    public class SaveData : ISerializationCallbackReceiver
     {
         // ========== 元数据 ==========
         public int SaveIndex;                    // 存档名称
@@ -28,6 +28,35 @@ namespace CrystalMagic.Core {
         public CharacterData Character;
         public UnitRuntimeData Player;
         public DungeonRunData DungeonRun;
+
+        // JsonUtility expands a null inline class into a default-valued object.
+        // Preserve whether a player snapshot actually existed before serialization.
+        [SerializeField] private int _playerSnapshotVersion;
+        [SerializeField] private bool _hasPlayerSnapshot;
+
+        public void OnBeforeSerialize()
+        {
+            _playerSnapshotVersion = 1;
+            _hasPlayerSnapshot = Player != null;
+        }
+
+        public void OnAfterDeserialize()
+        {
+            if (_playerSnapshotVersion > 0)
+            {
+                if (!_hasPlayerSnapshot)
+                    Player = null;
+                return;
+            }
+
+            // Older fresh Town saves wrote this exact placeholder for a null player.
+            // Keep real Town positions and combat snapshots, including zero health.
+            if (Location?.AreaType == SaveAreaType.Town && Player != null &&
+                Player.SaveId == -1 && Player.UnitDataId == -1 && Player.Faction == UnitFactionType.Player &&
+                Player.X == 0f && Player.Y == 0f && Player.Z == 0f &&
+                Player.Health == 0f && Player.Mana == 0f)
+                Player = null;
+        }
     }
     /// <summary>
     /// 全局数据
@@ -46,12 +75,12 @@ namespace CrystalMagic.Core {
     public class CharacterData
     {
         /// <summary>
-        /// 创建或载入存档时绑定的 Steam 账号 ID。
+        /// 绑定的账号 ID（Steam 或本地测试账号）；字段名保留以兼容现有存档。
         /// </summary>
         public ulong SteamAccountId;
 
         /// <summary>
-        /// 创建或载入存档时绑定的 Steam 玩家昵称。
+        /// 创建或载入存档时绑定的玩家昵称。
         /// </summary>
         public string Name = string.Empty;
 
@@ -189,6 +218,10 @@ namespace CrystalMagic.Core {
         /// 物品掉落位置
         /// </summary>
         public List<ItemDropData> ItemDrops = new();
+        // Persist the acquisition journal across floors and save/load. Older saves lack the flag.
+        public bool HasAcquisitionHistory;
+        public List<InventoryItemData> AcquiredItems = new();
+        public long AcquiredMoney;
     }
 
     /// <summary>
@@ -336,6 +369,10 @@ namespace CrystalMagic.Core {
     [System.Serializable]
     public class SkillChainData
     {
+        public const int MaxLength = 10;
+        [Newtonsoft.Json.JsonIgnore]
+        public bool IsFull => (Slots?.Count ?? 0) >= MaxLength;
+
         public int Index;
         public List<SkillChainSlotData> Slots = new();
 

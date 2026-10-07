@@ -16,30 +16,33 @@ partial class EffectVisualFollowSystem : SystemBase
                  SystemAPI.Query<RefRO<EffectVisualFollowComponent>, RefRW<LocalTransform>>().WithEntityAccess())
         {
             EffectVisualFollowComponent follow = followReference.ValueRO;
-            if (follow.Target == Entity.Null || !EntityManager.Exists(follow.Target) ||
-                !EntityManager.HasComponent<LocalTransform>(follow.Target))
+            bool hasTarget = follow.Target != Entity.Null && EntityManager.Exists(follow.Target) &&
+                             EntityManager.HasComponent<LocalTransform>(follow.Target);
+            if (hasTarget)
             {
-                if (follow.EndWhenTargetMissing == 0)
-                    continue;
+                LocalTransform targetTransform = EntityManager.GetComponentData<LocalTransform>(follow.Target);
+                LocalTransform visualTransform = transform.ValueRO;
+                quaternion rotation = follow.AlignRotation != 0 ? targetTransform.Rotation : visualTransform.Rotation;
+                visualTransform.Position = targetTransform.Position + math.rotate(rotation, follow.Offset);
+                if (follow.AlignRotation != 0)
+                    visualTransform.Rotation = rotation;
+                transform.ValueRW = visualTransform;
+            }
 
-                if (EntityManager.HasComponent<SpriteEffectAnimationComponent>(entity))
-                {
-                    SpriteEffectAnimationSystem.RequestEnd(EntityManager, entity);
-                    continue;
-                }
+            bool targetEnding = !hasTarget ||
+                                EntityManager.HasComponent<DestroyEntityFlag>(follow.Target) &&
+                                EntityManager.IsComponentEnabled<DestroyEntityFlag>(follow.Target);
+            if (!targetEnding || follow.EndWhenTargetMissing == 0)
+                continue;
 
-                pendingDestroy ??= new List<Entity>();
-                pendingDestroy.Add(entity);
+            if (EntityManager.HasComponent<SpriteEffectAnimationComponent>(entity))
+            {
+                SpriteEffectAnimationSystem.RequestEnd(EntityManager, entity);
                 continue;
             }
 
-            LocalTransform targetTransform = EntityManager.GetComponentData<LocalTransform>(follow.Target);
-            LocalTransform visualTransform = transform.ValueRO;
-            quaternion rotation = follow.AlignRotation != 0 ? targetTransform.Rotation : visualTransform.Rotation;
-            visualTransform.Position = targetTransform.Position + math.rotate(rotation, follow.Offset);
-            if (follow.AlignRotation != 0)
-                visualTransform.Rotation = rotation;
-            transform.ValueRW = visualTransform;
+            pendingDestroy ??= new List<Entity>();
+            pendingDestroy.Add(entity);
         }
 
         MarkForDestroy(pendingDestroy);

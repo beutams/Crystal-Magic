@@ -14,6 +14,7 @@ using Unity.Transforms;
 public partial struct DungeonPatrolArrivalSystem : ISystem
 {
     private EntityQuery _mapQuery;
+    private double _nextDormantUpdate;
 
     public void OnCreate(ref SystemState state)
     {
@@ -24,8 +25,12 @@ public partial struct DungeonPatrolArrivalSystem : ISystem
 
     public void OnUpdate(ref SystemState state)
     {
+        bool updateDormant = SystemAPI.Time.ElapsedTime >= _nextDormantUpdate;
+        if (updateDormant) _nextDormantUpdate = SystemAPI.Time.ElapsedTime + 0.5;
         DungeonPatrolArrivalJob job = new()
         {
+            SleepStates = SystemAPI.GetComponentLookup<DungeonMonsterDistanceState>(true),
+            UpdateDormant = updateDormant,
             Variables = SystemAPI.GetBufferLookup<UnitVariableElement>(),
             Owners = SystemAPI.GetComponentLookup<UnitVariableComponent>(true),
             Transforms = SystemAPI.GetComponentLookup<LocalTransform>(true),
@@ -52,6 +57,8 @@ public partial struct DungeonPatrolArrivalSystem : ISystem
 [WithNone(typeof(UnitDeathComponent), typeof(DestroyEntityFlag))]
 public partial struct DungeonPatrolArrivalJob : IJobEntity
 {
+    [ReadOnly] public ComponentLookup<DungeonMonsterDistanceState> SleepStates;
+    public bool UpdateDormant;
     public BufferLookup<UnitVariableElement> Variables;
     [ReadOnly] public ComponentLookup<UnitVariableComponent> Owners;
     [ReadOnly] public ComponentLookup<LocalTransform> Transforms;
@@ -80,6 +87,17 @@ public partial struct DungeonPatrolArrivalJob : IJobEntity
     {
         if (!Variables.TryGetBuffer(entity, out DynamicBuffer<UnitVariableElement> ownerVariables))
             return;
+        if (!UpdateDormant && consumers.Length > 0)
+        {
+            bool hasActiveMember = false;
+            foreach (UnitVariableConsumerElement consumer in consumers)
+                if (!SleepStates.TryGetComponent(consumer.Value, out DungeonMonsterDistanceState sleep) || sleep.Sleeping == 0)
+                {
+                    hasActiveMember = true;
+                    break;
+                }
+            if (!hasActiveMember) return;
+        }
         float version = Number(ownerVariables, DungeonPatrolRuntimeUtility.PatrolTargetVersionKey, 0f);
         bool hasTarget = Transforms.TryGetComponent(point.PatrolTarget, out LocalTransform target) &&
                          math.all(math.isfinite(target.Position)) && !IsDead(point.PatrolTarget);

@@ -48,7 +48,7 @@ namespace CrystalMagic.Core
                 TargetStateType = typeof(TownState),
                 TransitionUIName = "TransitionUI",
                 KeepCurrentMainScene = true,
-                ActiveSubSceneNames = new[] { TownState.SubSceneName },
+                ActiveSubSceneNames = new[] { DungeonState.RegistrySubSceneName, TownState.SubSceneName },
                 PreLoadCoroutineFactory = () => RestoreTownWorld(battleManager, transitionData),
                 OnLoadFailed = error =>
                 {
@@ -114,18 +114,17 @@ namespace CrystalMagic.Core
             DungeonSceneRuntimeBuilder.DestroyCurrentDungeonScene();
             yield return null;
 
-            SceneComponent.Instance.SetSubScenesActive(Array.Empty<string>());
+            yield return SceneComponent.Instance.SetSubScenesActiveCoroutine(Array.Empty<string>());
             yield return SceneComponent.Instance.WaitForSubSceneUnloadedCoroutine(TownState.SubSceneName);
-            yield return SceneComponent.Instance.WaitForSubSceneUnloadedCoroutine(DungeonState.RegistrySubSceneName);
-            if (SceneComponent.Instance.IsSubSceneLoaded(TownState.SubSceneName) ||
-                SceneComponent.Instance.IsSubSceneLoaded(DungeonState.RegistrySubSceneName))
+            if (SceneComponent.Instance.IsSubSceneLoaded(TownState.SubSceneName))
             {
                 battleManager.FailPreparation("旧的游戏子场景未能完成卸载。");
                 transitionData.LoadError = battleManager.PreparationError;
                 yield break;
             }
 
-            GameWorldManager.ShutdownGameWorld();
+            GameWorldManager.ReleaseGameWorld();
+            yield return SceneComponent.Instance.WaitForWorldPreloadCoroutine(GameWorldRole.Client);
             try
             {
                 World world = GameWorldManager.CreateGameWorld(GameWorldRole.Client, false);
@@ -146,17 +145,16 @@ namespace CrystalMagic.Core
             DungeonSceneRuntimeBuilder.DestroyCurrentDungeonScene();
             yield return null;
 
-            SceneComponent.Instance.SetSubScenesActive(Array.Empty<string>());
-            yield return SceneComponent.Instance.WaitForSubSceneUnloadedCoroutine(DungeonState.RegistrySubSceneName);
+            yield return SceneComponent.Instance.SetSubScenesActiveCoroutine(Array.Empty<string>());
             yield return SceneComponent.Instance.WaitForSubSceneUnloadedCoroutine(TownState.SubSceneName);
-            if (SceneComponent.Instance.IsSubSceneLoaded(DungeonState.RegistrySubSceneName) ||
-                SceneComponent.Instance.IsSubSceneLoaded(TownState.SubSceneName))
+            if (SceneComponent.Instance.IsSubSceneLoaded(TownState.SubSceneName))
             {
                 transitionData.LoadError = "旧场景未能完成卸载，无法恢复单机存档。";
                 yield break;
             }
 
-            GameWorldManager.ShutdownGameWorld();
+            GameWorldManager.ReleaseGameWorld();
+            yield return SceneComponent.Instance.WaitForWorldPreloadCoroutine(GameWorldRole.Standalone);
             LoadGameContext context = null;
             bool restored = false;
             try
@@ -209,7 +207,7 @@ namespace CrystalMagic.Core
                     yield return PrepareBattleWorld(battleManager, transitionData);
                     if (battleManager.PreparationFailed)
                         yield break;
-                    SceneComponent.Instance.SetSubScenesActive(new[] { DungeonState.RegistrySubSceneName });
+                    yield return SceneComponent.Instance.SetSubScenesActiveCoroutine(new[] { DungeonState.RegistrySubSceneName });
                 }
 
                 GameWorldManager.UpdateGameWorld();
@@ -218,9 +216,7 @@ namespace CrystalMagic.Core
                     World world = GameWorldManager.GameWorld;
                     if (world != null && world.IsCreated)
                     {
-                        using EntityQuery query = world.EntityManager.CreateEntityQuery(
-                            ComponentType.ReadOnly<EntitySpawnRegistrySingleton>());
-                        if (!query.IsEmptyIgnoreFilter)
+                        if (EntitySpawnRegistryUtility.HasRegistry(world.EntityManager))
                             battleManager.OnBattleSceneInitialized();
                     }
                 }
@@ -307,7 +303,7 @@ namespace CrystalMagic.Core
             {
                 context.Manager.StopBattle();
                 GameFlowComponent.Instance.SetState<MainMenuState>();
-            }, confirmLabel: "重试", showCancelButton: true));
+            }, confirmLabel: "重试"));
         }
     }
 

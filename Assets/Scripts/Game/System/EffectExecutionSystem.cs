@@ -4,9 +4,11 @@ using Unity.Collections;
 using Unity.Entities;
 using UnityEngine;
 
-[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
-[UpdateInGroup(typeof(UnitExecutionSystemGroup))]
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation | WorldSystemFilterFlags.ClientSimulation)]
+[UpdateInGroup(typeof(SkillProjectileSimulationSystemGroup))]
 [UpdateAfter(typeof(PersistentEffectSystem))]
+[UpdateAfter(typeof(SkillProjectileCleanupSystem))]
+[UpdateBefore(typeof(ClientPresentationEventSystem))]
 partial class EffectExecutionSystem : SystemBase
 {
     private EntityQuery _effectRequestQuery;

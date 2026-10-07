@@ -27,7 +27,8 @@ namespace Server
         private void OnHostBattleStart(IMessage message, Connect connect)
         {
             if (connect != lobbyConnect || message is not L2C_HostBattleStart start ||
-                room == null || room.ownerAccountId != accountId || start.room?.roomId != room.roomId)
+                room == null || start.connection?.hostAccountId != accountId || start.room?.roomId != room.roomId ||
+                start.room.ownerAccountId != room.ownerAccountId)
                 return;
             B2L_StartRoomResult result;
             pendingHostSessionId = start.connection?.sessionId;

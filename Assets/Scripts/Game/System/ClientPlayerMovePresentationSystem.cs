@@ -2,6 +2,7 @@ using Unity.Burst;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
+using Server;
 
 [BurstCompile]
 [WorldSystemFilter(WorldSystemFilterFlags.ClientSimulation)]
@@ -9,12 +10,15 @@ using Unity.Transforms;
 [UpdateBefore(typeof(ClientTransformInterpolationSystem))]
 public partial struct ClientPlayerMovePresentationSystem : ISystem
 {
-    [BurstCompile]
     public void OnUpdate(ref SystemState state)
     {
+        float interpolation = 1f;
+        if (FrameManagerUtility.TryGet(state.EntityManager, out ClientFrameManager frame) && frame.running)
+            interpolation = math.saturate((float)(frame.clock.AccumulatedMilliseconds / frame.frameInterval));
         state.Dependency = new ClientPlayerMovePresentationJob
         {
             DeltaTime = math.max(0f, SystemAPI.Time.DeltaTime),
+            Interpolation = interpolation,
         }.ScheduleParallel(state.Dependency);
     }
 }
@@ -24,10 +28,10 @@ public partial struct ClientPlayerMovePresentationSystem : ISystem
 public partial struct ClientPlayerMovePresentationJob : IJobEntity
 {
     private const float CorrectionHalfLife = 0.06f;
-    private const float SnapDistanceSq = 36f;
     private const float SettledDistanceSq = 0.000001f;
 
     public float DeltaTime;
+    public float Interpolation;
 
     private void Execute(
         in UnitMoveComponent move,
@@ -37,7 +41,6 @@ public partial struct ClientPlayerMovePresentationJob : IJobEntity
         if (move.HasPredictedPosition == 0)
             return;
 
-        float3 targetPosition = move.PredictedPosition;
         if (presentation.Initialized == 0)
         {
             presentation.CurrentPosition = transform.Position;
@@ -46,11 +49,11 @@ public partial struct ClientPlayerMovePresentationJob : IJobEntity
 
         if (presentation.ReconciliationPending != 0)
         {
-            presentation.CorrectionOffset = presentation.CurrentPosition - targetPosition;
-            presentation.ReconciliationPending = 0;
-            if (math.lengthsq(presentation.CorrectionOffset) >= SnapDistanceSq)
-                presentation.CorrectionOffset = float3.zero;
+            presentation.CompleteReconciliation(move.PredictedPosition);
         }
+        float3 targetPosition = presentation.HasPredictionSamples != 0
+            ? math.lerp(presentation.PreviousPredictionPosition, move.PredictedPosition, Interpolation)
+            : move.PredictedPosition;
 
         if (math.lengthsq(presentation.CorrectionOffset) > SettledDistanceSq)
         {

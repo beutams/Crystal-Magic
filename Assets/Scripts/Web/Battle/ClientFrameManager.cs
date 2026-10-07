@@ -24,9 +24,75 @@ namespace Server
         private uint pendingReplayBaseFrame;
         private bool hasPendingReplay;
         public bool HasPendingPredictionReplay => hasPendingReplay;
+        public bool HasReconciledPlayerFrame { get; private set; }
+        public uint LastReconciledPlayerFrame { get; private set; }
         private Guid characterEditRequestId;
         private Guid characterEditUnitId;
         private readonly Queue<NetworkPlayerOperationData> pendingOperations = new();
+        private readonly Dictionary<Guid, float> presentedHealth = new();
+        private readonly Dictionary<Guid, uint> presentationEntityFrames = new();
+        private readonly HashSet<Guid> presentedDamageUnits = new();
+        private uint presentationSceneVersion;
+
+        public bool TryGetPresentedHealth(Guid unitId, out float health)
+        {
+            if (presentationSceneVersion == sceneVersion && presentedHealth.TryGetValue(unitId, out var value))
+            {
+                health = value;
+                return true;
+            }
+            health = 0;
+            return false;
+        }
+
+        public void ConsumePresentedDamageUnits(HashSet<Guid> units)
+        {
+            units.Clear();
+            if (presentationSceneVersion == sceneVersion)
+                units.UnionWith(presentedDamageUnits);
+            presentedDamageUnits.Clear();
+        }
+
+        private void RecordPresentedHealth(General_FrameStateData packet)
+        {
+            if (presentationSceneVersion != sceneVersion)
+            {
+                presentedHealth.Clear();
+                presentationEntityFrames.Clear();
+                presentedDamageUnits.Clear();
+                presentationSceneVersion = sceneVersion;
+            }
+            if (packet.frames == null)
+                return;
+            foreach (NetworkFrameData frame in packet.frames)
+            {
+                if (frame?.datas == null)
+                    continue;
+                foreach (NetworkStateData state in frame.datas)
+                {
+                    if (state is not (NetworkVitalityStateData or NetworkEntitySpawnStateData or NetworkEntityDespawnStateData) ||
+                        state.unitId == Guid.Empty)
+                        continue;
+                    if (presentationEntityFrames.TryGetValue(state.unitId, out uint previousFrame) &&
+                        frame.frameId < previousFrame)
+                        continue;
+                    presentationEntityFrames[state.unitId] = frame.frameId;
+                    if (state is NetworkEntitySpawnStateData or NetworkEntityDespawnStateData)
+                    {
+                        presentedHealth.Remove(state.unitId);
+                        presentedDamageUnits.Remove(state.unitId);
+                    }
+                    else if (state is NetworkVitalityStateData vitality)
+                    {
+                        bool known = presentedHealth.TryGetValue(state.unitId, out var previous);
+                        float previousHealth = known ? previous : vitality.baseMaxHealth + vitality.baseMaxHealthOffset;
+                        if (vitality.currentHealth < previousHealth)
+                            presentedDamageUnits.Add(state.unitId);
+                        presentedHealth[state.unitId] = vitality.currentHealth;
+                    }
+                }
+            }
+        }
         private uint pendingSkillSelectionFrame;
         private bool hasPendingSkillSelection;
         private uint lastAppliedSkillSelectionFrame;
@@ -150,8 +216,11 @@ namespace Server
 
         public double UpdateSimulationSpeed(long now)
         {
-            TargetAheadFrames = Math.Min(32, Math.Max(1,
-                (int)Math.Ceiling((SmoothedRttMs * 0.5 + RttJitterMs) / frameInterval) + 1));
+            // Completed input ticks flush every world update. There is no extra
+            // 33 ms input batching budget; local delivery needs one tick of lead.
+            TargetAheadFrames = connect?.RemoteEndpoint is LoopbackEndpoint ? 1 :
+                Math.Min(32, Math.Max(1,
+                    (int)Math.Ceiling((SmoothedRttMs * 0.5 + RttJitterMs) / frameInterval)));
             EstimatedServerFrame = serverFrameAtSample + Math.Max(0, now - serverClockSampleTime) / (double)frameInterval;
             CurrentAheadFrames = currentFrame + Math.Min(1, clock.AccumulatedMilliseconds / frameInterval) - EstimatedServerFrame;
             double error = TargetAheadFrames - CurrentAheadFrames;
@@ -167,7 +236,8 @@ namespace Server
                 return;
             frameInterval = Math.Max(1, interval);
             base.Start(startFrame);
-            serverFrameAtSample = startFrame + (frameElapsedMs + SmoothedRttMs * 0.5) / frameInterval;
+            double oneWayMs = connect?.RemoteEndpoint is LoopbackEndpoint ? 0 : SmoothedRttMs * 0.5;
+            serverFrameAtSample = startFrame + (frameElapsedMs + oneWayMs) / frameInterval;
             serverClockSampleTime = NetworkTimer.Instance.TimeNow;
             hasServerClock = true;
         }
@@ -204,7 +274,9 @@ namespace Server
             if (pong.running)
             {
                 // 用本机 RTT 推算回程，不相减两台机器起点不同的 Stopwatch。
-                serverFrameAtSample = pong.serverFrame + (pong.frameElapsedMs + rtt * 0.5) / frameInterval;
+                // Local ping RTT measures main-loop queueing, not a return trip.
+                double oneWayMs = connect?.RemoteEndpoint is LoopbackEndpoint ? 0 : rtt * 0.5;
+                serverFrameAtSample = pong.serverFrame + (pong.frameElapsedMs + oneWayMs) / frameInterval;
                 serverClockSampleTime = receiveTime;
                 hasServerClock = true;
             }
@@ -259,6 +331,12 @@ namespace Server
         {
             RemoveHistoryThrough(inputOrder, frame);
             RemoveHistoryThrough(playerStates, frame);
+        }
+
+        public void RecordReconciledPlayerFrame(uint frame)
+        {
+            LastReconciledPlayerFrame = frame;
+            HasReconciledPlayerFrame = true;
         }
 
         public void RequestPredictionReplay(uint authoritativeFrame)
@@ -333,14 +411,14 @@ namespace Server
             }
         }
 
-        protected override void SendFrame(NetworkFrameData data)
+        protected override void SendFrames(List<NetworkFrameData> frames)
         {
             if (connect != null)
             {
                 uint clientFrameSequence = connect.RecordBattleFrameSend(NetworkTimer.Instance.TimeNow);
                 connect.Send(new General_FrameStateData
                 {
-                    data = data,
+                    frames = frames,
                     clientFrameSequence = clientFrameSequence,
                     sceneVersion = sceneVersion,
                 });
@@ -354,13 +432,17 @@ namespace Server
                 return;
             if (receivedConnect == connect &&
                 message is General_FrameStateData frameMessage &&
-                frameMessage.data != null)
+                frameMessage.frames != null)
             {
                 receivedConnect.AcknowledgeBattleFrame(
                     frameMessage.acknowledgedClientFrameSequence,
                     NetworkTimer.Instance.TimeNow);
             }
 
+            // Presentation can show a server-confirmed health change immediately.
+            // Simulation components and position reconciliation still wait for the
+            // atomic receive/replay pass inside the fixed player tick.
+            RecordPresentedHealth(receivedFrame);
             base.OnReceiveMessage(message, receivedConnect);
         }
 
@@ -373,6 +455,10 @@ namespace Server
         public override void ClearOrders()
         {
             base.ClearOrders();
+            presentedHealth.Clear();
+            presentationEntityFrames.Clear();
+            presentedDamageUnits.Clear();
+            presentationSceneVersion = sceneVersion;
             characterEditRequestId = Guid.Empty;
             characterEditUnitId = Guid.Empty;
             ResetOperationState();
@@ -385,6 +471,8 @@ namespace Server
             pendingReplayBaseFrame = 0;
             hasPendingReplay = false;
             hasRtt = false;
+            HasReconciledPlayerFrame = false;
+            LastReconciledPlayerFrame = 0;
             hasServerClock = false;
             serverFrameAtSample = 0;
             serverClockSampleTime = 0;

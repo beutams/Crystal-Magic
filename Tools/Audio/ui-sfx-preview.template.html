@@ -1,0 +1,109 @@
+<div id="cm-ui-sfx-v1">
+  <div class="viz-row">
+    <button class="btn btn-primary" type="button" data-action="all">按顺序试听 24 个</button>
+    <button class="btn" type="button" data-action="stop">停止</button>
+  </div>
+  <p class="text-small" aria-live="polite" data-status>未播放 · 48 kHz WAV</p>
+  <div data-groups></div>
+</div>
+<script type="application/json" id="cm-ui-sfx-v1-data">__AUDIO_PAYLOAD__</script>
+<script>
+(() => {
+  const root = document.getElementById('cm-ui-sfx-v1');
+  const sounds = JSON.parse(document.getElementById('cm-ui-sfx-v1-data').textContent);
+  const groups = root.querySelector('[data-groups]');
+  const status = root.querySelector('[data-status]');
+  const cache = new Map();
+  let context, source, generation = 0, lastHeard = null;
+  for (const category of [...new Set(sounds.map(s => s.group))]) {
+    const section = document.createElement('section');
+    const heading = document.createElement('h3');
+    heading.textContent = category;
+    const row = document.createElement('div');
+    row.className = 'viz-row';
+    for (const sound of sounds.filter(s => s.group === category)) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'btn';
+      button.dataset.sound = sound.id;
+      button.textContent = `${String(sound.number).padStart(2, '0')} ${sound.name}`;
+      button.setAttribute('aria-label', `试听 ${sound.number} ${sound.name}，${sound.duration} 秒`);
+      button.setAttribute('aria-pressed', 'false');
+      button.addEventListener('click', () => start([sound]));
+      row.append(button);
+    }
+    section.append(heading, row);
+    groups.append(section);
+  }
+  function mark(id) {
+    root.querySelectorAll('[data-sound]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.sound === id)));
+  }
+  function stop() {
+    generation++;
+    if (source) { source.stop(); source = null; }
+    mark(null);
+  }
+  async function decode(sound) {
+    if (cache.has(sound.id)) return cache.get(sound.id);
+    const zipped = Uint8Array.from(atob(sound.wav_delta16_gzip), c => c.charCodeAt(0));
+    const stream = new Blob([zipped]).stream().pipeThrough(new DecompressionStream('gzip'));
+    const delta = new DataView(await new Response(stream).arrayBuffer());
+    const bytes = new ArrayBuffer(delta.byteLength);
+    const reconstructed = new DataView(bytes);
+    let accumulator = 0;
+    for (let i = 0; i < delta.byteLength; i += 2) {
+      accumulator = (accumulator + delta.getUint16(i, true)) & 65535;
+      reconstructed.setUint16(i, accumulator, true);
+    }
+    const decoded = await context.decodeAudioData(bytes);
+    cache.set(sound.id, decoded);
+    return decoded;
+  }
+  function restore(state) {
+    const found = sounds.find(s => s.id === state?.privateContent?.lastHeard);
+    if (found && !source) status.textContent = `上次试听：${String(found.number).padStart(2, '0')} ${found.name}`;
+  }
+  restore(window.openai?.widgetState);
+  window.addEventListener('openai:set_globals', e => restore(e.detail?.globals?.widgetState));
+  async function start(list) {
+    stop();
+    const token = generation;
+    try {
+      context ||= new AudioContext();
+      await context.resume();
+      for (const sound of list) {
+        if (token !== generation) return;
+        status.textContent = `正在准备：${String(sound.number).padStart(2, '0')} ${sound.name}`;
+        const buffer = await decode(sound);
+        if (token !== generation) return;
+        const playing = context.createBufferSource();
+        playing.buffer = buffer;
+        playing.connect(context.destination);
+        source = playing;
+        lastHeard = sound;
+        mark(sound.id);
+        status.textContent = `${String(sound.number).padStart(2, '0')} ${sound.name} · ${sound.duration.toFixed(2)}s · ${sound.usage}`;
+        if (window.openai?.setWidgetState) {
+          window.openai.setWidgetState({ modelContent: { lastHeard: { number: sound.number, name: sound.name } }, privateContent: { lastHeard: sound.id } }).catch(() => {});
+        }
+        const ended = new Promise(resolve => { playing.onended = resolve; });
+        playing.start();
+        await ended;
+        if (token !== generation) return;
+        source = null;
+        mark(null);
+        if (list.length > 1) await new Promise(resolve => setTimeout(resolve, 400));
+      }
+      if (token === generation) status.textContent = list.length > 1 ? '24 个音效试听完成' : `${String(lastHeard.number).padStart(2, '0')} ${lastHeard.name} · 播放完成`;
+    } catch (error) {
+      if (token !== generation) return;
+      stop();
+      status.textContent = '试听未能播放，请使用回复中的 WAV 合集或下载包。';
+      console.error(error);
+    }
+  }
+  root.querySelector('[data-action="all"]').addEventListener('click', () => start(sounds));
+  root.querySelector('[data-action="stop"]').addEventListener('click', () => { stop(); status.textContent = '已停止'; });
+  window.addEventListener('pagehide', () => { stop(); if (context) context.close(); });
+})();
+</script>

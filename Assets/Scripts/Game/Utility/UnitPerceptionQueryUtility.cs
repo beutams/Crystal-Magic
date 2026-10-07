@@ -76,6 +76,7 @@ public static class UnitPerceptionQueryUtility
         return Entity.Null;
     }
 
+    /// <summary>Prefer the remembered attacker; otherwise select the closest perceived unit.</summary>
     public static bool TryGetNearestByFaction(
         EntityManager entityManager,
         Entity observer,
@@ -92,12 +93,19 @@ public static class UnitPerceptionQueryUtility
         for (int i = 0; i < units.Length; i++)
         {
             UnitPerceptionUnitElement candidate = units[i];
-            if (!MatchesFaction(entityManager, in candidate, faction) ||
-                candidate.DistanceSq >= nearestDistanceSq)
+            if (!MatchesFaction(entityManager, in candidate, faction))
             {
                 continue;
             }
 
+            if (candidate.IsDamageTarget != 0)
+            {
+                unit = candidate.Value;
+                distance = math.sqrt(candidate.DistanceSq);
+                return true;
+            }
+            if (candidate.DistanceSq >= nearestDistanceSq)
+                continue;
             nearestDistanceSq = candidate.DistanceSq;
             unit = candidate.Value;
         }

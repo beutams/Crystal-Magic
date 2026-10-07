@@ -23,6 +23,7 @@ public class ShopUI_CommodityItemView : UISubView<ShopUI_CommodityItemData>, IPo
         if (data == null)
         {
             UI.IconBG_Mask_Icon.Image.sprite = null;
+            UI.IconBG_Mask_Icon.GameObject.SetActive(false);
             UI.Name.TextMeshProUGUI.text = string.Empty;
             UI.Description.TextMeshProUGUI.text = string.Empty;
             UI.Price.TextMeshProUGUI.text = string.Empty;
@@ -30,6 +31,7 @@ public class ShopUI_CommodityItemView : UISubView<ShopUI_CommodityItemData>, IPo
         }
 
         UI.IconBG_Mask_Icon.Image.sprite = LoadIcon(data.IconPath);
+        UI.IconBG_Mask_Icon.GameObject.SetActive(UI.IconBG_Mask_Icon.Image.sprite != null);
         UI.Name.TextMeshProUGUI.text = data.Name;
         UI.Description.TextMeshProUGUI.text = data.Description;
         UI.Price.TextMeshProUGUI.text = data.Price.ToString();

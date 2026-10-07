@@ -2,70 +2,60 @@
 
 using CrystalMagic.UI;
 using System;
-using System.Collections.Generic;
-using UnityEngine;
 
 public class LoadUI : UIBase<LoadUIData, LoadUIModel>
 {
-    private readonly List<LoadUI_SaveItemView> _itemViews = new();
+    private LoadUI_SaveItemView[] _itemViews;
 
     public event Action BackClicked;
     public event Action<int> SaveItemClicked;
     public event Action<int> SaveItemDeleteClicked;
 
+    protected override void OnInit()
+    {
+        base.OnInit();
+        _itemViews = new[]
+        {
+            UI.Panel_Slots_Slot1.GameObject.GetComponent<LoadUI_SaveItemView>(),
+            UI.Panel_Slots_Slot2.GameObject.GetComponent<LoadUI_SaveItemView>(),
+            UI.Panel_Slots_Slot3.GameObject.GetComponent<LoadUI_SaveItemView>(),
+        };
+    }
+
     public override void OnOpen()
     {
         UI.Back.ButtonPlus.onClick.AddListener(OnBackButtonClicked);
+        foreach (LoadUI_SaveItemView item in _itemViews)
+        {
+            item.Clicked += HandleItemClicked;
+            item.DeleteClicked += HandleItemDeleteClicked;
+        }
         base.OnOpen();
     }
 
     public override void OnClose()
     {
         UI.Back.ButtonPlus.onClick.RemoveListener(OnBackButtonClicked);
-        UISubViewBase.ReleaseAllToPool(_itemViews);
+        foreach (LoadUI_SaveItemView item in _itemViews)
+        {
+            item.Clicked -= HandleItemClicked;
+            item.DeleteClicked -= HandleItemDeleteClicked;
+        }
         base.OnClose();
     }
 
     protected override void RefreshView()
     {
         if (Model != null)
-            RenderSlots(Model.SaveRecords, Model.SlotCountValue);
+            RenderSlots(Model.SaveRecords);
     }
 
-    public void RenderSlots(SaveRecord[] records, int slotCount)
+    public void RenderSlots(SaveRecord[] records)
     {
-        EnsureItemViews(slotCount);
-
-        for (int i = 0; i < _itemViews.Count; i++)
+        for (int i = 0; i < _itemViews.Length; i++)
         {
             SaveRecord record = records != null && i < records.Length ? records[i] : null;
             _itemViews[i].Render(i, record);
-        }
-    }
-
-    private void EnsureItemViews(int slotCount)
-    {
-        UI.ScrollView_Viewport_Content_SaveItem.GameObject.SetActive(false);
-
-        while (_itemViews.Count > slotCount)
-        {
-            int lastIndex = _itemViews.Count - 1;
-            LoadUI_SaveItemView itemView = _itemViews[lastIndex];
-            UISubViewBase.ReleaseToPool(itemView);
-            _itemViews.RemoveAt(lastIndex);
-        }
-
-        LoadUI_SaveItemView templateView = UI.ScrollView_Viewport_Content_SaveItem.GameObject.GetComponent<LoadUI_SaveItemView>();
-        UISubViewBase.EnsurePoolCapacity(templateView, slotCount, slotCount);
-
-        while (_itemViews.Count < slotCount)
-        {
-            LoadUI_SaveItemView itemView = UISubViewBase.AcquireFromPool(templateView, UI.ScrollView_Viewport_Content.GameObject.transform);
-            itemView.Clicked -= HandleItemClicked;
-            itemView.DeleteClicked -= HandleItemDeleteClicked;
-            itemView.Clicked += HandleItemClicked;
-            itemView.DeleteClicked += HandleItemDeleteClicked;
-            _itemViews.Add(itemView);
         }
     }
 

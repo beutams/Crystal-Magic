@@ -34,6 +34,11 @@ public struct UnitPerceptionComponent : IComponentData
 {
     public float SearchRadius;
     public FixedString128Bytes UnitName;
+    // Damage memory extends awareness, not attack range. Only real damage refreshes it.
+    public Entity DamageTarget;
+    public double DamageTargetUntil;
+
+    public readonly bool HasDamageTarget(double now) => DamageTarget != Entity.Null && now < DamageTargetUntil;
 }
 
 public struct UnitPerceptionUnitElement : IBufferElementData
@@ -41,6 +46,8 @@ public struct UnitPerceptionUnitElement : IBufferElementData
     public Entity Value;
     public float DistanceSq;
     public UnitFactionType Faction;
+    // Combat faction targeting prefers this attacker while retaining its real distance.
+    public byte IsDamageTarget;
 }
 
 [UnitSourceProvider(typeof(UnitPerceptionComponent), typeof(UnitPerceptionAuthoring))]
@@ -219,12 +226,19 @@ public static class UnitPerceptionSource
         for (int index = 0; index < units.Length; index++)
         {
             UnitPerceptionUnitElement unit = units[index];
-            if (unit.Faction != faction || unit.DistanceSq >= nearestDistanceSq ||
+            if (unit.Faction != faction ||
                 !IsAvailable(unit.Value, in factions, in deaths, in destroyFlags))
             {
                 continue;
             }
 
+            if (unit.IsDamageTarget != 0)
+            {
+                result = unit.Value;
+                return true;
+            }
+            if (unit.DistanceSq >= nearestDistanceSq)
+                continue;
             nearestDistanceSq = unit.DistanceSq;
             result = unit.Value;
         }

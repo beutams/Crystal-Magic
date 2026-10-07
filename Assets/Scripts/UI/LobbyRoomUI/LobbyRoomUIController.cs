@@ -9,6 +9,7 @@ namespace CrystalMagic.UI
 
         protected override void OnOpen()
         {
+            CrystalMagic.Core.SceneComponent.Instance.PreloadOnlineWorlds();
             View.BindModel(Model);
             Bindings.Bind(() => View.LeaveClicked += OnLeaveClicked, () => View.LeaveClicked -= OnLeaveClicked);
             Bindings.Bind(() => View.ConfirmClicked += OnConfirmClicked, () => View.ConfirmClicked -= OnConfirmClicked);

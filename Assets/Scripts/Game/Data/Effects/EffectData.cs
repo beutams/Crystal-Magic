@@ -21,6 +21,14 @@ namespace CrystalMagic.Game.Data.Effects
     [System.Serializable]
     public abstract class EffectData
     {
+        [EditorLabel("执行端（服务端表现节点同步事件）")]
+        public GameWorldExecutionTarget ExecutionTargets;
+
+        protected EffectData()
+        {
+            ExecutionTargets = CrystalMagic.Game.Skill.EffectExecutionTargetUtility.DefaultTargets(this);
+        }
+
         /// <summary>效果释放条件（所有条件通过才执行该效果）</summary>
         [EditorLabel("生效条件")]
         public List<ConditionConfig> Conditions = new();

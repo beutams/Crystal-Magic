@@ -1,3 +1,4 @@
+using CrystalMagic.Core;
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
@@ -6,14 +7,17 @@ using Unity.Mathematics;
 using Unity.Transforms;
 
 [WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
-[UpdateInGroup(typeof(UnitExecutionSystemGroup))]
+[UpdateInGroup(typeof(SkillProjectileSimulationSystemGroup))]
 public partial struct SkillProjectileSystem : ISystem
 {
     private UnitSourceDispatcher _sources;
+    private EntityQuery _terrainQuery;
 
     public void OnCreate(ref SystemState state)
     {
         _sources.InitializeReadOnly(ref state);
+        _terrainQuery = state.GetEntityQuery(ComponentType.ReadOnly<DungeonNavigationMapComponent>(),
+            ComponentType.ReadOnly<DungeonNavigationCollisionWord>());
         state.RequireForUpdate<UnitQuerySingleton>();
         state.RequireForUpdate<SkillProjectilePayloadComponent>();
     }
@@ -30,15 +34,23 @@ public partial struct SkillProjectileSystem : ISystem
         }
 
         _sources.Update(ref state);
+        ComponentLookup<ClientPredictedProjectileComponent> predictions = SystemAPI.GetComponentLookup<ClientPredictedProjectileComponent>(true);
         JobHandle movementHandle = new SkillProjectileMovementJob
         {
             DeltaTime = SystemAPI.Time.DeltaTime,
+            Predictions = predictions,
         }.ScheduleParallel(state.Dependency);
+        Entity terrainEntity = _terrainQuery.IsEmptyIgnoreFilter ? Entity.Null : _terrainQuery.GetSingletonEntity();
         state.Dependency = new SkillProjectileCollisionJob
         {
+            DeltaTime = SystemAPI.Time.DeltaTime,
             Tree = new UnitQueryTree(treeNodes.AsNativeArray(), treeEntries.AsNativeArray()),
             Variables = SystemAPI.GetComponentLookup<UnitVariableComponent>(true),
             Sources = _sources,
+            Predictions = predictions,
+            TerrainEntity = terrainEntity,
+            TerrainMap = terrainEntity == Entity.Null ? default : SystemAPI.GetComponent<DungeonNavigationMapComponent>(terrainEntity),
+            TerrainWords = SystemAPI.GetBufferLookup<DungeonNavigationCollisionWord>(true),
         }.ScheduleParallel(movementHandle);
     }
 }
@@ -47,12 +59,18 @@ public partial struct SkillProjectileSystem : ISystem
 public partial struct SkillProjectileMovementJob : IJobEntity
 {
     public float DeltaTime;
+    [ReadOnly] public ComponentLookup<ClientPredictedProjectileComponent> Predictions;
 
     private void Execute(
-        ref SkillProjectileComponent projectile,
-        ref LocalTransform transform)
+        Entity entity, ref SkillProjectileComponent projectile,
+        ref LocalTransform transform, in SkillProjectilePayloadComponent payload)
     {
+        if (Predictions.TryGetComponent(entity, out ClientPredictedProjectileComponent prediction) && prediction.HasPredictedEnd != 0)
+            return;
+        projectile.PreviousPosition = transform.Position;
         float moveDistance = projectile.Speed * DeltaTime;
+        if (projectile.MaxRange > 0f)
+            moveDistance = math.min(moveDistance, math.max(0f, projectile.MaxRange - projectile.TraveledDistance));
         transform.Position += projectile.Direction * moveDistance;
         float2 planar = math.normalizesafe(projectile.Direction.xy, new float2(1f, 0f));
         transform.Rotation = quaternion.RotateZ(math.atan2(planar.y, planar.x));
@@ -64,6 +82,12 @@ public partial struct SkillProjectileMovementJob : IJobEntity
 [BurstCompile]
 public partial struct SkillProjectileCollisionJob : IJobEntity
 {
+    public float DeltaTime;
+    public Entity TerrainEntity;
+    public DungeonNavigationMapComponent TerrainMap;
+    [ReadOnly] public BufferLookup<DungeonNavigationCollisionWord> TerrainWords;
+    [ReadOnly] public ComponentLookup<ClientPredictedProjectileComponent> Predictions;
+
     [ReadOnly]
     public UnitQueryTree Tree;
 
@@ -84,6 +108,17 @@ public partial struct SkillProjectileCollisionJob : IJobEntity
         in DynamicBuffer<SkillProjectileConditionLiteralElement> conditionLiterals)
     {
         frameResult = default;
+        if (Predictions.TryGetComponent(entity, out ClientPredictedProjectileComponent prediction) && prediction.HasPredictedEnd != 0)
+            return;
+
+        if (projectile.RepeatHitIntervalSeconds > 0f)
+            SkillProjectileHitHistory.Advance(ref hitEntities, DeltaTime);
+
+        float terrainFraction = float.MaxValue;
+        bool hitTerrain = TerrainEntity != Entity.Null &&
+            TerrainWords.TryGetBuffer(TerrainEntity, out DynamicBuffer<DungeonNavigationCollisionWord> terrainWords) &&
+            ProjectileTerrainCollisionUtility.TryCast(in TerrainMap, terrainWords.AsNativeArray(),
+                projectile.PreviousPosition.xy, transform.Position.xy, projectile.HitRadius, out terrainFraction);
 
         if (TryFindHitEntity(
                 entity,
@@ -93,10 +128,11 @@ public partial struct SkillProjectileCollisionJob : IJobEntity
                 in conditionInstructions,
                 in conditionLiterals,
                 transform.Position,
+                terrainFraction,
                 out Entity hitEntity,
                 out float3 hitPosition))
         {
-            hitEntities.Add(new SkillProjectileHitEntityElement { Value = hitEntity });
+            SkillProjectileHitHistory.Record(ref hitEntities, hitEntity, projectile.RepeatHitIntervalSeconds);
             frameResult.HitEntity = hitEntity;
             frameResult.HitPosition = hitPosition;
             frameResult.HasHit = 1;
@@ -108,6 +144,17 @@ public partial struct SkillProjectileCollisionJob : IJobEntity
                 frameResult.DestroyUsesHitContext = 1;
                 return;
             }
+        }
+
+        // Piercing applies to units, never to solid terrain. A piercing shot may
+        // hit a unit before the wall in this frame, then end at the wall itself.
+        if (hitTerrain)
+        {
+            frameResult.HasTerrainHit = 1;
+            frameResult.TerrainHitPosition = math.lerp(projectile.PreviousPosition, transform.Position, terrainFraction);
+            frameResult.ShouldDestroy = 1;
+            frameResult.TriggerDestroyEffects = 1;
+            return;
         }
 
         if (projectile.MaxRange > 0f && projectile.TraveledDistance >= projectile.MaxRange)
@@ -125,6 +172,7 @@ public partial struct SkillProjectileCollisionJob : IJobEntity
         in DynamicBuffer<SkillProjectileConditionInstructionElement> conditionInstructions,
         in DynamicBuffer<SkillProjectileConditionLiteralElement> conditionLiterals,
         float3 projectilePosition,
+        float terrainFraction,
         out Entity hitEntity,
         out float3 hitPosition)
     {
@@ -145,15 +193,21 @@ public partial struct SkillProjectileCollisionJob : IJobEntity
         {
             ProjectileEntity = projectileEntity,
             ProjectilePosition = projectilePosition,
+            PreviousPosition = projectile.PreviousPosition,
+            HitRadius = projectile.HitRadius,
             Payload = payload,
             HitEntities = hitEntities,
+            AllowRepeatHits = projectile.RepeatHitIntervalSeconds > 0f,
             ConditionInstructions = instructions,
             ConditionLiterals = literals,
             Variables = Variables,
             Sources = Sources,
-            BestDistanceSq = float.MaxValue,
+            BestFraction = terrainFraction,
         };
-        UnitQueryShape shape = UnitQueryShape.Circle(projectilePosition, projectile.HitRadius);
+        float3 queryEnd = math.lerp(projectile.PreviousPosition, projectilePosition, math.min(1f, terrainFraction));
+        float3 center = (queryEnd + projectile.PreviousPosition) * 0.5f;
+        UnitQueryShape shape = UnitQueryShape.Circle(center,
+            math.distance(queryEnd.xy, projectile.PreviousPosition.xy) * 0.5f + projectile.HitRadius);
         Tree.Query(in shape, UnitFactionMask.Combatants, ref visitor);
         hitEntity = visitor.HitEntity;
         hitPosition = visitor.HitPosition;
@@ -164,8 +218,11 @@ public partial struct SkillProjectileCollisionJob : IJobEntity
     {
         public Entity ProjectileEntity;
         public float3 ProjectilePosition;
+        public float3 PreviousPosition;
+        public float HitRadius;
         public SkillProjectilePayloadComponent Payload;
         public DynamicBuffer<SkillProjectileHitEntityElement> HitEntities;
+        public bool AllowRepeatHits;
 
         [ReadOnly]
         public NativeArray<ExpressionInstruction> ConditionInstructions;
@@ -179,7 +236,7 @@ public partial struct SkillProjectileCollisionJob : IJobEntity
         [ReadOnly]
         public UnitSourceDispatcher Sources;
 
-        public float BestDistanceSq;
+        public float BestFraction;
         public Entity HitEntity;
         public float3 HitPosition;
 
@@ -193,14 +250,16 @@ public partial struct SkillProjectileCollisionJob : IJobEntity
                 return true;
             }
 
-            float distanceSq = math.lengthsq(entry.Position.xy - ProjectilePosition.xy);
-            if (distanceSq > BestDistanceSq ||
-                distanceSq == BestDistanceSq && !IsEntityBefore(entry.Entity, HitEntity))
+            if (!ProjectileTerrainCollisionUtility.TryHitCircle(PreviousPosition.xy, ProjectilePosition.xy,
+                    entry.Position.xy, HitRadius, out float fraction))
+                return true;
+            if (fraction > BestFraction ||
+                fraction == BestFraction && (HitEntity == Entity.Null || !IsEntityBefore(entry.Entity, HitEntity)))
             {
                 return true;
             }
 
-            BestDistanceSq = distanceSq;
+            BestFraction = fraction;
             HitEntity = entry.Entity;
             HitPosition = new float3(entry.Position.x, entry.Position.y, ProjectilePosition.z);
             return true;
@@ -226,13 +285,7 @@ public partial struct SkillProjectileCollisionJob : IJobEntity
 
         private bool HasHitEntity(Entity entity)
         {
-            for (int index = 0; index < HitEntities.Length; index++)
-            {
-                if (HitEntities[index].Value == entity)
-                    return true;
-            }
-
-            return false;
+            return SkillProjectileHitHistory.Blocks(in HitEntities, entity, AllowRepeatHits);
         }
 
         private static bool IsEntityBefore(Entity candidate, Entity current)

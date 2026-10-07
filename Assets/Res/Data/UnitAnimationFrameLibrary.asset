@@ -7557,6 +7557,70 @@ MonoBehaviour:
     FlipXValues: []
     Length: 0.6666667
     IsLooping: 0
+  - ClipPath: Assets/Res/Animation/Effects/Earth/Earth_Rocksmash_Single/Earth_Rocksmash_Single.anim
+    SourceClip: {fileID: 7400000, guid: 579a5465983618742a694850e22e3a3a, type: 2}
+    Sprites:
+    - {fileID: -3521157740150945283, guid: 6b9a925368709014a9d7de395660c5ab, type: 3}
+    - {fileID: -639366107393808207, guid: 6b9a925368709014a9d7de395660c5ab, type: 3}
+    - {fileID: -4103497981411260351, guid: 6b9a925368709014a9d7de395660c5ab, type: 3}
+    - {fileID: 6469383917623249649, guid: 6b9a925368709014a9d7de395660c5ab, type: 3}
+    - {fileID: -6627912944577535365, guid: 6b9a925368709014a9d7de395660c5ab, type: 3}
+    - {fileID: 3735095915336904227, guid: 6b9a925368709014a9d7de395660c5ab, type: 3}
+    - {fileID: -3240706093433127142, guid: 6b9a925368709014a9d7de395660c5ab, type: 3}
+    - {fileID: -6083913093476090336, guid: 6b9a925368709014a9d7de395660c5ab, type: 3}
+    - {fileID: 1861920101666905838, guid: 6b9a925368709014a9d7de395660c5ab, type: 3}
+    - {fileID: 8232007522183608863, guid: 6b9a925368709014a9d7de395660c5ab, type: 3}
+    - {fileID: 4453549334263167693, guid: 6b9a925368709014a9d7de395660c5ab, type: 3}
+    - {fileID: -8776589734053672445, guid: 6b9a925368709014a9d7de395660c5ab, type: 3}
+    - {fileID: 4046986140095343388, guid: 6b9a925368709014a9d7de395660c5ab, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    - 0.5
+    - 0.5833333
+    - 0.6666667
+    - 0.75
+    - 0.8333333
+    - 0.9166667
+    - 1
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 1.0833334
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Earth/Earth_Spike/Earth_Spike.anim
+    SourceClip: {fileID: 7400000, guid: b37158e7e4cac1646a06559f9b17d1c6, type: 2}
+    Sprites:
+    - {fileID: 2938830271392831201, guid: 1f043f97f5560334885605901714a810, type: 3}
+    - {fileID: 8939824159305167374, guid: 1f043f97f5560334885605901714a810, type: 3}
+    - {fileID: -6933559542999560434, guid: 1f043f97f5560334885605901714a810, type: 3}
+    - {fileID: -4969247812682076269, guid: 1f043f97f5560334885605901714a810, type: 3}
+    - {fileID: 7992454948516198555, guid: 1f043f97f5560334885605901714a810, type: 3}
+    - {fileID: -2454810628565478386, guid: 1f043f97f5560334885605901714a810, type: 3}
+    - {fileID: 1853361886984572496, guid: 1f043f97f5560334885605901714a810, type: 3}
+    - {fileID: -8320470622077364137, guid: 1f043f97f5560334885605901714a810, type: 3}
+    - {fileID: -4658637719284394286, guid: 1f043f97f5560334885605901714a810, type: 3}
+    - {fileID: 2149729560590192715, guid: 1f043f97f5560334885605901714a810, type: 3}
+    - {fileID: 8350506936140222584, guid: 1f043f97f5560334885605901714a810, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    - 0.5
+    - 0.5833333
+    - 0.6666667
+    - 0.75
+    - 0.8333333
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.9166666
+    IsLooping: 1
   - ClipPath: Assets/Res/Animation/Effects/Fire_Flurry/Fire_Flurry.anim
     SourceClip: {fileID: 7400000, guid: 63189906f0b9c9a42a25c5fd5e35fe7d, type: 2}
     Sprites:
@@ -7955,6 +8019,666 @@ MonoBehaviour:
     FlipXValues: []
     Length: 1
     IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Lightning/Blue/Lightning_Blast_B/Lightning_Blast_Blue.anim
+    SourceClip: {fileID: 7400000, guid: 0d726b66f09347b43afb0c8e150951e2, type: 2}
+    Sprites:
+    - {fileID: -8468413872688647281, guid: 4da7aa79b2f1ca74588f013f7f1f5465, type: 3}
+    - {fileID: -4374807655950530453, guid: 4da7aa79b2f1ca74588f013f7f1f5465, type: 3}
+    - {fileID: 2430382798989401473, guid: 4da7aa79b2f1ca74588f013f7f1f5465, type: 3}
+    - {fileID: -4343817775927263763, guid: 4da7aa79b2f1ca74588f013f7f1f5465, type: 3}
+    - {fileID: 3781430107358229772, guid: 4da7aa79b2f1ca74588f013f7f1f5465, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.4166667
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Lightning/Yellow/lightning_Blast_Y/Lightning_Blast_Y.anim
+    SourceClip: {fileID: 7400000, guid: ce08986eb80368d4da4be3b7dbf2f561, type: 2}
+    Sprites:
+    - {fileID: -7961230878753717658, guid: 060f6b530eab1d743ab50e47cb2d66d3, type: 3}
+    - {fileID: -3952900982137529403, guid: 060f6b530eab1d743ab50e47cb2d66d3, type: 3}
+    - {fileID: 2819995589743802190, guid: 060f6b530eab1d743ab50e47cb2d66d3, type: 3}
+    - {fileID: -1323706419933193563, guid: 060f6b530eab1d743ab50e47cb2d66d3, type: 3}
+    - {fileID: 2265076814294459625, guid: 060f6b530eab1d743ab50e47cb2d66d3, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.4166667
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Lightning/Blue/Lightning_Bolt_B/Lightning_Bolt_Blue.anim
+    SourceClip: {fileID: 7400000, guid: 19aa5b5537454af4ab139fa2b0116e72, type: 2}
+    Sprites:
+    - {fileID: -8914935255033990965, guid: b24b97ca1e2f7b64585b63a22203c69f, type: 3}
+    - {fileID: -6051557721314359680, guid: b24b97ca1e2f7b64585b63a22203c69f, type: 3}
+    - {fileID: 4990720788653534145, guid: b24b97ca1e2f7b64585b63a22203c69f, type: 3}
+    - {fileID: -5928893538732973445, guid: b24b97ca1e2f7b64585b63a22203c69f, type: 3}
+    - {fileID: -1562037129772660482, guid: b24b97ca1e2f7b64585b63a22203c69f, type: 3}
+    - {fileID: 6741836053383070353, guid: b24b97ca1e2f7b64585b63a22203c69f, type: 3}
+    - {fileID: -5782406197127289101, guid: b24b97ca1e2f7b64585b63a22203c69f, type: 3}
+    - {fileID: -2377334921636508465, guid: b24b97ca1e2f7b64585b63a22203c69f, type: 3}
+    - {fileID: 9184347291786909608, guid: b24b97ca1e2f7b64585b63a22203c69f, type: 3}
+    - {fileID: -123322022, guid: b24b97ca1e2f7b64585b63a22203c69f, type: 3}
+    - {fileID: -410200594, guid: b24b97ca1e2f7b64585b63a22203c69f, type: 3}
+    - {fileID: 2000321380, guid: b24b97ca1e2f7b64585b63a22203c69f, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    - 0.5
+    - 0.5833333
+    - 0.6666667
+    - 0.75
+    - 0.8333333
+    - 0.9166667
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 1
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Lightning/Yellow/Lightning_Bolt_Y/Lightning_Bolt_Y.anim
+    SourceClip: {fileID: 7400000, guid: a91a35b5b3171d64080f5528b52239dd, type: 2}
+    Sprites:
+    - {fileID: -3270854768511310621, guid: 3e992f334ae481d45a82ba598581a132, type: 3}
+    - {fileID: 3775963356031269748, guid: 3e992f334ae481d45a82ba598581a132, type: 3}
+    - {fileID: 2181212132528194012, guid: 3e992f334ae481d45a82ba598581a132, type: 3}
+    - {fileID: 3392963990949323848, guid: 3e992f334ae481d45a82ba598581a132, type: 3}
+    - {fileID: 1569108569727427910, guid: 3e992f334ae481d45a82ba598581a132, type: 3}
+    - {fileID: 5168570801817414199, guid: 3e992f334ae481d45a82ba598581a132, type: 3}
+    - {fileID: 950031388294089281, guid: 3e992f334ae481d45a82ba598581a132, type: 3}
+    - {fileID: -513487870104211867, guid: 3e992f334ae481d45a82ba598581a132, type: 3}
+    - {fileID: -4626136432541184595, guid: 3e992f334ae481d45a82ba598581a132, type: 3}
+    - {fileID: -1294269338, guid: 3e992f334ae481d45a82ba598581a132, type: 3}
+    - {fileID: 1039343557, guid: 3e992f334ae481d45a82ba598581a132, type: 3}
+    - {fileID: 606206461, guid: 3e992f334ae481d45a82ba598581a132, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    - 0.5
+    - 0.5833333
+    - 0.6666667
+    - 0.75
+    - 0.8333333
+    - 0.9166667
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 1
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Lightning/Blue/Lightning_Impact_1_B/Lightning_Impact_1.anim
+    SourceClip: {fileID: 7400000, guid: c74739f9fa879854994d2e58538afc19, type: 2}
+    Sprites:
+    - {fileID: -4500638565805462571, guid: 4d2f64b1162adc34c844856d67bdf4de, type: 3}
+    - {fileID: 6017603524024411357, guid: 4d2f64b1162adc34c844856d67bdf4de, type: 3}
+    - {fileID: 3257983181100574082, guid: 4d2f64b1162adc34c844856d67bdf4de, type: 3}
+    - {fileID: 2303089351745232622, guid: 4d2f64b1162adc34c844856d67bdf4de, type: 3}
+    - {fileID: -8238522384652328789, guid: 4d2f64b1162adc34c844856d67bdf4de, type: 3}
+    - {fileID: 207168339511597094, guid: 4d2f64b1162adc34c844856d67bdf4de, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.5
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Lightning/Yellow/Lightning_Impact_1_Y/Lightning_Impact_1_Y.anim
+    SourceClip: {fileID: 7400000, guid: bd0ff43bdcc99bd40b187d761b1d5d3b, type: 2}
+    Sprites:
+    - {fileID: 226439740107416967, guid: 2cb9ffebc37d8ce47b55b6ae35958297, type: 3}
+    - {fileID: 7468312889301248467, guid: 2cb9ffebc37d8ce47b55b6ae35958297, type: 3}
+    - {fileID: -7284907936135070402, guid: 2cb9ffebc37d8ce47b55b6ae35958297, type: 3}
+    - {fileID: 4391141125007747747, guid: 2cb9ffebc37d8ce47b55b6ae35958297, type: 3}
+    - {fileID: -181355211028412988, guid: 2cb9ffebc37d8ce47b55b6ae35958297, type: 3}
+    - {fileID: 7208445422068698516, guid: 2cb9ffebc37d8ce47b55b6ae35958297, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.5
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Lightning/Blue/Lightning_Impact_2_B/Lightning_Impact_2_Blue.anim
+    SourceClip: {fileID: 7400000, guid: 049d7f73ca758164b98384e403ab91c4, type: 2}
+    Sprites:
+    - {fileID: 7137530125440479605, guid: 41681e8caef0baa46a1de303074d882f, type: 3}
+    - {fileID: 879709928886885643, guid: 41681e8caef0baa46a1de303074d882f, type: 3}
+    - {fileID: 8768224685378634111, guid: 41681e8caef0baa46a1de303074d882f, type: 3}
+    - {fileID: 1951616895192153423, guid: 41681e8caef0baa46a1de303074d882f, type: 3}
+    - {fileID: 7832130306538450376, guid: 41681e8caef0baa46a1de303074d882f, type: 3}
+    - {fileID: 1826980620725700504, guid: 41681e8caef0baa46a1de303074d882f, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.5
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Lightning/Yellow/Lightning_Impact_2_Y/Lightning_Impact_2_Y.anim
+    SourceClip: {fileID: 7400000, guid: 2a2409e49148c194db057da51f1c6060, type: 2}
+    Sprites:
+    - {fileID: -1174099653229010231, guid: fe3811f94b07214468b52405512a6ead, type: 3}
+    - {fileID: 6807602383719476278, guid: fe3811f94b07214468b52405512a6ead, type: 3}
+    - {fileID: 5881214879989362452, guid: fe3811f94b07214468b52405512a6ead, type: 3}
+    - {fileID: -1081345485100858668, guid: fe3811f94b07214468b52405512a6ead, type: 3}
+    - {fileID: -703453671860931693, guid: fe3811f94b07214468b52405512a6ead, type: 3}
+    - {fileID: 864605431981991325, guid: fe3811f94b07214468b52405512a6ead, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.5
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Lightning/Blue/Lightning_Orb_B/Lightning_Orb_Blue.anim
+    SourceClip: {fileID: 7400000, guid: ba3b44a9b2ed0124d8fcb84f829e1d88, type: 2}
+    Sprites:
+    - {fileID: -5505957211719794235, guid: ace509ae2f5773148bd08632de155ded, type: 3}
+    - {fileID: 1169485795588058645, guid: ace509ae2f5773148bd08632de155ded, type: 3}
+    - {fileID: 2262995935077287274, guid: ace509ae2f5773148bd08632de155ded, type: 3}
+    - {fileID: -4580683982526174324, guid: ace509ae2f5773148bd08632de155ded, type: 3}
+    - {fileID: -5521716011199847851, guid: ace509ae2f5773148bd08632de155ded, type: 3}
+    - {fileID: 5338602535471710908, guid: ace509ae2f5773148bd08632de155ded, type: 3}
+    - {fileID: 7383366857764583459, guid: ace509ae2f5773148bd08632de155ded, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    - 0.5
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.5833333
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Lightning/Blue/Lightning_Orb_B/End/Lightning_Orb_End_Blue.anim
+    SourceClip: {fileID: 7400000, guid: b216ad8679e022c49bfef74f3d4965da, type: 2}
+    Sprites:
+    - {fileID: 6396380975898702232, guid: 4282bb46133d4094d89dfb1c702fc0e9, type: 3}
+    - {fileID: 3147944774277884250, guid: 4282bb46133d4094d89dfb1c702fc0e9, type: 3}
+    - {fileID: -1218986914, guid: 4282bb46133d4094d89dfb1c702fc0e9, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.25
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Lightning/Yellow/Lightning_Orb_Y/End/Lightning_Orb_End_Y.anim
+    SourceClip: {fileID: 7400000, guid: 26c841afb5a7134419c242d537c3edb7, type: 2}
+    Sprites:
+    - {fileID: -5197870206411262188, guid: 74fef384c02f2f04d90f4856ceda5cae, type: 3}
+    - {fileID: 1283686941002279380, guid: 74fef384c02f2f04d90f4856ceda5cae, type: 3}
+    - {fileID: -284036419, guid: 74fef384c02f2f04d90f4856ceda5cae, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.25
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Lightning/Blue/Lightning_Orb_B/Start/Lightning_Orb_Start_Blue.anim
+    SourceClip: {fileID: 7400000, guid: 62bae5bb8bb763049b7613b571679478, type: 2}
+    Sprites:
+    - {fileID: 7601246344269171266, guid: c7a127215fef71d4599a6cc4d5cec9b8, type: 3}
+    - {fileID: 3087548742848475047, guid: c7a127215fef71d4599a6cc4d5cec9b8, type: 3}
+    - {fileID: 1371732411361446458, guid: c7a127215fef71d4599a6cc4d5cec9b8, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.25
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Lightning/Yellow/Lightning_Orb_Y/Start/Lightning_Orb_Start_Y.anim
+    SourceClip: {fileID: 7400000, guid: bcf88e534ddd32c47af41f6b0f7198c7, type: 2}
+    Sprites:
+    - {fileID: 3914463199910357765, guid: f851d25876019f246ab98a5ddd432c68, type: 3}
+    - {fileID: -6903801901582654403, guid: f851d25876019f246ab98a5ddd432c68, type: 3}
+    - {fileID: 1588260384158549785, guid: f851d25876019f246ab98a5ddd432c68, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.25
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Lightning/Yellow/Lightning_Orb_Y/Lightning_Orb_Y.anim
+    SourceClip: {fileID: 7400000, guid: d94da813e5616b64dab1c3c8452f501a, type: 2}
+    Sprites:
+    - {fileID: -7215230804727200254, guid: 7ad595531a0301741b912956f2379b5c, type: 3}
+    - {fileID: -3394477889172863049, guid: 7ad595531a0301741b912956f2379b5c, type: 3}
+    - {fileID: 3593893923752091193, guid: 7ad595531a0301741b912956f2379b5c, type: 3}
+    - {fileID: 3572884551331062543, guid: 7ad595531a0301741b912956f2379b5c, type: 3}
+    - {fileID: -2230440625579925011, guid: 7ad595531a0301741b912956f2379b5c, type: 3}
+    - {fileID: -6279917686418003277, guid: 7ad595531a0301741b912956f2379b5c, type: 3}
+    - {fileID: -4643862059383259772, guid: 7ad595531a0301741b912956f2379b5c, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    - 0.5
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.5833333
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Lightning/Blue/Lightning_Projectile_1_B/Lightning_Projectile_1_B.anim
+    SourceClip: {fileID: 7400000, guid: 23a6a813177cc3d4885298c791c6457f, type: 2}
+    Sprites:
+    - {fileID: -3063245938149104955, guid: ba0e91f5aad7a914ea971e0a88c9f1c2, type: 3}
+    - {fileID: -7167061010085489965, guid: ba0e91f5aad7a914ea971e0a88c9f1c2, type: 3}
+    - {fileID: 2436953572784470937, guid: ba0e91f5aad7a914ea971e0a88c9f1c2, type: 3}
+    - {fileID: -6186718146197525468, guid: ba0e91f5aad7a914ea971e0a88c9f1c2, type: 3}
+    - {fileID: 213838688971814265, guid: ba0e91f5aad7a914ea971e0a88c9f1c2, type: 3}
+    - {fileID: 935650851001600992, guid: ba0e91f5aad7a914ea971e0a88c9f1c2, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.5
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Lightning/Yellow/Lightning_Projectile_1_Y/Lightning_Projectile_1_Y.anim
+    SourceClip: {fileID: 7400000, guid: 71b3c201f6bb4ea48a3b4a7b0c7a6cfe, type: 2}
+    Sprites:
+    - {fileID: 5567190569802366412, guid: af5c161a4583dfe4bacd5fe1006052c7, type: 3}
+    - {fileID: 7636797740227479675, guid: af5c161a4583dfe4bacd5fe1006052c7, type: 3}
+    - {fileID: 8510842909975928241, guid: af5c161a4583dfe4bacd5fe1006052c7, type: 3}
+    - {fileID: -3559099516804082215, guid: af5c161a4583dfe4bacd5fe1006052c7, type: 3}
+    - {fileID: 9209569849175672336, guid: af5c161a4583dfe4bacd5fe1006052c7, type: 3}
+    - {fileID: -1921963151436037882, guid: af5c161a4583dfe4bacd5fe1006052c7, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.5
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Lightning/Blue/Lightning_Projectile_2_B/Lightning_Projectile_2_B.anim
+    SourceClip: {fileID: 7400000, guid: 647b61fd238750e42b86175b7dbf04a1, type: 2}
+    Sprites:
+    - {fileID: -4858830901190498262, guid: c2fab73fb9aa53f4183189182cab210f, type: 3}
+    - {fileID: 4875426517745493809, guid: c2fab73fb9aa53f4183189182cab210f, type: 3}
+    - {fileID: 8928168457419203162, guid: c2fab73fb9aa53f4183189182cab210f, type: 3}
+    - {fileID: -7788917096588316009, guid: c2fab73fb9aa53f4183189182cab210f, type: 3}
+    - {fileID: -204146204, guid: c2fab73fb9aa53f4183189182cab210f, type: 3}
+    - {fileID: -782238340, guid: c2fab73fb9aa53f4183189182cab210f, type: 3}
+    - {fileID: 176683705, guid: c2fab73fb9aa53f4183189182cab210f, type: 3}
+    - {fileID: -1606492962, guid: c2fab73fb9aa53f4183189182cab210f, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    - 0.5
+    - 0.5833333
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.6666666
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Lightning/Yellow/Lightning_Projectile_2_Y/Lightning_Projectile_2_Y.anim
+    SourceClip: {fileID: 7400000, guid: 9db86328fecc6974bb7db67a6265b0bd, type: 2}
+    Sprites:
+    - {fileID: -4254341279344392066, guid: 30b57a470cd845a4293bd4d8446d5649, type: 3}
+    - {fileID: -8564175298287726285, guid: 30b57a470cd845a4293bd4d8446d5649, type: 3}
+    - {fileID: -8994840362644526871, guid: 30b57a470cd845a4293bd4d8446d5649, type: 3}
+    - {fileID: -999397805078577872, guid: 30b57a470cd845a4293bd4d8446d5649, type: 3}
+    - {fileID: 1670054867, guid: 30b57a470cd845a4293bd4d8446d5649, type: 3}
+    - {fileID: -2060559410, guid: 30b57a470cd845a4293bd4d8446d5649, type: 3}
+    - {fileID: -353627143, guid: 30b57a470cd845a4293bd4d8446d5649, type: 3}
+    - {fileID: 198656619, guid: 30b57a470cd845a4293bd4d8446d5649, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    - 0.5
+    - 0.5833333
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.6666666
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Lightning/Blue/Lightning_Projectile_3_B/Lightning_Projectile_3_B.anim
+    SourceClip: {fileID: 7400000, guid: 95d116fa7c633fc4585747d4c2476460, type: 2}
+    Sprites:
+    - {fileID: -3520584366400651122, guid: f95f8623b8b3f604581cdb25a958308e, type: 3}
+    - {fileID: -6041033976412328557, guid: f95f8623b8b3f604581cdb25a958308e, type: 3}
+    - {fileID: 3312023408876030353, guid: f95f8623b8b3f604581cdb25a958308e, type: 3}
+    - {fileID: 3385421971291273674, guid: f95f8623b8b3f604581cdb25a958308e, type: 3}
+    - {fileID: -793517063575895353, guid: f95f8623b8b3f604581cdb25a958308e, type: 3}
+    - {fileID: -1838171774032480134, guid: f95f8623b8b3f604581cdb25a958308e, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.5
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Lightning/Yellow/Lightning_Projectile_3_Y/Lightning_Projectile_3_Y.anim
+    SourceClip: {fileID: 7400000, guid: 3e13d95b244adb9429501c83afbeadbf, type: 2}
+    Sprites:
+    - {fileID: -7862585155599161140, guid: 434132f089614104da63ad6d919a658f, type: 3}
+    - {fileID: -7557028271024533716, guid: 434132f089614104da63ad6d919a658f, type: 3}
+    - {fileID: 4722345505606632723, guid: 434132f089614104da63ad6d919a658f, type: 3}
+    - {fileID: -7967519483676964358, guid: 434132f089614104da63ad6d919a658f, type: 3}
+    - {fileID: 7061705308398278985, guid: 434132f089614104da63ad6d919a658f, type: 3}
+    - {fileID: 4326884366966018259, guid: 434132f089614104da63ad6d919a658f, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.5
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Lightning/Blue/Lightning_Projectile_4_B/Lightning_Projectile_4_B.anim
+    SourceClip: {fileID: 7400000, guid: f61eb035b6b63e141954b9f77346ef7d, type: 2}
+    Sprites:
+    - {fileID: 4505433797066146960, guid: e448426dc8e94734594197a687a1b967, type: 3}
+    - {fileID: -4135315077276463703, guid: e448426dc8e94734594197a687a1b967, type: 3}
+    - {fileID: 5349564871475874971, guid: e448426dc8e94734594197a687a1b967, type: 3}
+    - {fileID: 5359662689424237662, guid: e448426dc8e94734594197a687a1b967, type: 3}
+    - {fileID: 7014326538478014305, guid: e448426dc8e94734594197a687a1b967, type: 3}
+    - {fileID: 8349749589520460967, guid: e448426dc8e94734594197a687a1b967, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.5
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Lightning/Yellow/Lightning_Projectile_4_Y/Lightning_Projectile_4_Y.anim
+    SourceClip: {fileID: 7400000, guid: a1aa3b4191b0d6040b627943df359764, type: 2}
+    Sprites:
+    - {fileID: 2212758253671669478, guid: 5060de63080c500469ca4ba790942f8e, type: 3}
+    - {fileID: -8973500383740252757, guid: 5060de63080c500469ca4ba790942f8e, type: 3}
+    - {fileID: 3097631681834163294, guid: 5060de63080c500469ca4ba790942f8e, type: 3}
+    - {fileID: 1642863364223831052, guid: 5060de63080c500469ca4ba790942f8e, type: 3}
+    - {fileID: -1251599394450207327, guid: 5060de63080c500469ca4ba790942f8e, type: 3}
+    - {fileID: 1130360634832679534, guid: 5060de63080c500469ca4ba790942f8e, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.5
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Lightning/Blue/Lightning_Slash_1_B/Lightning_Slash_1_Blue.anim
+    SourceClip: {fileID: 7400000, guid: 6f7380b3aba28cc47aa81731f9c975de, type: 2}
+    Sprites:
+    - {fileID: -3461938632895864838, guid: 5eb93a2dfc57b2248856a065265035f1, type: 3}
+    - {fileID: -7895248619256444897, guid: 5eb93a2dfc57b2248856a065265035f1, type: 3}
+    - {fileID: 7476210039135319818, guid: 5eb93a2dfc57b2248856a065265035f1, type: 3}
+    - {fileID: 1993711122147689277, guid: 5eb93a2dfc57b2248856a065265035f1, type: 3}
+    - {fileID: 4729373012610496622, guid: 5eb93a2dfc57b2248856a065265035f1, type: 3}
+    - {fileID: 1171511582700048398, guid: 5eb93a2dfc57b2248856a065265035f1, type: 3}
+    - {fileID: -766982003002811020, guid: 5eb93a2dfc57b2248856a065265035f1, type: 3}
+    - {fileID: 2451078186298881616, guid: 5eb93a2dfc57b2248856a065265035f1, type: 3}
+    - {fileID: -6300125086342927657, guid: 5eb93a2dfc57b2248856a065265035f1, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    - 0.5
+    - 0.5833333
+    - 0.6666667
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.75
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Lightning/Yellow/Lightning_Slash_1_Y/Lightning_Slash_1_Y.anim
+    SourceClip: {fileID: 7400000, guid: 82ef62d0dcf8c554f8fe36a6f341ecee, type: 2}
+    Sprites:
+    - {fileID: -4714125782604262058, guid: 69d4ff00e83ad5b4aad6274f837c3c72, type: 3}
+    - {fileID: -4219389704235892561, guid: 69d4ff00e83ad5b4aad6274f837c3c72, type: 3}
+    - {fileID: -7598876350965162122, guid: 69d4ff00e83ad5b4aad6274f837c3c72, type: 3}
+    - {fileID: -1954548606272737375, guid: 69d4ff00e83ad5b4aad6274f837c3c72, type: 3}
+    - {fileID: 6648382518471500565, guid: 69d4ff00e83ad5b4aad6274f837c3c72, type: 3}
+    - {fileID: 5762443560259481440, guid: 69d4ff00e83ad5b4aad6274f837c3c72, type: 3}
+    - {fileID: -5895374204411300809, guid: 69d4ff00e83ad5b4aad6274f837c3c72, type: 3}
+    - {fileID: 2283598001596946316, guid: 69d4ff00e83ad5b4aad6274f837c3c72, type: 3}
+    - {fileID: 6203600449924727206, guid: 69d4ff00e83ad5b4aad6274f837c3c72, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    - 0.5
+    - 0.5833333
+    - 0.6666667
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.75
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Lightning/Blue/Lightning_Slash_2_B/Lightning_Slash_2_Blue.anim
+    SourceClip: {fileID: 7400000, guid: b693ac43be09d4a42b79611b3303534f, type: 2}
+    Sprites:
+    - {fileID: -4460014085316223790, guid: 2af22c31bc6dbe445b7859fc744ce58e, type: 3}
+    - {fileID: -239745343196696781, guid: 2af22c31bc6dbe445b7859fc744ce58e, type: 3}
+    - {fileID: 485644370007236984, guid: 2af22c31bc6dbe445b7859fc744ce58e, type: 3}
+    - {fileID: -8271898744444910603, guid: 2af22c31bc6dbe445b7859fc744ce58e, type: 3}
+    - {fileID: -1256444345046202107, guid: 2af22c31bc6dbe445b7859fc744ce58e, type: 3}
+    - {fileID: -881235879235364915, guid: 2af22c31bc6dbe445b7859fc744ce58e, type: 3}
+    - {fileID: 7314572972463305470, guid: 2af22c31bc6dbe445b7859fc744ce58e, type: 3}
+    - {fileID: -1075169518604366891, guid: 2af22c31bc6dbe445b7859fc744ce58e, type: 3}
+    - {fileID: -2352983870280048067, guid: 2af22c31bc6dbe445b7859fc744ce58e, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    - 0.5
+    - 0.5833333
+    - 0.6666667
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.75
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Lightning/Yellow/Lightning_Slash_2_Y/Lightning_Slash_2_Y.anim
+    SourceClip: {fileID: 7400000, guid: d245aaa0de6f93340ad9e791ac27f8a8, type: 2}
+    Sprites:
+    - {fileID: 4181121392807663690, guid: 6d043ad937291da48ba2388e05db6b49, type: 3}
+    - {fileID: 9192198044689163109, guid: 6d043ad937291da48ba2388e05db6b49, type: 3}
+    - {fileID: -1782658320047477567, guid: 6d043ad937291da48ba2388e05db6b49, type: 3}
+    - {fileID: 2330429047457758924, guid: 6d043ad937291da48ba2388e05db6b49, type: 3}
+    - {fileID: 7409846494287007792, guid: 6d043ad937291da48ba2388e05db6b49, type: 3}
+    - {fileID: -6100943985617369565, guid: 6d043ad937291da48ba2388e05db6b49, type: 3}
+    - {fileID: 8143724090685152753, guid: 6d043ad937291da48ba2388e05db6b49, type: 3}
+    - {fileID: -1529105644722828739, guid: 6d043ad937291da48ba2388e05db6b49, type: 3}
+    - {fileID: 9088882048314093071, guid: 6d043ad937291da48ba2388e05db6b49, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    - 0.5
+    - 0.5833333
+    - 0.6666667
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.75
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Lightning/Blue/Status_Paralyzed/Status_Paralyzed.anim
+    SourceClip: {fileID: 7400000, guid: 17ae4d7c708062c4a8c8b14e96decf3c, type: 2}
+    Sprites:
+    - {fileID: -8821142078035230921, guid: 7473b8ad2fbfb634584dae6b6b451c0b, type: 3}
+    - {fileID: -2441504617925513587, guid: 7473b8ad2fbfb634584dae6b6b451c0b, type: 3}
+    - {fileID: 1381212905632039231, guid: 7473b8ad2fbfb634584dae6b6b451c0b, type: 3}
+    - {fileID: -6654326669479702567, guid: 7473b8ad2fbfb634584dae6b6b451c0b, type: 3}
+    - {fileID: 6242604879173393139, guid: 7473b8ad2fbfb634584dae6b6b451c0b, type: 3}
+    - {fileID: -3182251791374186520, guid: 7473b8ad2fbfb634584dae6b6b451c0b, type: 3}
+    - {fileID: 1932550358103388282, guid: 7473b8ad2fbfb634584dae6b6b451c0b, type: 3}
+    - {fileID: -8046913621444222374, guid: 7473b8ad2fbfb634584dae6b6b451c0b, type: 3}
+    - {fileID: -4024124566835806276, guid: 7473b8ad2fbfb634584dae6b6b451c0b, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    - 0.5
+    - 0.5833333
+    - 0.6666667
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.75
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Lightning/Yellow/Status_Paralyzed_Y/Status_Paralyzed_Y.anim
+    SourceClip: {fileID: 7400000, guid: b42ab4811bd1239498a33538916d034c, type: 2}
+    Sprites:
+    - {fileID: -19896563347229037, guid: 3e8e262c1b17b1a46b7ef87a35e759a6, type: 3}
+    - {fileID: -4529706193497021318, guid: 3e8e262c1b17b1a46b7ef87a35e759a6, type: 3}
+    - {fileID: -5232875736997801411, guid: 3e8e262c1b17b1a46b7ef87a35e759a6, type: 3}
+    - {fileID: 7663668873641927850, guid: 3e8e262c1b17b1a46b7ef87a35e759a6, type: 3}
+    - {fileID: -3916375216928272498, guid: 3e8e262c1b17b1a46b7ef87a35e759a6, type: 3}
+    - {fileID: -5620299349724448070, guid: 3e8e262c1b17b1a46b7ef87a35e759a6, type: 3}
+    - {fileID: -7013243132372996430, guid: 3e8e262c1b17b1a46b7ef87a35e759a6, type: 3}
+    - {fileID: 7024178693399233120, guid: 3e8e262c1b17b1a46b7ef87a35e759a6, type: 3}
+    - {fileID: 9031938855852562130, guid: 3e8e262c1b17b1a46b7ef87a35e759a6, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    - 0.5
+    - 0.5833333
+    - 0.6666667
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.75
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Lightning/Blue/Lightning_Thunderbolt_B/Lightning_Thunderbolt_Blue.anim
+    SourceClip: {fileID: 7400000, guid: bbe553f96aa29484f8c36faa1ac2474d, type: 2}
+    Sprites:
+    - {fileID: 6315114616288966408, guid: 69e7c6c992b7d714eb024b24d7dacab5, type: 3}
+    - {fileID: 2776789179517662645, guid: 69e7c6c992b7d714eb024b24d7dacab5, type: 3}
+    - {fileID: 8435423496333652335, guid: 69e7c6c992b7d714eb024b24d7dacab5, type: 3}
+    - {fileID: -5847224019856418548, guid: 69e7c6c992b7d714eb024b24d7dacab5, type: 3}
+    - {fileID: -5354648043446577327, guid: 69e7c6c992b7d714eb024b24d7dacab5, type: 3}
+    - {fileID: -7334118163771271445, guid: 69e7c6c992b7d714eb024b24d7dacab5, type: 3}
+    - {fileID: -1035104588688132997, guid: 69e7c6c992b7d714eb024b24d7dacab5, type: 3}
+    - {fileID: 1567038436, guid: 69e7c6c992b7d714eb024b24d7dacab5, type: 3}
+    - {fileID: 1426648188, guid: 69e7c6c992b7d714eb024b24d7dacab5, type: 3}
+    - {fileID: -2112494698, guid: 69e7c6c992b7d714eb024b24d7dacab5, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    - 0.5
+    - 0.5833333
+    - 0.6666667
+    - 0.75
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.8333333
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Lightning/Yellow/Lightning_Thunderbolt_Y/Lightning_Thunderbolt_Y.anim
+    SourceClip: {fileID: 7400000, guid: e72e7705a7666fc478b633bff8f29c5e, type: 2}
+    Sprites:
+    - {fileID: -4467989300044868129, guid: 1f158a7b405979544a3ff609dd71eff0, type: 3}
+    - {fileID: -2353509010613070523, guid: 1f158a7b405979544a3ff609dd71eff0, type: 3}
+    - {fileID: 7650382489518138499, guid: 1f158a7b405979544a3ff609dd71eff0, type: 3}
+    - {fileID: -5491144492128676278, guid: 1f158a7b405979544a3ff609dd71eff0, type: 3}
+    - {fileID: 3068916670686931491, guid: 1f158a7b405979544a3ff609dd71eff0, type: 3}
+    - {fileID: -3930169590623448715, guid: 1f158a7b405979544a3ff609dd71eff0, type: 3}
+    - {fileID: 6644717024528311592, guid: 1f158a7b405979544a3ff609dd71eff0, type: 3}
+    - {fileID: -649172361, guid: 1f158a7b405979544a3ff609dd71eff0, type: 3}
+    - {fileID: 1026625930, guid: 1f158a7b405979544a3ff609dd71eff0, type: 3}
+    - {fileID: -1874872643, guid: 1f158a7b405979544a3ff609dd71eff0, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    - 0.5
+    - 0.5833333
+    - 0.6666667
+    - 0.75
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.8333333
+    IsLooping: 1
   - ClipPath: Assets/Res/Animation/Effects/Meteor/Meteor.anim
     SourceClip: {fileID: 7400000, guid: 3e6a432dbeee1454385b8d8c6d15a8c2, type: 2}
     Sprites:
@@ -8100,4 +8824,478 @@ MonoBehaviour:
     FlipXTimes: []
     FlipXValues: []
     Length: 0.6666666
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Water/Bubble_Projectile/End/Bubble Pop.anim
+    SourceClip: {fileID: 7400000, guid: 64b9875a12efa2244b498a00ef3150de, type: 2}
+    Sprites:
+    - {fileID: 5406823363841564007, guid: f8576b5df1b088b43bfdf01654e8cbb5, type: 3}
+    - {fileID: -1556712105, guid: f8576b5df1b088b43bfdf01654e8cbb5, type: 3}
+    - {fileID: 942278120, guid: f8576b5df1b088b43bfdf01654e8cbb5, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.25
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Water/Bubble_Projectile/Bubble_Projectile.anim
+    SourceClip: {fileID: 7400000, guid: 9828bcb009c67064786f6329d67d3731, type: 2}
+    Sprites:
+    - {fileID: 1127389012668319253, guid: 4a79866b66aa8f545aa9acd1562dbcd4, type: 3}
+    - {fileID: 1368990483095208084, guid: 4a79866b66aa8f545aa9acd1562dbcd4, type: 3}
+    - {fileID: 1783852035803339081, guid: 4a79866b66aa8f545aa9acd1562dbcd4, type: 3}
+    - {fileID: 8837217499141040750, guid: 4a79866b66aa8f545aa9acd1562dbcd4, type: 3}
+    - {fileID: -7954209299917259718, guid: 4a79866b66aa8f545aa9acd1562dbcd4, type: 3}
+    - {fileID: -3033923509750264393, guid: 4a79866b66aa8f545aa9acd1562dbcd4, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.5
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Water/Bubble_Projectile_2/Bubble_Projectile_2.anim
+    SourceClip: {fileID: 7400000, guid: f0716bc5ed6d69941891e75d7d490a4b, type: 2}
+    Sprites:
+    - {fileID: -4633319159317276368, guid: 7e39438f1e452ae4799ad45571856caa, type: 3}
+    - {fileID: -6253932187373307660, guid: 7e39438f1e452ae4799ad45571856caa, type: 3}
+    - {fileID: -289448616775553855, guid: 7e39438f1e452ae4799ad45571856caa, type: 3}
+    - {fileID: 6715726350135194803, guid: 7e39438f1e452ae4799ad45571856caa, type: 3}
+    - {fileID: -8088543965235055129, guid: 7e39438f1e452ae4799ad45571856caa, type: 3}
+    - {fileID: -2903529551633187382, guid: 7e39438f1e452ae4799ad45571856caa, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.5
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Water/Bubble_Projectile_2/End/Bubble_Projectile_2_End.anim
+    SourceClip: {fileID: 7400000, guid: fa0f79225929d2f4ba453232213bfe1d, type: 2}
+    Sprites:
+    - {fileID: -3548152020477742722, guid: a152346894b75db4fbe93ca67898bcb2, type: 3}
+    - {fileID: 1899240983, guid: a152346894b75db4fbe93ca67898bcb2, type: 3}
+    - {fileID: -441640471, guid: a152346894b75db4fbe93ca67898bcb2, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.25
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Water/Bubble_Sphere/Bubble_Sphere.anim
+    SourceClip: {fileID: 7400000, guid: 4cc615d7a786e4c48b944c29a1d345cc, type: 2}
+    Sprites:
+    - {fileID: -6330090148607048911, guid: 88fcc4b85bb367f43b52d5000904b357, type: 3}
+    - {fileID: -8285885229929257171, guid: 88fcc4b85bb367f43b52d5000904b357, type: 3}
+    - {fileID: -1225585091709497940, guid: 88fcc4b85bb367f43b52d5000904b357, type: 3}
+    - {fileID: 5212281498908184188, guid: 88fcc4b85bb367f43b52d5000904b357, type: 3}
+    - {fileID: 239701126105132155, guid: 88fcc4b85bb367f43b52d5000904b357, type: 3}
+    - {fileID: -5038661286160164616, guid: 88fcc4b85bb367f43b52d5000904b357, type: 3}
+    - {fileID: 5481344474120432062, guid: 88fcc4b85bb367f43b52d5000904b357, type: 3}
+    - {fileID: -7376142812055880535, guid: 88fcc4b85bb367f43b52d5000904b357, type: 3}
+    - {fileID: 5583009641787699375, guid: 88fcc4b85bb367f43b52d5000904b357, type: 3}
+    - {fileID: 5982104643858717771, guid: 88fcc4b85bb367f43b52d5000904b357, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    - 0.5
+    - 0.5833333
+    - 0.6666667
+    - 0.75
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.8333333
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Water/Bubble_Sphere/End/Bubble_Sphere_End.anim
+    SourceClip: {fileID: 7400000, guid: 4196973a0e4956c4d9d010c87281e3da, type: 2}
+    Sprites:
+    - {fileID: -6913057906535421190, guid: 46ab12824d5a10442b00637b5f85ce07, type: 3}
+    - {fileID: 2876151021858512834, guid: 46ab12824d5a10442b00637b5f85ce07, type: 3}
+    - {fileID: -6941995146329101345, guid: 46ab12824d5a10442b00637b5f85ce07, type: 3}
+    - {fileID: 3356547881238382877, guid: 46ab12824d5a10442b00637b5f85ce07, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.33333334
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Water/Bubble_Sphere/Start/Bubble_Sphere_Start.anim
+    SourceClip: {fileID: 7400000, guid: 8ba7b57d378960f4fb1b0fb7bdd26446, type: 2}
+    Sprites:
+    - {fileID: -5437284269070103309, guid: cc28fbaf85fc6bc48bb3b00142fa30a6, type: 3}
+    - {fileID: 6701157911324997213, guid: cc28fbaf85fc6bc48bb3b00142fa30a6, type: 3}
+    - {fileID: 1323549734162439952, guid: cc28fbaf85fc6bc48bb3b00142fa30a6, type: 3}
+    - {fileID: 7219373386892919275, guid: cc28fbaf85fc6bc48bb3b00142fa30a6, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.33333334
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Water/Water_Heal/Water Heal.anim
+    SourceClip: {fileID: 7400000, guid: 7602c12ea87b00641b5539fea46f1088, type: 2}
+    Sprites:
+    - {fileID: 1643280306556447351, guid: b3ea02aea472b8849a6cf70c35c187a1, type: 3}
+    - {fileID: 2690717094612926033, guid: b3ea02aea472b8849a6cf70c35c187a1, type: 3}
+    - {fileID: 7851098079441881822, guid: b3ea02aea472b8849a6cf70c35c187a1, type: 3}
+    - {fileID: -2238554343001223701, guid: b3ea02aea472b8849a6cf70c35c187a1, type: 3}
+    - {fileID: 5380143459180098265, guid: b3ea02aea472b8849a6cf70c35c187a1, type: 3}
+    - {fileID: 3969549157920776656, guid: b3ea02aea472b8849a6cf70c35c187a1, type: 3}
+    - {fileID: -8358754008579653956, guid: b3ea02aea472b8849a6cf70c35c187a1, type: 3}
+    - {fileID: 2809832993613397248, guid: b3ea02aea472b8849a6cf70c35c187a1, type: 3}
+    - {fileID: -5144384153614343278, guid: b3ea02aea472b8849a6cf70c35c187a1, type: 3}
+    - {fileID: 1702860418103633231, guid: b3ea02aea472b8849a6cf70c35c187a1, type: 3}
+    - {fileID: 2511608432289384765, guid: b3ea02aea472b8849a6cf70c35c187a1, type: 3}
+    - {fileID: -8396198389022730358, guid: b3ea02aea472b8849a6cf70c35c187a1, type: 3}
+    - {fileID: -7799387540738780918, guid: b3ea02aea472b8849a6cf70c35c187a1, type: 3}
+    - {fileID: 1680886933766167952, guid: b3ea02aea472b8849a6cf70c35c187a1, type: 3}
+    - {fileID: 5136710588405286430, guid: b3ea02aea472b8849a6cf70c35c187a1, type: 3}
+    - {fileID: 2182772695738761036, guid: b3ea02aea472b8849a6cf70c35c187a1, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    - 0.5
+    - 0.5833333
+    - 0.6666667
+    - 0.75
+    - 0.8333333
+    - 0.9166667
+    - 1
+    - 1.0833334
+    - 1.1666666
+    - 1.25
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 1.3333334
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Water/Impact_Water/Impact Water.anim
+    SourceClip: {fileID: 7400000, guid: bf34ca39fd27b4e488efab8a04fc47c6, type: 2}
+    Sprites:
+    - {fileID: 514154284698809214, guid: 469b4ced8e49934418a522fe70010427, type: 3}
+    - {fileID: 8445790788713561307, guid: 469b4ced8e49934418a522fe70010427, type: 3}
+    - {fileID: -93483424260444673, guid: 469b4ced8e49934418a522fe70010427, type: 3}
+    - {fileID: -692720331797063760, guid: 469b4ced8e49934418a522fe70010427, type: 3}
+    - {fileID: -3097868523180109132, guid: 469b4ced8e49934418a522fe70010427, type: 3}
+    - {fileID: 4383344979008585673, guid: 469b4ced8e49934418a522fe70010427, type: 3}
+    - {fileID: 3695252706769181320, guid: 469b4ced8e49934418a522fe70010427, type: 3}
+    - {fileID: 275423439131690272, guid: 469b4ced8e49934418a522fe70010427, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    - 0.5
+    - 0.5833333
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.6666666
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Water/Impact_Water_2/Impact_Water_2.anim
+    SourceClip: {fileID: 7400000, guid: 5f5a70b9ca1959f4eb2daeb6fccfafe0, type: 2}
+    Sprites:
+    - {fileID: -7287395026139505217, guid: eef33ef6e02bde044bd775add3d572a2, type: 3}
+    - {fileID: 6094818281911007745, guid: eef33ef6e02bde044bd775add3d572a2, type: 3}
+    - {fileID: -5095775748914652556, guid: eef33ef6e02bde044bd775add3d572a2, type: 3}
+    - {fileID: 398452744520882811, guid: eef33ef6e02bde044bd775add3d572a2, type: 3}
+    - {fileID: -8425738861232565068, guid: eef33ef6e02bde044bd775add3d572a2, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.4166667
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Water/Impact_Water_3/Impact_Water_3.anim
+    SourceClip: {fileID: 7400000, guid: 2c0ec805e9b799a448d8430f60bb0b89, type: 2}
+    Sprites:
+    - {fileID: 4206297357690351762, guid: 5454a92dfb16cff4688d59d8ae9675b3, type: 3}
+    - {fileID: -3319267541081120738, guid: 5454a92dfb16cff4688d59d8ae9675b3, type: 3}
+    - {fileID: 7529691302398498530, guid: 5454a92dfb16cff4688d59d8ae9675b3, type: 3}
+    - {fileID: -5708132270497722238, guid: 5454a92dfb16cff4688d59d8ae9675b3, type: 3}
+    - {fileID: 8076253030269420422, guid: 5454a92dfb16cff4688d59d8ae9675b3, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.4166667
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Water/Water_Jet/Water_Jet.anim
+    SourceClip: {fileID: 7400000, guid: 4fbc4436e279c2a468ea880321805dba, type: 2}
+    Sprites:
+    - {fileID: -6465731506381449337, guid: a6fb04caa4becd449a9fddc13eca9dce, type: 3}
+    - {fileID: -2344185003500915586, guid: a6fb04caa4becd449a9fddc13eca9dce, type: 3}
+    - {fileID: -6691209920635039439, guid: a6fb04caa4becd449a9fddc13eca9dce, type: 3}
+    - {fileID: 5973603505561297597, guid: a6fb04caa4becd449a9fddc13eca9dce, type: 3}
+    - {fileID: -2489392020143616408, guid: a6fb04caa4becd449a9fddc13eca9dce, type: 3}
+    - {fileID: -4528149170780731415, guid: a6fb04caa4becd449a9fddc13eca9dce, type: 3}
+    - {fileID: -2340149010537904125, guid: a6fb04caa4becd449a9fddc13eca9dce, type: 3}
+    - {fileID: 1047754234654359949, guid: a6fb04caa4becd449a9fddc13eca9dce, type: 3}
+    - {fileID: -5174209933469158706, guid: a6fb04caa4becd449a9fddc13eca9dce, type: 3}
+    - {fileID: 8996066773753157520, guid: a6fb04caa4becd449a9fddc13eca9dce, type: 3}
+    - {fileID: -5705230876846345941, guid: a6fb04caa4becd449a9fddc13eca9dce, type: 3}
+    - {fileID: 380529274185870362, guid: a6fb04caa4becd449a9fddc13eca9dce, type: 3}
+    - {fileID: 5271282627856436768, guid: a6fb04caa4becd449a9fddc13eca9dce, type: 3}
+    - {fileID: 1266677902276137910, guid: a6fb04caa4becd449a9fddc13eca9dce, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    - 0.5
+    - 0.5833333
+    - 0.6666667
+    - 0.75
+    - 0.8333333
+    - 0.9166667
+    - 1
+    - 1.0833334
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 1.1666667
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Water/Water_Projectile_Small/Water Projectile.anim
+    SourceClip: {fileID: 7400000, guid: e315f72a3277c7e4ea7d5af491a6edbc, type: 2}
+    Sprites:
+    - {fileID: 2312277215909755758, guid: 8410fba2523f2e549960cad89d1bebdc, type: 3}
+    - {fileID: -6046297742735180059, guid: 8410fba2523f2e549960cad89d1bebdc, type: 3}
+    - {fileID: 7264064629286342798, guid: 8410fba2523f2e549960cad89d1bebdc, type: 3}
+    - {fileID: -4541173628067259308, guid: 8410fba2523f2e549960cad89d1bebdc, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.33333334
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Water/Water_Projectile_Large/Water_Projectile_Large.anim
+    SourceClip: {fileID: 7400000, guid: eeeec9bbcad60cf4796590baa31abcdf, type: 2}
+    Sprites:
+    - {fileID: 7677535304157483150, guid: 4b566ca8a8a132244987ee3d483ef054, type: 3}
+    - {fileID: 1511789764675134177, guid: 4b566ca8a8a132244987ee3d483ef054, type: 3}
+    - {fileID: 8291752548674186779, guid: 4b566ca8a8a132244987ee3d483ef054, type: 3}
+    - {fileID: -1316029262015880903, guid: 4b566ca8a8a132244987ee3d483ef054, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.33333334
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Water/Puddle/Puddle.anim
+    SourceClip: {fileID: 7400000, guid: 52ebafca42a93df45bc0d97e5fb74069, type: 2}
+    Sprites:
+    - {fileID: 4417754540867561566, guid: 864268974c5b87b4ca3ce870d0bf7f1b, type: 3}
+    - {fileID: 6033796963110446444, guid: 864268974c5b87b4ca3ce870d0bf7f1b, type: 3}
+    - {fileID: -8314525031882020439, guid: 864268974c5b87b4ca3ce870d0bf7f1b, type: 3}
+    - {fileID: 8281927427671237425, guid: 864268974c5b87b4ca3ce870d0bf7f1b, type: 3}
+    - {fileID: -2672210353937301003, guid: 864268974c5b87b4ca3ce870d0bf7f1b, type: 3}
+    - {fileID: -3734701894956647216, guid: 864268974c5b87b4ca3ce870d0bf7f1b, type: 3}
+    - {fileID: 4253857717051954337, guid: 864268974c5b87b4ca3ce870d0bf7f1b, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    - 0.5
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.5833333
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Water/Puddle/End/Puddle_End.anim
+    SourceClip: {fileID: 7400000, guid: b8884a7f23ce00544b2c925a4462119f, type: 2}
+    Sprites:
+    - {fileID: -8612775113111778348, guid: 488e4f8f8c7258548bcc5939baca4e6c, type: 3}
+    - {fileID: 8029829043314426885, guid: 488e4f8f8c7258548bcc5939baca4e6c, type: 3}
+    - {fileID: 7317067221409872882, guid: 488e4f8f8c7258548bcc5939baca4e6c, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.25
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Water/Puddle/Start/Puddle_Start.anim
+    SourceClip: {fileID: 7400000, guid: 462de2eee9a6a6d44b3ac2ab557ce7ee, type: 2}
+    Sprites:
+    - {fileID: 4778776022894100822, guid: 3f4804eb46b8b09468ba9060b5a49f19, type: 3}
+    - {fileID: -3937138096604982376, guid: 3f4804eb46b8b09468ba9060b5a49f19, type: 3}
+    - {fileID: -291642192943412104, guid: 3f4804eb46b8b09468ba9060b5a49f19, type: 3}
+    - {fileID: 2271782512488490966, guid: 3f4804eb46b8b09468ba9060b5a49f19, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 0.33333334
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Water/Rain/Rain.anim
+    SourceClip: {fileID: 7400000, guid: 874a5257826be9740a7b7d6cbf589e69, type: 2}
+    Sprites:
+    - {fileID: -6612189874378024921, guid: 340a0bdf067a82044b30ef0ae1c8ebcb, type: 3}
+    - {fileID: -2846174074112908080, guid: 340a0bdf067a82044b30ef0ae1c8ebcb, type: 3}
+    - {fileID: -463354536366307213, guid: 340a0bdf067a82044b30ef0ae1c8ebcb, type: 3}
+    - {fileID: 2488587871624548440, guid: 340a0bdf067a82044b30ef0ae1c8ebcb, type: 3}
+    - {fileID: -1518919441747905966, guid: 340a0bdf067a82044b30ef0ae1c8ebcb, type: 3}
+    - {fileID: 4041090725678385473, guid: 340a0bdf067a82044b30ef0ae1c8ebcb, type: 3}
+    - {fileID: -4377537435317516324, guid: 340a0bdf067a82044b30ef0ae1c8ebcb, type: 3}
+    - {fileID: -8399213286835932282, guid: 340a0bdf067a82044b30ef0ae1c8ebcb, type: 3}
+    - {fileID: 2246510213179811022, guid: 340a0bdf067a82044b30ef0ae1c8ebcb, type: 3}
+    - {fileID: -3520891600124190278, guid: 340a0bdf067a82044b30ef0ae1c8ebcb, type: 3}
+    - {fileID: 681432963946395609, guid: 340a0bdf067a82044b30ef0ae1c8ebcb, type: 3}
+    - {fileID: -7815714939569552309, guid: 340a0bdf067a82044b30ef0ae1c8ebcb, type: 3}
+    - {fileID: -8867678291267977815, guid: 340a0bdf067a82044b30ef0ae1c8ebcb, type: 3}
+    - {fileID: -4374490868465436803, guid: 340a0bdf067a82044b30ef0ae1c8ebcb, type: 3}
+    - {fileID: 3975531418669575686, guid: 340a0bdf067a82044b30ef0ae1c8ebcb, type: 3}
+    - {fileID: 5726840202121417254, guid: 340a0bdf067a82044b30ef0ae1c8ebcb, type: 3}
+    - {fileID: -390953002675814594, guid: 340a0bdf067a82044b30ef0ae1c8ebcb, type: 3}
+    - {fileID: -5601495520474089993, guid: 340a0bdf067a82044b30ef0ae1c8ebcb, type: 3}
+    - {fileID: -3066776723701015130, guid: 340a0bdf067a82044b30ef0ae1c8ebcb, type: 3}
+    - {fileID: -6509888504112021314, guid: 340a0bdf067a82044b30ef0ae1c8ebcb, type: 3}
+    - {fileID: 3561872041918670680, guid: 340a0bdf067a82044b30ef0ae1c8ebcb, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    - 0.5
+    - 0.5833333
+    - 0.6666667
+    - 0.75
+    - 0.8333333
+    - 0.9166667
+    - 1
+    - 1.0833334
+    - 1.1666666
+    - 1.25
+    - 1.3333334
+    - 1.4166666
+    - 1.5
+    - 1.5833334
+    - 1.6666666
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 1.75
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Water/Status_Wet/Status_Wet.anim
+    SourceClip: {fileID: 7400000, guid: e990e37352ca3f047aa52731318a86a5, type: 2}
+    Sprites:
+    - {fileID: 9104740728499634794, guid: ea02c8d03d3a5c247a52285ce878224c, type: 3}
+    - {fileID: 6409689672434205138, guid: ea02c8d03d3a5c247a52285ce878224c, type: 3}
+    - {fileID: -4030089304110431642, guid: ea02c8d03d3a5c247a52285ce878224c, type: 3}
+    - {fileID: 4477308938921433819, guid: ea02c8d03d3a5c247a52285ce878224c, type: 3}
+    - {fileID: -6907637877233498340, guid: ea02c8d03d3a5c247a52285ce878224c, type: 3}
+    - {fileID: 8988280422353518758, guid: ea02c8d03d3a5c247a52285ce878224c, type: 3}
+    - {fileID: -2504274300013561961, guid: ea02c8d03d3a5c247a52285ce878224c, type: 3}
+    - {fileID: -1573616883931793010, guid: ea02c8d03d3a5c247a52285ce878224c, type: 3}
+    - {fileID: -8186664337565119509, guid: ea02c8d03d3a5c247a52285ce878224c, type: 3}
+    - {fileID: -7727852622498535838, guid: ea02c8d03d3a5c247a52285ce878224c, type: 3}
+    - {fileID: 8274310305222675860, guid: ea02c8d03d3a5c247a52285ce878224c, type: 3}
+    - {fileID: -4064442593008616477, guid: ea02c8d03d3a5c247a52285ce878224c, type: 3}
+    - {fileID: -8843518059707902997, guid: ea02c8d03d3a5c247a52285ce878224c, type: 3}
+    - {fileID: 166027059670609952, guid: ea02c8d03d3a5c247a52285ce878224c, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    - 0.5
+    - 0.5833333
+    - 0.6666667
+    - 0.75
+    - 0.8333333
+    - 0.9166667
+    - 1
+    - 1.0833334
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 1.1666667
+    IsLooping: 1
+  - ClipPath: Assets/Res/Animation/Effects/Water/Water_Whip/Water_Whip.anim
+    SourceClip: {fileID: 7400000, guid: 6b5d032fa4426884d8c0a24f60eb9f8d, type: 2}
+    Sprites:
+    - {fileID: 254607862592869487, guid: f38b7f1f5ae9f074486469a30c1f081f, type: 3}
+    - {fileID: 4790980748348309504, guid: f38b7f1f5ae9f074486469a30c1f081f, type: 3}
+    - {fileID: -2205830733632814874, guid: f38b7f1f5ae9f074486469a30c1f081f, type: 3}
+    - {fileID: 5129918367572246849, guid: f38b7f1f5ae9f074486469a30c1f081f, type: 3}
+    - {fileID: 1172404268079065127, guid: f38b7f1f5ae9f074486469a30c1f081f, type: 3}
+    - {fileID: 4715319056142612797, guid: f38b7f1f5ae9f074486469a30c1f081f, type: 3}
+    - {fileID: -425328974192761145, guid: f38b7f1f5ae9f074486469a30c1f081f, type: 3}
+    - {fileID: 3232918652285788453, guid: f38b7f1f5ae9f074486469a30c1f081f, type: 3}
+    - {fileID: -4457241292075716290, guid: f38b7f1f5ae9f074486469a30c1f081f, type: 3}
+    - {fileID: -4169824367743830471, guid: f38b7f1f5ae9f074486469a30c1f081f, type: 3}
+    - {fileID: 3674849067678428305, guid: f38b7f1f5ae9f074486469a30c1f081f, type: 3}
+    - {fileID: 4098159156598009867, guid: f38b7f1f5ae9f074486469a30c1f081f, type: 3}
+    - {fileID: 8968380548968927045, guid: f38b7f1f5ae9f074486469a30c1f081f, type: 3}
+    - {fileID: -3344893718926871652, guid: f38b7f1f5ae9f074486469a30c1f081f, type: 3}
+    - {fileID: -3879842223190970582, guid: f38b7f1f5ae9f074486469a30c1f081f, type: 3}
+    - {fileID: -6695783594381505259, guid: f38b7f1f5ae9f074486469a30c1f081f, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.083333336
+    - 0.16666667
+    - 0.25
+    - 0.33333334
+    - 0.41666666
+    - 0.5
+    - 0.5833333
+    - 0.6666667
+    - 0.75
+    - 0.8333333
+    - 0.9166667
+    - 1
+    - 1.0833334
+    - 1.1666666
+    - 1.25
+    FlipXTimes: []
+    FlipXValues: []
+    Length: 1.3333334
     IsLooping: 1

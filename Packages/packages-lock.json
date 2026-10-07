@@ -7,6 +7,19 @@
       "dependencies": {},
       "hash": "c21a8f0e31c56ae8707130967faf491f7dd7c0d8"
     },
+    "com.seanba.super-tiled2unity": {
+      "version": "file:com.seanba.super-tiled2unity",
+      "depth": 0,
+      "source": "embedded",
+      "dependencies": {
+        "com.unity.2d.sprite": "1.0.0",
+        "com.unity.2d.tilemap": "1.0.0",
+        "com.unity.modules.animation": "1.0.0",
+        "com.unity.modules.physics2d": "1.0.0",
+        "com.unity.modules.tilemap": "1.0.0",
+        "com.unity.burst": "1.0.0"
+      }
+    },
     "com.unity.2d.sprite": {
       "version": "1.0.0",
       "depth": 0,

@@ -10,7 +10,11 @@ using UnityEngine;
 public sealed class NPCDialogueInteractionNodeRunner : NPCInteractionNodeRunner
 {
     private readonly NPCDialogueInteractionNodeData _node;
-    private bool _completed;
+    private DialoguePlayback _playback;
+    private DialogueUI _view;
+    private DialogueUIModel _model;
+    private bool _serverOnly;
+    private IDisposable _cameraLock;
 
     public NPCDialogueInteractionNodeRunner(NPCDialogueInteractionNodeData node)
     {
@@ -19,13 +23,97 @@ public sealed class NPCDialogueInteractionNodeRunner : NPCInteractionNodeRunner
 
     public override void Enter(NPCInteractionSession session)
     {
-        Debug.Log($"[NPCInteraction] Dialogue node started. Speaker='{_node.Speaker}', ContentKey='{_node.ContentKey}'.");
-        _completed = true;
+        _playback = new DialoguePlayback(LocalizationComponent.Resolve(_node.ContentKey), _node.CharactersPerSecond, _node.LingerSeconds);
+        if (_playback.IsCompleted)
+            return;
+
+        World world = session.World;
+        if (world == null || !world.IsCreated)
+        {
+            session.Cancel();
+            return;
+        }
+        _serverOnly = GameWorldContextUtility.TryGet(world.EntityManager, out GameWorldContextComponent context)
+            && context.Role == GameWorldRole.Server;
+        if (_serverOnly)
+            return;
+
+        Entity anchor = _node.SpeakerAnchor == NPCDialogueAnchor.Actor ? session.Actor : session.Target;
+        _view = UIComponent.Instance.Open<DialogueUI>(new DialogueUIOpenData
+        {
+            World = world,
+            Anchor = anchor,
+            Speaker = LocalizationComponent.Resolve(_node.Speaker),
+            Playback = _playback,
+            WorldYOffset = _node.WorldYOffset,
+            OnClosed = ReleaseCamera,
+        });
+        if (_view == null)
+        {
+            Debug.LogError("[NPCInteraction] DialogueUI could not be opened; cancelling the interaction.");
+            ReleaseCamera();
+            session.Cancel();
+            return;
+        }
+        _model = UIComponent.Instance.GetModel<DialogueUIModel>(_view);
+        if (_model == null)
+        {
+            _playback.Cancel();
+            ReleaseCamera();
+            session.Cancel();
+            return;
+        }
+        // Acquire only after presentation opened successfully: failed UI setup must not
+        // strand a camera lease. Closing the presentation also releases this ownership.
+        if (_node.LockCamera && !_playback.IsCancelled)
+            _cameraLock = CameraComponent.Instance.AcquireFollowTarget(world, anchor, _node.CameraFollowSmooth);
+    }
+
+    public override void Update(NPCInteractionSession session, float deltaTime)
+    {
+        if (_playback.IsCancelled)
+        {
+            session.Cancel();
+            return;
+        }
+        // Server worlds have no UI/camera; preserve both typing and reading-wait duration.
+        if (_serverOnly)
+            _playback.Advance(deltaTime);
     }
 
     public override bool IsCompleted(NPCInteractionSession session)
     {
-        return _completed;
+        return _playback != null && _playback.IsCompleted;
+    }
+
+    public override void Cancel(NPCInteractionSession session)
+    {
+        _playback?.Cancel();
+        ReleasePresentation();
+    }
+
+    public override void Exit(NPCInteractionSession session)
+    {
+        // The graph enters the next node in the same tick. Releasing a camera handle only
+        // changes follow state; it never moves the camera between consecutive lines.
+        ReleasePresentation();
+    }
+
+    private void ReleaseCamera()
+    {
+        _cameraLock?.Dispose();
+        _cameraLock = null;
+    }
+
+    private void ReleasePresentation()
+    {
+        ReleaseCamera();
+        // A pooled view may have been reused by another line; never release that new owner.
+        if (_view != null && _model != null && UIComponent.Instance.IsManaged(_view) &&
+            ReferenceEquals(UIComponent.Instance.GetModel<DialogueUIModel>(_view), _model))
+            UIComponent.Instance.ReleaseUI(_view);
+        _view = null;
+        _model = null;
     }
 }
 

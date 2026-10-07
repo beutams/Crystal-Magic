@@ -5,7 +5,7 @@
         public const string DataChangedEventName = "StashUIModel.DataChanged";
         public override string ChangedEventName => DataChangedEventName;
 
-        private readonly StashInventoryDisplayData[] _inventoryItems = new StashInventoryDisplayData[32];
+        private StashInventoryDisplayData[] _inventoryItems = new StashInventoryDisplayData[32];
         private readonly System.Collections.Generic.List<StashItemDisplayData> _stashItems = new();
 
         private int _inventorySlotCount = 32;
@@ -42,6 +42,9 @@
             CrystalMagic.Core.BackpackData backpackData = CrystalMagic.Core.SaveDataComponent.Instance.GetBackpackData();
             CrystalMagic.Core.InventoryUtility.EnsureBackpackSlots(backpackData);
             System.Collections.Generic.List<CrystalMagic.Core.InventoryItemData> backpackItems = backpackData?.Items;
+            _inventorySlotCount = backpackItems?.Count ?? 0;
+            if (_inventoryItems.Length != _inventorySlotCount)
+                System.Array.Resize(ref _inventoryItems, _inventorySlotCount);
             if (backpackItems == null)
                 return;
 
@@ -60,7 +63,7 @@
                     Count = inventoryItem.Quantity,
                     ItemType = itemData != null ? itemData.ItemType : inventoryItem.ItemType,
                     Name = itemData != null ? itemData.Name : string.Empty,
-                    Description = itemData != null ? itemData.Description : string.Empty,
+                    Description = itemData != null ? itemData.DescriptionWithType : string.Empty,
                     IconPath = itemData != null ? itemData.IconPath : string.Empty,
                 };
             }
@@ -79,7 +82,7 @@
             for (int i = 0; i < stashItems.Count; i++)
             {
                 CrystalMagic.Core.InventoryItemData stashItem = stashItems[i];
-                if (stashItem == null)
+                if (stashItem == null || stashItem.IsEmpty)
                     continue;
 
                 CrystalMagic.Game.Data.ItemData itemData = CrystalMagic.Core.DataComponent.Instance.Get<CrystalMagic.Game.Data.ItemData>(stashItem.ItemId);
@@ -94,27 +97,12 @@
                     Count = stashItem.Quantity,
                     ItemType = itemType,
                     Name = itemData != null ? itemData.Name : string.Empty,
-                    Description = itemData != null ? itemData.Description : string.Empty,
+                    Description = itemData != null ? itemData.DescriptionWithType : string.Empty,
                     IconPath = itemData != null ? itemData.IconPath : string.Empty,
                 });
             }
 
-            displayItems.Sort((a, b) =>
-            {
-                if (a == null && b == null)
-                    return 0;
-                if (a == null)
-                    return 1;
-                if (b == null)
-                    return -1;
-
-                int itemCompare = a.ItemId.CompareTo(b.ItemId);
-                if (itemCompare != 0)
-                    return itemCompare;
-
-                return a.SlotIndex.CompareTo(b.SlotIndex);
-            });
-
+            // Preserve the real slot order, including the shared one-click sort order.
             _stashItems.AddRange(displayItems);
         }
 

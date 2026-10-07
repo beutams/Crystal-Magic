@@ -1,5 +1,6 @@
 using CrystalMagic.Game.Data.Effects;
 using CrystalMagic.Game.Skill.Effects;
+using CrystalMagic.Core;
 using Unity.Entities;
 
 namespace CrystalMagic.Game.Skill
@@ -11,17 +12,42 @@ namespace CrystalMagic.Game.Skill
             if (effects == null || IsContextDead(context))
                 return;
 
-            foreach (EffectData effectData in effects)
+            GameWorldRole role = GameWorldContextUtility.Get(GetEntityManager(context)).Role;
+            SkillEffectIdentity parentIdentity = context != null ? context.EffectIdentity : default;
+            for (int index = 0; index < effects.Length; index++)
             {
-                if (effectData == null || !PassEffectConditions(effectData, context))
+                EffectData effectData = effects[index];
+                if (effectData == null || !EffectExecutionTargetUtility.CanExecute(effectData, role) ||
+                    !PassEffectConditions(effectData, context))
                     continue;
 
                 EffectData runtimeEffectData = effectData;
                 if (context != null && !context.RuntimeModifiers.IsEmpty)
                     runtimeEffectData = effectData.CreateRuntimeCopy(context.RuntimeModifiers);
 
-                Effect effect = CreateEffect(runtimeEffectData);
-                effect?.Execute(context);
+                if (context != null)
+                {
+                    context.EffectIdentity = parentIdentity.Child(index);
+                    if (context.HasTargetEntity)
+                    {
+                        SkillEffectIdentity identity = context.EffectIdentity;
+                        identity.TargetId = SkillEffectIdentity.GetNetworkId(context.EntityManager, context.TargetEntity);
+                        context.EffectIdentity = identity;
+                    }
+                }
+                try
+                {
+                    if (role == GameWorldRole.Client && context != null && context.EffectIdentity.Valid != 0 &&
+                        context.EntityManager.World.GetOrCreateSystemManaged<ClientSkillVisualExecutionSystem>()
+                            .TryExecutePresentation(runtimeEffectData, context))
+                        continue;
+                    Effect effect = CreateEffect(runtimeEffectData);
+                    effect?.Execute(context);
+                }
+                finally
+                {
+                    if (context != null) context.EffectIdentity = parentIdentity;
+                }
             }
         }
 

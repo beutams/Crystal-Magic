@@ -31,7 +31,7 @@ public sealed class BattleFrameClockTests
         frame.clock.Reset(0);
         long now = 100;
         BattleFrameRateManager rate = new(frame, () => now);
-        world.SetTime(new TimeData(10, 0.016f));
+        world.SetTime(new TimeData(10, 0.1f));
         int count = 0;
         while (rate.ShouldGroupUpdate(group))
         {
@@ -42,22 +42,21 @@ public sealed class BattleFrameClockTests
         Assert.That(count, Is.EqualTo(3));
         Assert.That(frame.currentFrame, Is.EqualTo(3));
         Assert.That(world.Time.ElapsedTime, Is.EqualTo(10));
-        Assert.That(world.Time.DeltaTime, Is.EqualTo(0.016f));
+        Assert.That(world.Time.DeltaTime, Is.EqualTo(0.1f));
         now = 1100;
+        world.SetTime(new TimeData(10.2, 0.2f));
         while (rate.ShouldGroupUpdate(group)) { }
         Assert.That(rate.LastStepCount, Is.EqualTo(4));
-        Assert.That(frame.clock.AccumulatedMilliseconds, Is.EqualTo(869));
+        Assert.That(frame.clock.AccumulatedMilliseconds, Is.EqualTo(69).Within(0.001));
     }
 
     [Test]
-    public void PreparationRunsOnceWithoutAdvancingBattleTime()
+    public void PreparationDoesNotRunPlayerSimulation()
     {
         using World world = new("Frame preparation test");
         ComponentSystemGroup group = world.GetOrCreateSystemManaged<SimulationSystemGroup>();
         FrameManager frame = new();
         BattleFrameRateManager rate = new(frame, () => 1000);
-        Assert.That(rate.ShouldGroupUpdate(group), Is.True);
-        Assert.That(world.Time.DeltaTime, Is.Zero);
         Assert.That(rate.ShouldGroupUpdate(group), Is.False);
         Assert.That(frame.currentFrame, Is.Zero);
         Assert.That(frame.clock.AccumulatedMilliseconds, Is.Zero);
@@ -72,7 +71,7 @@ public sealed class BattleFrameClockTests
             clientSendTime = 0, running = true, serverFrame = 98,
         }, 100);
         Assert.That(frame.UpdateSimulationSpeed(100), Is.GreaterThan(1));
-        Assert.That(frame.TargetAheadFrames, Is.EqualTo(3));
+        Assert.That(frame.TargetAheadFrames, Is.EqualTo(2));
         frame.currentFrame = 107;
         Assert.That(frame.UpdateSimulationSpeed(100), Is.LessThan(1));
         frame.SetFrameSpeedAdjustmentEnabled(false);
@@ -81,6 +80,42 @@ public sealed class BattleFrameClockTests
         frame.SetFrameSpeedAdjustmentEnabled(true);
         Assert.That(frame.UpdateSimulationSpeed(100), Is.LessThan(1));
         Assert.That(frame.UpdateSimulationSpeed(2200), Is.EqualTo(1));
+    }
+
+    [TestCase(33)]
+    [TestCase(0)]
+    public void ZeroRttTargetsOneFrameWithoutExtraPadding(int sendInterval)
+    {
+        ClientFrameManager frame = new() { currentFrame = 101, sendInterval = sendInterval };
+        frame.ReceiveClockSample(new B2C_FramePong
+        {
+            clientSendTime = 100, running = true, serverFrame = 100,
+        }, 100);
+
+        Assert.That(frame.UpdateSimulationSpeed(100), Is.EqualTo(1));
+        Assert.That(frame.TargetAheadFrames, Is.EqualTo(1));
+        Assert.That(frame.CurrentAheadFrames, Is.EqualTo(1));
+    }
+
+    [Test]
+    public void ZeroRttCatchUpStopsOneFrameAheadOfServer()
+    {
+        using World world = new("One frame client lead test");
+        ComponentSystemGroup group = world.GetOrCreateSystemManaged<SimulationSystemGroup>();
+        ClientFrameManager frame = new() { running = true, currentFrame = 100 };
+        frame.clock.Reset(100);
+        frame.ReceiveClockSample(new B2C_FramePong
+        {
+            clientSendTime = 100, running = true, serverFrame = 100,
+        }, 100);
+        BattleFrameRateManager rate = new(frame, () => 100);
+        world.SetTime(new TimeData(0.001, 0.001f));
+
+        while (rate.ShouldGroupUpdate(group)) { }
+
+        Assert.That(frame.currentFrame, Is.EqualTo(101));
+        Assert.That(rate.LastStepCount, Is.EqualTo(1));
+        Assert.That(world.Time.DeltaTime, Is.EqualTo(0.001f));
     }
 
     [Test]
@@ -95,6 +130,7 @@ public sealed class BattleFrameClockTests
             clientSendTime = 0, running = true, serverFrame = 10,
         }, 100);
         BattleFrameRateManager rate = new(frame, () => 100);
+        world.SetTime(new TimeData(0.001, 0.001f));
         frame.SetFrameSpeedAdjustmentEnabled(false);
         Assert.That(rate.ShouldGroupUpdate(group), Is.False);
         frame.SetFrameSpeedAdjustmentEnabled(true);

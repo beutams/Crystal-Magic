@@ -25,17 +25,24 @@ public partial class ServerNetworkEntitySpawnCollectSystem : SystemBase
 
         NetworkEntitySpawnQueueComponent spawnQueue = EntityManager.GetComponentObject<NetworkEntitySpawnQueueComponent>(
             _queueQuery.GetSingletonEntity());
-        if (spawnQueue.entityInfos.Count == 0)
+        if (spawnQueue.entityInfos.Count == 0 && spawnQueue.sleepingEntityIds.Count == 0)
         {
             return;
         }
 
         uint currentFrame = frame.currentFrame;
+        if (SystemAPI.TryGetSingleton(out BattleSimulationScope scope) &&
+            scope.Pass == BattleSimulationPass.World && currentFrame > 0)
+            currentFrame--;
         if (!frame.sendOrder.TryGetValue(currentFrame, out Queue<NetworkStateData> states))
         {
             states = new Queue<NetworkStateData>();
             frame.sendOrder.Add(currentFrame, states);
         }
+
+        foreach (System.Guid id in spawnQueue.sleepingEntityIds)
+            states.Enqueue(new NetworkEntityDespawnStateData { unitId = id, waitForDeathPresentation = 0 });
+        spawnQueue.sleepingEntityIds.Clear();
 
         for (int index = 0; index < spawnQueue.entityInfos.Count; index++)
         {

@@ -35,6 +35,11 @@ partial struct UnitPerceptionSystem : ISystem
             Tree = new UnitQueryTree(treeNodes.AsNativeArray(), treeEntries.AsNativeArray()),
             Deaths = SystemAPI.GetComponentLookup<UnitDeathComponent>(true),
             DestroyFlags = SystemAPI.GetComponentLookup<DestroyEntityFlag>(true),
+            Transforms = SystemAPI.GetComponentLookup<LocalTransform>(true),
+            Factions = SystemAPI.GetComponentLookup<UnitFactionComponent>(true),
+            Spectators = SystemAPI.GetComponentLookup<BattleSpectatorComponent>(true),
+            DisabledUnits = SystemAPI.GetComponentLookup<Disabled>(true),
+            ElapsedTime = SystemAPI.Time.ElapsedTime,
         }.ScheduleParallel(state.Dependency);
     }
 }
@@ -52,18 +57,21 @@ public partial struct UnitPerceptionJob : IJobEntity
     [ReadOnly]
     public ComponentLookup<DestroyEntityFlag> DestroyFlags;
 
+    [ReadOnly] public ComponentLookup<LocalTransform> Transforms;
+    [ReadOnly] public ComponentLookup<UnitFactionComponent> Factions;
+    [ReadOnly] public ComponentLookup<BattleSpectatorComponent> Spectators;
+    [ReadOnly] public ComponentLookup<Disabled> DisabledUnits;
+    public double ElapsedTime;
+
     private void Execute(
         Entity entity,
-        in UnitPerceptionComponent perception,
+        ref UnitPerceptionComponent perception,
         in LocalTransform transform,
         ref DynamicBuffer<UnitPerceptionUnitElement> nearbyEntities)
     {
         nearbyEntities.Clear();
 
         float radius = math.max(0f, perception.SearchRadius);
-        if (radius <= 0f)
-            return;
-
         float3 center = transform.Position;
         UnitQueryShape shape = UnitQueryShape.Circle(center, radius);
         PerceptionVisitor visitor = new()
@@ -74,7 +82,40 @@ public partial struct UnitPerceptionJob : IJobEntity
             Deaths = Deaths,
             DestroyFlags = DestroyFlags,
         };
-        Tree.Query(in shape, UnitFactionMask.Combatants, ref visitor);
+        if (radius > 0f)
+            Tree.Query(in shape, UnitFactionMask.Combatants, ref visitor);
+
+        Entity target = perception.DamageTarget;
+        if (perception.HasDamageTarget(ElapsedTime) && target != entity &&
+            Transforms.TryGetComponent(target, out LocalTransform targetTransform) &&
+            Factions.TryGetComponent(target, out UnitFactionComponent targetFaction) &&
+            targetFaction.Value == UnitFactionType.Player &&
+            !Spectators.HasComponent(target) && !DisabledUnits.HasComponent(target) &&
+            (!Deaths.HasComponent(target) || !Deaths.IsComponentEnabled(target)) &&
+            (!DestroyFlags.HasComponent(target) || !DestroyFlags.IsComponentEnabled(target)))
+        {
+            UnitPerceptionUnitElement remembered = new()
+            {
+                Value = target,
+                DistanceSq = math.distancesq(targetTransform.Position, center),
+                Faction = targetFaction.Value,
+                IsDamageTarget = 1,
+            };
+            bool found = false;
+            for (int i = 0; i < nearbyEntities.Length; i++)
+            {
+                if (nearbyEntities[i].Value != target) continue;
+                nearbyEntities[i] = remembered;
+                found = true;
+                break;
+            }
+            if (!found) nearbyEntities.Add(remembered);
+        }
+        else
+        {
+            perception.DamageTarget = Entity.Null;
+            perception.DamageTargetUntil = 0;
+        }
 
         SortByEntity(ref nearbyEntities);
     }

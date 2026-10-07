@@ -109,7 +109,12 @@ namespace Server
                 return false;
             try
             {
-                transport.Send(MessageCodec.Encode(message));
+                byte[] packet = MessageCodec.Encode(message);
+                if (message is General_FrameStateData &&
+                    transport is IImmediateBattleFrameTransport immediate &&
+                    immediate.TrySendBattleFrame(packet))
+                    return State != ConnectState.Close;
+                transport.Send(packet);
                 return State != ConnectState.Close;
             }
             catch (Exception exception)

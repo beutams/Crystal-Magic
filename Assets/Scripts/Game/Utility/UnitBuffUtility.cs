@@ -210,16 +210,16 @@ public static class UnitBuffUtility
         if (!entityManager.HasComponent<UnitModifierComponent>(entity))
             entityManager.AddComponentData(entity, UnitModifierComponent.CreateIdentity());
 
-        DynamicBuffer<UnitBuffElement> buffs = entityManager.HasBuffer<UnitBuffElement>(entity)
-            ? entityManager.GetBuffer<UnitBuffElement>(entity)
-            : entityManager.AddBuffer<UnitBuffElement>(entity);
+        if (!entityManager.HasBuffer<UnitBuffElement>(entity))
+            entityManager.AddBuffer<UnitBuffElement>(entity);
 
         if (!entityManager.HasBuffer<UnitBuffHookRequestElement>(entity))
             entityManager.AddBuffer<UnitBuffHookRequestElement>(entity);
         if (!entityManager.HasBuffer<EffectEntry>(entity))
             entityManager.AddBuffer<EffectEntry>(entity);
 
-        return buffs;
+        // Adding the companion buffers invalidates previously acquired DynamicBuffers.
+        return entityManager.GetBuffer<UnitBuffElement>(entity);
     }
 
     public static bool TryGetRuntimeBuffer(

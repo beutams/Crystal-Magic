@@ -40,7 +40,7 @@ namespace CrystalMagic.Game.Skill.Effects
                     Data.Duration,
                     Data.AlignToTargetForward,
                     context.OriginEntity,
-                    context.SourceSkillId))
+                    context.SourceSkillId, context.EffectIdentity))
             {
                 return;
             }

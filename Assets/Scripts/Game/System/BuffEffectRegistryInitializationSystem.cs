@@ -6,7 +6,8 @@ using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 
-[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation |
+                   WorldSystemFilterFlags.ClientSimulation)]
 [UpdateInGroup(typeof(UnitInitializationSystemGroup))]
 [UpdateBefore(typeof(UnitBuffSystem))]
 public partial class BuffEffectRegistryInitializationSystem : SystemBase

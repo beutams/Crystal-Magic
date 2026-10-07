@@ -3,9 +3,11 @@ using CrystalMagic.Game.Data;
 
 namespace CrystalMagic.UI
 {
-    public sealed class CharacterUIController : UIControllerBase<CharacterUI, CharacterUIModel>
+    public sealed class CharacterUIController : UIControllerBase<CharacterUI, CharacterUIModel>, IUIOpenDataReceiver<CharacterPage>
     {
         private EffectSelectUI _effectSelectUI;
+        private bool _settingsPendingSave;
+        private CharacterPage _initialPage = CharacterPage.Equip;
         private readonly System.Action<CrystalMagic.Core.CommonGameEvent> _refreshHandler;
 
         public CharacterUIController(CharacterUI view, CharacterUIModel model)
@@ -14,9 +16,24 @@ namespace CrystalMagic.UI
             _refreshHandler = _ => Model.Refresh();
         }
 
+        public void SetOpenData(CharacterPage page) => _initialPage = page;
+
         protected override void OnOpen()
         {
+            Model.ResetNavigation(_initialPage);
+            _initialPage = CharacterPage.Equip;
             View.BindModel(Model);
+            Bindings.Bind(() => View.PageRequested += OnPageRequested, () => View.PageRequested -= OnPageRequested);
+            Bindings.Bind(() => View.ChainRequested += OnChainRequested, () => View.ChainRequested -= OnChainRequested);
+            Bindings.Bind(() => View.InventorySortRequested += OnInventorySortRequested, () => View.InventorySortRequested -= OnInventorySortRequested);
+            Bindings.Bind(() => View.SettingsView.SectionRequested += OnSettingsSectionRequested, () => View.SettingsView.SectionRequested -= OnSettingsSectionRequested);
+            Bindings.Bind(() => View.SettingsView.ValueChanged += OnSettingValueChanged, () => View.SettingsView.ValueChanged -= OnSettingValueChanged);
+            Bindings.Bind(() => View.SettingsView.LanguageRequested += OnLanguageRequested, () => View.SettingsView.LanguageRequested -= OnLanguageRequested);
+            Bindings.Bind(() => View.SettingsView.EditCompleted += FlushSettings, () => View.SettingsView.EditCompleted -= FlushSettings);
+            Bindings.Bind(() => View.SettingsView.SaveRequested += OnSaveRequested, () => View.SettingsView.SaveRequested -= OnSaveRequested);
+            Bindings.Bind(() => View.SettingsView.ReturnMainMenuRequested += OnReturnMainMenuRequested, () => View.SettingsView.ReturnMainMenuRequested -= OnReturnMainMenuRequested);
+            BindEvent(new CommonGameEvent(GameSettingsComponent.SettingsChangedEventName), OnSettingsChanged);
+            Model.SetSettings(GameSettingsComponent.Instance.GetSettingsCopy());
             View.InventorySkillStoneDropped += OnInventorySkillStoneDropped;
             View.InventoryEquipDropped += OnInventoryEquipDropped;
             View.InventoryItemMoved += OnInventoryItemMoved;
@@ -28,13 +45,13 @@ namespace CrystalMagic.UI
             View.SkillReturnedToInventory += OnSkillReturnedToInventory;
             View.PropReturnedToInventory += OnPropReturnedToInventory;
             View.PropSlotMoved += OnPropSlotMoved;
-            BindEvent(new CommonGameEvent(PlayerInputComponent.SkillChainChangedEventName), _refreshHandler);
             BindEvent(new CommonGameEvent(SaveDataComponent.CharacterDataChangedEventName), _refreshHandler);
             Model.Refresh();
         }
 
         protected override void OnClose()
         {
+            FlushSettings();
             View.InventorySkillStoneDropped -= OnInventorySkillStoneDropped;
             View.InventoryEquipDropped -= OnInventoryEquipDropped;
             View.InventoryItemMoved -= OnInventoryItemMoved;
@@ -49,6 +66,106 @@ namespace CrystalMagic.UI
             CloseEffectSelectUI();
         }
 
+        private void OnPageRequested(CharacterPage page)
+        {
+            if (page != CharacterPage.Setting &&
+                GameRuntimeStateUtility.TryGetPlayerEntity(out Unity.Entities.EntityManager entityManager, out Unity.Entities.Entity player) &&
+                PlayerCharacterUtility.IsEditLocked(entityManager, player))
+                return;
+
+            CloseEffectSelectUI();
+            if (Model.SelectedPage == CharacterPage.Setting)
+                FlushSettings();
+            Model.SelectPage(page);
+        }
+
+        private void OnChainRequested(int index)
+        {
+            CloseEffectSelectUI();
+            Model.SelectChain(index);
+        }
+
+        private void OnSettingsSectionRequested(CharacterSettingsSection section)
+        {
+            FlushSettings();
+            Model.SelectSettingsSection(section);
+        }
+
+        private void OnSettingsChanged(CommonGameEvent gameEvent)
+        {
+            Model.SetSettings(gameEvent.GetData<GameSettingsData>());
+        }
+
+        private void OnSettingValueChanged(CharacterSettingValue field, float value)
+        {
+            GameSettingsData settings = GameSettingsComponent.Instance.GetSettingsCopy();
+            value = UnityEngine.Mathf.Clamp01(value);
+            switch (field)
+            {
+                case CharacterSettingValue.MasterVolume: settings.MasterVolume = value; break;
+                case CharacterSettingValue.BgmVolume: settings.BgmVolume = value; break;
+                case CharacterSettingValue.SfxVolume: settings.SfxVolume = value; break;
+                default: return;
+            }
+            _settingsPendingSave = true;
+            GameSettingsComponent.Instance.SetSettings(settings);
+        }
+
+        private void OnLanguageRequested(GameLanguage language)
+        {
+            GameSettingsData settings = GameSettingsComponent.Instance.GetSettingsCopy();
+            settings.Language = language;
+            _settingsPendingSave = true;
+            GameSettingsComponent.Instance.SetSettings(settings);
+            FlushSettings();
+        }
+
+        private void FlushSettings()
+        {
+            if (_settingsPendingSave && GameSettingsComponent.Instance.SaveSettings())
+                _settingsPendingSave = false;
+        }
+
+        private void OnSaveRequested()
+        {
+            UIComponent.Instance.OpenChild<ConfirmUI>(View, new ConfirmUIOpenData(
+                LocalizationComponent.Instance.Get("ui.confirm.save"),
+                LocalizationComponent.Instance.Get("ui.confirm.save_current.content"),
+                ConfirmSave));
+        }
+
+        private void ConfirmSave()
+        {
+            FlushSettings();
+            if (!SaveDataComponent.Instance.Save())
+                return;
+
+            UIComponent.Instance.OpenChild<ConfirmSingleUI>(View, new ConfirmUIOpenData(
+                LocalizationComponent.Instance.Get("ui.confirm.save"),
+                LocalizationComponent.Instance.Get("ui.confirm.save_success.content")));
+        }
+
+        private void OnReturnMainMenuRequested()
+        {
+            UIComponent.Instance.OpenChild<ConfirmUI>(View, new ConfirmUIOpenData(
+                LocalizationComponent.Instance.Get("ui.character.settings.return_main_menu"),
+                LocalizationComponent.Instance.Get("ui.confirm.return_main_menu.content"),
+                ConfirmReturnMainMenu));
+        }
+
+        private void ConfirmReturnMainMenu()
+        {
+            FlushSettings();
+            GameFlowComponent.Instance.BeginTransition(new TransitionData
+            {
+                TargetSceneName = "MainMenu",
+                TargetStateType = typeof(MainMenuState),
+                TransitionUIName = "TransitionUI",
+                KeepCurrentMainScene = true,
+                ActiveSubSceneNames = System.Array.Empty<string>(),
+            });
+        }
+
         private void OnInventorySkillStoneDropped(CharacterInventoryDisplayData data, int insertIndex)
         {
             if (data == null || data.ItemType != ItemType.SkillStone)
@@ -61,12 +178,20 @@ namespace CrystalMagic.UI
             if (backpackData?.Items == null || skillData?.Chains == null)
                 return;
 
+            int skillChainIndex = UnityEngine.Mathf.Clamp(Model.SelectedChainIndex, 0, skillData.Chains.Length - 1);
+            SkillChainData chain = skillData.Chains[skillChainIndex] ??= new SkillChainData { Index = skillChainIndex };
+            chain.EnsureSlots();
+            if (chain.IsFull)
+            {
+                UIComponent.Instance.Open<TipForm>(new TipFormOpenData
+                {
+                    Info = string.Format(LocalizationComponent.Resolve("ui.character.chain_full"), SkillChainData.MaxLength),
+                });
+                return;
+            }
             if (!TryConsumeBackpackItem(backpackData, data.SlotIndex, data.ItemId, 1))
                 return;
 
-            int skillChainIndex = UnityEngine.Mathf.Clamp(PlayerInputUtility.GetSkillChainIndex(), 0, skillData.Chains.Length - 1);
-            SkillChainData chain = skillData.Chains[skillChainIndex] ??= new SkillChainData { Index = skillChainIndex };
-            chain.EnsureSlots();
             int clampedInsertIndex = UnityEngine.Mathf.Clamp(insertIndex, 0, chain.Slots.Count);
             chain.Slots.Insert(clampedInsertIndex, new SkillChainSlotData
             {
@@ -119,6 +244,12 @@ namespace CrystalMagic.UI
 
             if (InventoryUtility.TryMoveBackpackSlot(edit.Data.Backpack, data.SlotIndex, targetSlotIndex))
                 PlayerCharacterUtility.CommitEdit(edit);
+        }
+
+        private void OnInventorySortRequested()
+        {
+            CloseEffectSelectUI();
+            PlayerCharacterUtility.TrySortBackpack();
         }
 
         private void OnInventoryPropDropped(CharacterInventoryDisplayData data, int propSlotIndex)
@@ -197,7 +328,7 @@ namespace CrystalMagic.UI
             if (skillData?.Chains == null)
                 return;
 
-            int skillChainIndex = UnityEngine.Mathf.Clamp(PlayerInputUtility.GetSkillChainIndex(), 0, skillData.Chains.Length - 1);
+            int skillChainIndex = UnityEngine.Mathf.Clamp(Model.SelectedChainIndex, 0, skillData.Chains.Length - 1);
             SkillChainData chain = skillData.Chains[skillChainIndex];
             chain?.EnsureSlots();
             if (chain?.Slots == null || data.SkillIndex < 0 || data.SkillIndex >= chain.Slots.Count)
@@ -229,7 +360,7 @@ namespace CrystalMagic.UI
             if (skillData?.Chains == null || backpackData?.Items == null)
                 return;
 
-            int skillChainIndex = UnityEngine.Mathf.Clamp(PlayerInputUtility.GetSkillChainIndex(), 0, skillData.Chains.Length - 1);
+            int skillChainIndex = UnityEngine.Mathf.Clamp(Model.SelectedChainIndex, 0, skillData.Chains.Length - 1);
             SkillChainData chain = skillData.Chains[skillChainIndex];
             chain?.EnsureSlots();
             if (chain?.Slots == null || data.SkillIndex < 0 || data.SkillIndex >= chain.Slots.Count)
@@ -296,7 +427,7 @@ namespace CrystalMagic.UI
             if (skillData?.Chains == null)
                 return;
 
-            int skillChainIndex = UnityEngine.Mathf.Clamp(PlayerInputUtility.GetSkillChainIndex(), 0, skillData.Chains.Length - 1);
+            int skillChainIndex = UnityEngine.Mathf.Clamp(Model.SelectedChainIndex, 0, skillData.Chains.Length - 1);
             SkillChainData chain = skillData.Chains[skillChainIndex];
             chain?.EnsureSlots();
             if (chain?.Slots == null || data.SkillIndex < 0 || data.SkillIndex >= chain.Slots.Count)

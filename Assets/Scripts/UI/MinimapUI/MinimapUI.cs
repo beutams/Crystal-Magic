@@ -13,7 +13,6 @@ public sealed class MinimapUI : UIBase<MinimapUIData, MinimapUIModel>
     {
         ClearInterestPointViews();
         UI.Terrain.Image.sprite = null;
-        UI.Fog.Image.sprite = null;
         base.OnClose();
     }
 
@@ -24,17 +23,13 @@ public sealed class MinimapUI : UIBase<MinimapUIData, MinimapUIModel>
         if (!hasMap)
         {
             UI.Terrain.Image.enabled = false;
-            UI.Fog.GameObject.SetActive(false);
             ClearInterestPointViews();
             return;
         }
 
         UI.Terrain.Image.enabled = true;
         UI.Terrain.Image.sprite = Model.TerrainSprite;
-        UI.Fog.GameObject.SetActive(false);
-        UI.Fog.Image.sprite = null;
         RenderInterestPoints();
-        RenderMarker(UI.Exit, Model.HasExit, Model.ExitPosition, 0f);
         RenderMarker(UI.Player, Model.HasPlayer, Model.PlayerPosition, Model.PlayerRotationDegrees);
     }
 
@@ -53,12 +48,18 @@ public sealed class MinimapUI : UIBase<MinimapUIData, MinimapUIModel>
                     MinimapInterestPointView view = UISubViewBase.AcquireFromPool(
                         UI.InterestPointTemplate,
                         UI.InterestPointRoot.RectTransform);
-                    Model.GetInterestPointAnchorRange(layout.InterestPoints[index], out Vector2 anchorMin, out Vector2 anchorMax);
-                    view.Render(anchorMin, anchorMax);
                     view.gameObject.SetActive(true);
                     _interestPointViews.Add(view);
                 }
             }
+        }
+
+        for (int index = 0; index < _interestPointViews.Count; index++)
+        {
+            OpenFieldInterestPoint point = layout.InterestPoints[index];
+            _interestPointViews[index].Render(
+                Model.GetInterestPointPosition(point),
+                Model.IsInterestPointCleared(point.EncounterId));
         }
     }
 

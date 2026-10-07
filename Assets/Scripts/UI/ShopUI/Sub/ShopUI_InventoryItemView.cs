@@ -25,8 +25,8 @@ public class ShopUI_InventoryItemView : UISubView<ShopUI_InventoryItemData>, IBe
             return;
         }
 
-        UI.IconBG_Mask_Icon.GameObject.SetActive(true);
         UI.IconBG_Mask_Icon.Image.sprite = LoadIcon(data.IconPath);
+        UI.IconBG_Mask_Icon.GameObject.SetActive(UI.IconBG_Mask_Icon.Image.sprite != null);
         UI.Count.TextMeshProUGUI.text = data.Count.ToString();
         UI.Name.TextMeshProUGUI.text = data.Name;
     }

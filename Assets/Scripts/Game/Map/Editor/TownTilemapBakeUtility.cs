@@ -87,6 +87,11 @@ namespace CrystalMagic.Editor.Map
 
         private static void BakeTileSet(Transform tileSet)
         {
+            foreach (var occlusion in tileSet.GetComponentsInChildren<CrystalMagic.Game.Map.TileOcclusionMap>(true))
+                if (occlusion.IsGenerated || occlusion.Regions.Count > 0)
+                    throw new InvalidOperationException(
+                        $"{tileSet.name} has occlusion groups. Use Tools/Map/Tile Occlusion Editor to export a separate prefab; Back/Top baking would flatten and lose its sorting anchors.");
+
             List<TilemapRenderer> backRenderers = FindRenderers(tileSet, BakeLayer.Back);
             List<TilemapRenderer> topRenderers = FindRenderers(tileSet, BakeLayer.Top);
             if (backRenderers.Count == 0 && topRenderers.Count == 0)

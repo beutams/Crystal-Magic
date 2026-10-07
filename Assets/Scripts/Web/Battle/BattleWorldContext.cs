@@ -25,17 +25,13 @@ namespace Server
 
             try
             {
-                world = new World($"BattleWorld_{battleId}", WorldFlags.GameServer);
-                GameSingletonUtility.Create(
-                    world.EntityManager,
-                    GameWorldRole.Server,
-                    GameSceneMode.Dungeon);
-                DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(
-                    world,
-                    DefaultWorldInitialization.GetAllSystems(
-                        WorldSystemFilterFlags.Default | WorldSystemFilterFlags.ServerSimulation));
+                if (!GameWorldPreload.TryTake(GameWorldRole.Server, out world))
+                    world = GameWorldManager.CreateConfiguredWorld(GameWorldRole.Server, $"BattleWorld_{battleId}");
+                GameSingletonUtility.Set(world.EntityManager, new GameWorldContextComponent
+                { Role = GameWorldRole.Server, SceneMode = GameSceneMode.Dungeon });
 
                 FrameManagerUtility.Bind(world.EntityManager, frame);
+                DisableServerPresentation(world);
                 RegistrySceneEntity = SceneSystem.LoadSceneAsync(world.Unmanaged, registrySceneGuid);
                 ScriptBehaviourUpdateOrder.AppendWorldToCurrentPlayerLoop(world);
                 appendedToPlayerLoop = true;
@@ -45,6 +41,19 @@ namespace Server
                 Dispose();
                 throw;
             }
+        }
+
+        internal static void DisableServerPresentation(World serverWorld)
+        {
+            if ((serverWorld.Flags & WorldFlags.GameServer) != WorldFlags.GameServer)
+                return;
+
+            // This internal Unity system runs outside PresentationSystemGroup,
+            // even without the Presentation filter. It activates SpriteRenderer
+            // companions alongside the client's characters in a hosted battle.
+            GameWorldPreload.SetPresentation(serverWorld, false);
+            // Keep live-baking initialization and CompanionReference disposal so
+            // hidden companion objects still have their normal ownership/cleanup.
         }
 
         public bool TryGetEntityManager(out EntityManager entityManager)
@@ -78,7 +87,11 @@ namespace Server
             {
                 if (wasAppended) ScriptBehaviourUpdateOrder.RemoveWorldFromCurrentPlayerLoop(previous);
             }
-            finally { previous.Dispose(); }
+            finally
+            {
+                if (!GameWorldPreload.TryReturn(previous))
+                    previous.Dispose();
+            }
         }
     }
 }

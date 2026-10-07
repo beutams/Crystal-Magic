@@ -7,7 +7,7 @@ namespace Server
     /// <summary>消息型传输共用的主线程生命周期。回调只在 Update 派发，所有队列和等待都有上限。</summary>
     public abstract class MessageTransport : IClientTransport, IServerTransport
     {
-        protected sealed class Peer : IConnectionTransport
+        protected sealed class Peer : IConnectionTransport, IImmediateBattleFrameTransport
         {
             public readonly Connect Connection = new();
             public readonly Queue<byte[]> Outgoing = new();
@@ -20,6 +20,9 @@ namespace Server
             public int IncomingBytes;
             public long NextPing;
             public long DrainDeadline;
+            public Func<byte[], bool> ImmediateBattleFrameSender;
+            public bool TrySendBattleFrame(byte[] message) =>
+                ImmediateBattleFrameSender?.Invoke(message) == true;
             public Peer(NetworkEndpoint endpoint, bool incoming)
             {
                 RemoteEndpoint = endpoint;
@@ -41,6 +44,7 @@ namespace Server
 
         protected readonly Dictionary<Connect, Peer> peers = new();
         protected bool active;
+        protected virtual bool UsesHeartbeatTimeout => true;
         public NetworkEndpoint LocalEndpoint { get; protected set; }
         public event Action<Connect> OnSend;
         public event Action<Connect> OnRecv;
@@ -50,6 +54,9 @@ namespace Server
         public event Action<Connect> OnAccept;
         public event Action OnListening;
         public event Action OnListeningFail;
+
+        protected void NotifyImmediateSend(Connect connect) => Invoke(OnSend, connect);
+        protected void NotifyImmediateReceive(Connect connect) => Invoke(OnRecv, connect);
 
         public void Init()
         {
@@ -167,7 +174,7 @@ namespace Server
                 if (active && connect.State == ConnectState.Connected) Invoke(OnRecv, connect);
             }
             if (!active || connect.State != ConnectState.Connected) return;
-            if (now - connect.LastReceiveTime >= ServerUtility.Timeout)
+            if (UsesHeartbeatTimeout && now - connect.LastReceiveTime >= ServerUtility.Timeout)
             {
                 Fail(peer, DisconnectReason.Timeout, "HeartbeatTimeout");
                 return;
