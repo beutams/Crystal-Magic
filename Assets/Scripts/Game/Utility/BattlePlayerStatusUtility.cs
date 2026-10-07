@@ -23,6 +23,9 @@ public static class BattlePlayerStatusUtility
         else
             entityManager.AddComponentData(entity, status);
 
+        if (status.IsSpectator || status.IsWaitingForTransition)
+            UnitControlUtility.ClearAll(entityManager, entity);
+
         if (status.IsSpectator)
         {
             if (entityManager.HasBuffer<PlayerInputEventElement>(entity))

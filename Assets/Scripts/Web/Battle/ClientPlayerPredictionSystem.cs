@@ -17,6 +17,9 @@ public partial class ClientPlayerPredictionSystem : SystemBase
 
     private EntityQuery _localPlayerQuery;
     private ClientFrameManager _frameManager;
+    private uint _lastControlFrame;
+    private uint _controlSceneVersion;
+    private bool _hasControlFrame;
 
     protected override void OnCreate()
     {
@@ -34,6 +37,7 @@ public partial class ClientPlayerPredictionSystem : SystemBase
         {
             UnbindFrameManager();
             _frameManager = frame;
+            _hasControlFrame = false;
             _frameManager.onHandlePlayerFrame = HandlePlayerFrame;
         }
 
@@ -51,11 +55,24 @@ public partial class ClientPlayerPredictionSystem : SystemBase
         IReadOnlyList<NetworkStateData> states,
         NetworkStateApplyContext context)
     {
-        if (_frameManager == null || states == null ||
-            !TryFindMoveState(states, out NetworkMoveStateData authoritativeMove))
+        if (_frameManager == null || states == null)
         {
             return false;
         }
+        bool hasMove = TryFindMoveState(states, out NetworkMoveStateData authoritativeMove);
+        NetworkControlStateData authoritativeControl = null;
+        for (int i = 0; i < states.Count; i++)
+            if (states[i] is NetworkControlStateData control)
+                authoritativeControl = control;
+        if (!hasMove && authoritativeControl == null)
+            return false;
+
+        if (_controlSceneVersion != _frameManager.sceneVersion ||
+            (!_frameManager.HasReconciledPlayerFrame && _frameManager.currentFrame <= _lastControlFrame))
+            _hasControlFrame = false;
+        _controlSceneVersion = _frameManager.sceneVersion;
+        bool skipControl = authoritativeControl == null ||
+                           (_hasControlFrame && authoritativeFrame <= _lastControlFrame);
 
         Entity player = GetLocalPlayerEntity();
         if (player == Entity.Null)
@@ -65,7 +82,10 @@ public partial class ClientPlayerPredictionSystem : SystemBase
             authoritativeFrame <= _frameManager.LastReconciledPlayerFrame)
         {
             // A delayed/repeated move must not rewind prediction after its history was retired.
-            ApplyStates(context, states, skipMove: true);
+            ApplyStates(context, states, skipMove: true, skipControl: skipControl);
+            if (!skipControl)
+                UpdateControlHistory(authoritativeControl, context, authoritativeFrame);
+            RecordControlFrame(authoritativeFrame, skipControl);
             return true;
         }
 
@@ -74,18 +94,30 @@ public partial class ClientPlayerPredictionSystem : SystemBase
             out ClientPlayerPredictionSnapshot snapshot);
         bool predictionMatches = !_frameManager.HasPendingPredictionReplay &&
                                  hasSnapshot &&
-                                 snapshot.TryGetMoveState(out NetworkMoveStateData predictedMove) &&
-                                 MoveStatesMatch(predictedMove, authoritativeMove);
+                                 (!hasMove || (snapshot.TryGetMoveState(out NetworkMoveStateData predictedMove) &&
+                                  MoveStatesMatch(predictedMove, authoritativeMove))) &&
+                                 (skipControl || (snapshot.HasControl && UnitControlUtility.StatesMatch(
+                                     snapshot.Control, authoritativeControl.CreateRuntime(context))));
 
         if (predictionMatches)
         {
             // 移动逻辑已经相同，不把历史权威位置重新写回当前预测态。
-            ApplyStates(context, states, skipMove: true);
+            ApplyStates(context, states, skipMove: true, skipControl: true);
+            if (!skipControl)
+                authoritativeControl.ApplyPresentation(context, player);
         }
         else
         {
             bool restored = hasSnapshot && snapshot.RestoreStateScript(EntityManager, player);
-            ApplyStates(context, states, skipMove: false);
+            if (restored)
+            {
+                snapshot.RestoreControl(EntityManager, player);
+                if (!hasMove && snapshot.TryGetMoveState(out NetworkMoveStateData baseMove))
+                    baseMove.Apply(context);
+            }
+            ApplyStates(context, states, skipMove: false, skipControl: skipControl, controlAtFrame: restored);
+            if (!skipControl)
+                UpdateControlHistory(authoritativeControl, context, authoritativeFrame);
             if (restored && authoritativeFrame < _frameManager.currentFrame)
                 _frameManager.RequestPredictionReplay(authoritativeFrame);
             else if (!_frameManager.HasPendingPredictionReplay &&
@@ -99,9 +131,36 @@ public partial class ClientPlayerPredictionSystem : SystemBase
             }
         }
 
-        _frameManager.RemovePredictionHistoryThrough(authoritativeFrame);
-        _frameManager.RecordReconciledPlayerFrame(authoritativeFrame);
+        RecordControlFrame(authoritativeFrame, skipControl);
+        if (hasMove)
+        {
+            _frameManager.RemovePredictionHistoryThrough(authoritativeFrame);
+            _frameManager.RecordReconciledPlayerFrame(authoritativeFrame);
+        }
         return true;
+    }
+
+    private void RecordControlFrame(uint frame, bool skipControl)
+    {
+        if (skipControl)
+            return;
+        _hasControlFrame = true;
+        _lastControlFrame = frame;
+    }
+
+    private void UpdateControlHistory(NetworkControlStateData control, NetworkStateApplyContext context, uint frame)
+    {
+        // 控制可能晚于同帧的位置确认到达。补齐仍保留的历史，避免随后仅纠正位置时丢掉免疫。
+        foreach (var pair in _frameManager.playerStates)
+        {
+            if (pair.Key < frame)
+                continue;
+            UnitControlRuntimeComponent runtime = control.CreateRuntime(context);
+            UnitControlUtility.TickAndRefresh(ref runtime, (pair.Key - frame) * context.FrameInterval / 1000f);
+            runtime.NetworkDirty = 0;
+            pair.Value.HasControl = true;
+            pair.Value.Control = runtime;
+        }
     }
 
     private void EnsurePresentationState()
@@ -143,14 +202,20 @@ public partial class ClientPlayerPredictionSystem : SystemBase
     private static void ApplyStates(
         NetworkStateApplyContext context,
         IReadOnlyList<NetworkStateData> states,
-        bool skipMove)
+        bool skipMove,
+        bool skipControl = false,
+        bool controlAtFrame = false)
     {
         for (int index = 0; index < states.Count; index++)
         {
             NetworkStateData state = states[index];
-            if (state == null || (skipMove && state is NetworkMoveStateData))
+            if (state == null || (skipMove && state is NetworkMoveStateData) ||
+                (skipControl && state is NetworkControlStateData))
                 continue;
-            state.Apply(context);
+            if (controlAtFrame && state is NetworkControlStateData control)
+                control.ApplyAtFrame(context);
+            else
+                state.Apply(context);
         }
     }
 

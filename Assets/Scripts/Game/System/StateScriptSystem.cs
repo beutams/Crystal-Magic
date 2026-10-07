@@ -268,6 +268,9 @@ public partial class StateScriptSystem : SystemBase
             try
             {
                 World.GetExistingSystemManaged<StateScriptManagedCommandSystem>()?.ReplayClientSkills();
+                var controls = World.GetExistingSystem<UnitControlSystem>();
+                if (controls != SystemHandle.Null)
+                    controls.Update(World.Unmanaged);
                 World.GetExistingSystem<UnitMoveSystem>().Update(World.Unmanaged);
                 World.GetExistingSystemManaged<FixedStepSimulationSystemGroup>().Update();
                 ClientPlayerPhysicsPredictionUtility.CaptureSimulationPosition(EntityManager, player);

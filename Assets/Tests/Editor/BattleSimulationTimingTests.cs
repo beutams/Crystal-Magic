@@ -236,6 +236,7 @@ public partial class ControlTimingProbe : SystemBase
     {
         new UnitControlTickJob
         {
+            LocalPlayers = GetComponentLookup<NetworkPlayerComponent>(true),
             Scope = SystemAPI.GetSingleton<BattleSimulationScope>(),
             Players = GetComponentLookup<PlayerInputComponent>(true),
             DeltaTime = SystemAPI.Time.DeltaTime,

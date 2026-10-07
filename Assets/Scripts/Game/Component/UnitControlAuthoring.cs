@@ -5,6 +5,11 @@ using UnityEngine;
 
 public sealed class UnitControlAuthoring : MonoBehaviour
 {
+    [Header("玩家硬控保护")]
+    public bool HardControlImmunityEnabled = true;
+    [Min(0f)] public float HardControlImmunityDurationMultiplier = 2f;
+    [Min(0f)] public float HardControlImmunityMinimumSeconds = 0.5f;
+
     private sealed class Baker : Baker<UnitControlAuthoring>
     {
         public override void Bake(UnitControlAuthoring authoring)
@@ -13,6 +18,9 @@ public sealed class UnitControlAuthoring : MonoBehaviour
             AddComponent(entity, new UnitControlRuntimeComponent
             {
                 Entries = new FixedList512Bytes<UnitControlRuntimeEntry>(),
+                HardControlImmunityEnabled = authoring.HardControlImmunityEnabled ? (byte)1 : (byte)0,
+                HardControlImmunityDurationMultiplier = math.max(0f, authoring.HardControlImmunityDurationMultiplier),
+                HardControlImmunityMinimumSeconds = math.max(0f, authoring.HardControlImmunityMinimumSeconds),
                 ActiveType = UnitControlType.None,
                 ActiveRemainingTime = 0f,
                 ActivePriority = 0,
@@ -51,6 +59,11 @@ public struct UnitControlRuntimeEntry
 public struct UnitControlRuntimeComponent : IComponentData
 {
     public FixedList512Bytes<UnitControlRuntimeEntry> Entries;
+    // 从成功施加控制开始计时，包含本次控制时长及结束后的保护间隔。
+    public FixedList64Bytes<UnitControlImmunityEntry> Immunities;
+    public byte HardControlImmunityEnabled;
+    public float HardControlImmunityDurationMultiplier;
+    public float HardControlImmunityMinimumSeconds;
     public UnitControlType ActiveType;
     public float ActiveRemainingTime;
     public int ActivePriority;
@@ -61,6 +74,12 @@ public struct UnitControlRuntimeComponent : IComponentData
     public float2 ActiveMotionVelocity;
     public float ActiveMotionDamping;
     public byte NetworkDirty;
+}
+
+public struct UnitControlImmunityEntry
+{
+    public UnitControlType ControlType;
+    public float RemainingTime;
 }
 
 [UnitSourceProvider(typeof(UnitControlRuntimeComponent), typeof(UnitControlAuthoring))]

@@ -242,6 +242,57 @@ public sealed class ClientMovementStabilityTests
     }
 
     [Test]
+    public void PlayerEnemyBlockingMatchesAuthorityAndSurvivesPredictionReplay()
+    {
+        using World client = CreateBattleWorld(true);
+        using World server = CreateBattleWorld(false);
+        using BlobAssetReference<Collider> sphere = Unity.Physics.SphereCollider.Create(
+            new SphereGeometry { Radius = 0.5f }, CollisionFilter.Default);
+        Entity predicted = Player(client.EntityManager, 0);
+        Entity authority = Player(server.EntityManager, 0);
+        foreach (var pair in new[] { (client, predicted), (server, authority) })
+        {
+            EntityManager manager = pair.Item1.EntityManager;
+            manager.AddComponentData(pair.Item2, new PhysicsCollider { Value = sphere });
+            Entity enemy = Body(manager, sphere, new float3(2, 0, 0), true);
+            manager.AddComponentData(enemy, new UnitFactionComponent { Value = UnitFactionType.Enemy });
+            manager.AddComponentData(enemy, new UnitMoveComponent
+            {
+                StateMoveMultiplier = 1, CommandMoveSpeed = -1,
+            });
+        }
+        using BlobAssetReference<StateScriptRuntimeRegistryBlob> registry = EnableEmptyStateScript(client, predicted);
+        double elapsed = 0;
+        for (int tick = 0; tick < 45; tick++)
+        {
+            SetVelocity(client.EntityManager, predicted, new float2(4, 0));
+            SetVelocity(server.EntityManager, authority, new float2(4, 0));
+            elapsed += 0.033;
+            Step(client, elapsed, 0.033f);
+            Step(server, elapsed, 0.033f);
+            float3 local = client.EntityManager.GetComponentData<UnitMoveComponent>(predicted).PredictedPosition;
+            float3 authoritative = server.EntityManager.GetComponentData<LocalTransform>(authority).Position;
+            Assert.That(local.x, Is.LessThanOrEqualTo(1.001f));
+            Assert.That(math.distance(local, authoritative), Is.LessThan(0.0001f), $"Tick {tick}");
+        }
+        ClientFrameManager frame = GetFrame(client);
+        Guid id = client.EntityManager.GetComponentData<NetworkIdentityComponent>(predicted).id;
+        frame.receivedOrder[10] = new Queue<NetworkState>(new[]
+        {
+            new NetworkState { data = new NetworkMoveStateData { unitId = id, positionX = 0.25f,
+                velocityX = 4, baseMoveSpeed = 4, stateMoveMultiplier = 1 } },
+        });
+        Step(client, elapsed + 0.033, 0.033f);
+        Assert.That(frame.HasPendingPredictionReplay, Is.False);
+        foreach (ClientPlayerPredictionSnapshot snapshot in frame.playerStates.Values)
+        {
+            Assert.That(snapshot.TryGetMoveState(out NetworkMoveStateData move), Is.True);
+            Assert.That(move.positionX, Is.LessThanOrEqualTo(1.001f),
+                "Each replay step must refresh its own blocking starting poses.");
+        }
+    }
+
+    [Test]
     public void CollisionReplayStopsAtTheBoxAndStandingAfterLeavingDoesNotFeedRenderingIntoPhysics()
     {
         using World world = CreateBattleWorld(true);
@@ -355,6 +406,110 @@ public sealed class ClientMovementStabilityTests
         }
     }
 
+    [TestCase(false)]
+    [TestCase(true)]
+    public void LateHardControlReplaysExactTimersAndRepeatedPacketsDoNotExtendImmunity(bool includeMove)
+    {
+        using World client = CreateBattleWorld(true);
+        using World server = CreateBattleWorld(false);
+        Entity predicted = Player(client.EntityManager, 0);
+        Entity authority = Player(server.EntityManager, 0);
+        UnitControlRuntimeComponent initial = new()
+        {
+            HardControlImmunityEnabled = 1,
+            HardControlImmunityDurationMultiplier = 2,
+            HardControlImmunityMinimumSeconds = 0.5f,
+        };
+        client.EntityManager.AddComponentData(predicted, initial);
+        server.EntityManager.AddComponentData(authority, initial);
+        SetVelocity(client.EntityManager, predicted, float2.zero);
+        SetVelocity(server.EntityManager, authority, float2.zero);
+        using BlobAssetReference<StateScriptRuntimeRegistryBlob> registry = EnableEmptyStateScript(client, predicted);
+        UnitControlUtility.ApplyStun(server.EntityManager, authority, Entity.Null, 0.1f);
+        Step(client, 0.034, 0.034f);
+        Step(server, 0.034, 0.034f);
+        Guid id = client.EntityManager.GetComponentData<NetworkIdentityComponent>(predicted).id;
+        NetworkControlStateData control = NetworkControlStateData.Capture(server.EntityManager, id,
+            server.EntityManager.GetComponentData<UnitControlRuntimeComponent>(authority), 0, 33);
+        var states = new List<NetworkState> { new() { data = control } };
+        if (includeMove)
+            states.Add(new NetworkState { data = NetworkUnitStateSnapshotUtility.CreateMoveState(id,
+                server.EntityManager.GetComponentData<UnitMoveComponent>(authority),
+                server.EntityManager.GetComponentData<LocalTransform>(authority)) });
+        for (int tick = 1; tick < 5; tick++)
+        {
+            Step(client, (tick + 1) * 0.033, 0.033f);
+            Step(server, (tick + 1) * 0.033, 0.033f);
+        }
+        ClientFrameManager frame = GetFrame(client);
+        frame.receivedOrder[0] = new Queue<NetworkState>(states);
+        Step(client, 6 * 0.033, 0.033f);
+        Assert.That(frame.HasPendingPredictionReplay, Is.False);
+        UnitControlRuntimeComponent actual = client.EntityManager.GetComponentData<UnitControlRuntimeComponent>(predicted);
+        Assert.That(actual.HasControl, Is.Zero);
+        Assert.That(UnitControlUtility.GetImmunityRemaining(actual, UnitControlType.Stun),
+            Is.EqualTo(0.6f - 6 * 0.033f).Within(0.00001), "Replay must advance protection once per historical tick.");
+        foreach (var pair in frame.playerStates)
+            Assert.That(UnitControlUtility.GetImmunityRemaining(pair.Value.Control, UnitControlType.Stun),
+                Is.EqualTo(0.6f - (pair.Key + 1) * 0.033f).Within(0.00001));
+
+        frame.receivedOrder[0] = new Queue<NetworkState>(states);
+        Step(client, 7 * 0.033, 0.033f);
+        actual = client.EntityManager.GetComponentData<UnitControlRuntimeComponent>(predicted);
+        Assert.That(UnitControlUtility.GetImmunityRemaining(actual, UnitControlType.Stun),
+            Is.EqualTo(0.6f - 7 * 0.033f).Within(0.00001));
+
+        frame.receivedOrder[3] = new Queue<NetworkState>(new[]
+        {
+            new NetworkState { data = new NetworkMoveStateData { unitId = id, positionX = 0.25f,
+                baseMoveSpeed = 4, stateMoveMultiplier = 1 } },
+        });
+        Step(client, 8 * 0.033, 0.033f);
+        actual = client.EntityManager.GetComponentData<UnitControlRuntimeComponent>(predicted);
+        Assert.That(UnitControlUtility.GetImmunityRemaining(actual, UnitControlType.Stun),
+            Is.EqualTo(0.6f - 8 * 0.033f).Within(0.00001), "A movement-only rollback must restore the historical control timer.");
+    }
+
+    [Test]
+    public void ControlArrivingAfterPositionConfirmationIsPreservedByLaterMovementRollback()
+    {
+        using World world = CreateBattleWorld(true);
+        Entity player = Player(world.EntityManager, 0);
+        SetVelocity(world.EntityManager, player, float2.zero);
+        world.EntityManager.AddComponentData(player, new UnitControlRuntimeComponent
+        {
+            HardControlImmunityEnabled = 1,
+            HardControlImmunityDurationMultiplier = 2,
+            HardControlImmunityMinimumSeconds = 0.5f,
+        });
+        using BlobAssetReference<StateScriptRuntimeRegistryBlob> registry = EnableEmptyStateScript(world, player);
+        Step(world, 0.034, 0.034f);
+        ClientFrameManager frame = GetFrame(world);
+        Guid id = world.EntityManager.GetComponentData<NetworkIdentityComponent>(player).id;
+        frame.playerStates[0].TryGetMoveState(out NetworkMoveStateData move);
+        var prediction = world.GetExistingSystemManaged<ClientPlayerPredictionSystem>();
+        Assert.That(frame.TryHandlePlayerFrame(0, new NetworkStateData[] { move },
+            new NetworkStateApplyContext(world.EntityManager, 0, 33)), Is.True);
+        Assert.That(frame.playerStates.ContainsKey(0), Is.False);
+        for (int tick = 1; tick < 5; tick++)
+            Step(world, 0.034 + tick * 0.033, 0.033f);
+        UnitControlRuntimeComponent control = world.EntityManager.GetComponentData<UnitControlRuntimeComponent>(player);
+        control.Immunities.Add(new UnitControlImmunityEntry { ControlType = UnitControlType.Stun, RemainingTime = 1f });
+        NetworkControlStateData state = NetworkControlStateData.Capture(world.EntityManager, id, control, 0, 33);
+        Assert.That(frame.TryHandlePlayerFrame(0, new NetworkStateData[] { state },
+            new NetworkStateApplyContext(world.EntityManager, 0, 33)), Is.True);
+        frame.receivedOrder[2] = new Queue<NetworkState>(new[]
+        {
+            new NetworkState { data = new NetworkMoveStateData { unitId = id, positionX = 0.25f,
+                baseMoveSpeed = 4, stateMoveMultiplier = 1 } },
+        });
+        Step(world, 0.034 + 5 * 0.033, 0.033f);
+        control = world.EntityManager.GetComponentData<UnitControlRuntimeComponent>(player);
+        Assert.That(UnitControlUtility.GetImmunityRemaining(control, UnitControlType.Stun),
+            Is.EqualTo(1f - 5 * 0.033f).Within(0.00001));
+        Assert.That(frame.HasPendingPredictionReplay, Is.False);
+    }
+
     private static World CreateBattleWorld(bool client)
     {
         World world = new("Movement stability", client ? WorldFlags.GameClient : WorldFlags.GameServer);
@@ -374,7 +529,10 @@ public sealed class ClientMovementStabilityTests
             string ns = system.Namespace ?? string.Empty;
             if (ns.StartsWith("Unity.Physics") || ns.StartsWith("Unity.Transforms") || ns == "Unity.Entities" ||
                 system == typeof(ClientPhysicsGraphicalCleanupSystem) || system == typeof(ClientPhysicsProxySystem) ||
-                system == typeof(UnitMoveSystem) || system == typeof(UnitPhysicsRotationInitializationSystem))
+                system == typeof(UnitMoveSystem) || system == typeof(UnitControlSystem) ||
+                system == typeof(UnitPhysicsRotationInitializationSystem) ||
+                system == typeof(UnitBlockingSystem) || system == typeof(UnitBlockingContactSystem) ||
+                system == typeof(UnitBlockingFinalizeSystem))
                 selected.Add(system);
         }
         DefaultWorldInitialization.AddSystemsToRootLevelSystemGroups(world, selected);

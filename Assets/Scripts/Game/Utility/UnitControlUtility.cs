@@ -83,13 +83,25 @@ public static class UnitControlUtility
     {
         float safeDeltaTime = math.max(0f, deltaTime);
         bool removed = false;
+        for (int i = runtime.Immunities.Length - 1; i >= 0; i--)
+        {
+            UnitControlImmunityEntry immunity = runtime.Immunities[i];
+            immunity.RemainingTime = math.max(0f, immunity.RemainingTime - safeDeltaTime);
+            if (immunity.RemainingTime <= 0.00001f)
+            {
+                runtime.Immunities.RemoveAt(i);
+                removed = true;
+            }
+            else
+                runtime.Immunities[i] = immunity;
+        }
         for (int i = runtime.Entries.Length - 1; i >= 0; i--)
         {
             UnitControlRuntimeEntry entry = runtime.Entries[i];
             entry.RemainingTime = math.max(0f, entry.RemainingTime - safeDeltaTime);
             entry.MotionVelocity = DampenVelocity(entry.MotionVelocity, entry.MotionDamping, safeDeltaTime);
 
-            if (entry.RemainingTime <= 0f)
+            if (entry.RemainingTime <= 0.00001f)
             {
                 runtime.Entries.RemoveAt(i);
                 removed = true;
@@ -101,6 +113,71 @@ public static class UnitControlUtility
         RefreshResolvedState(ref runtime);
         if (removed)
             runtime.NetworkDirty = 1;
+    }
+
+    public static float GetImmunityRemaining(in UnitControlRuntimeComponent runtime, UnitControlType controlType)
+    {
+        for (int i = 0; i < runtime.Immunities.Length; i++)
+            if (runtime.Immunities[i].ControlType == controlType)
+                return runtime.Immunities[i].RemainingTime;
+        return 0f;
+    }
+
+    public static float GetHardControlImmunityInterval(float duration, float multiplier, float minimumSeconds)
+    {
+        return math.max(math.max(0f, minimumSeconds), math.max(0f, duration) * math.max(0f, multiplier));
+    }
+
+    public static bool IsHardControl(UnitControlType type)
+    {
+        return type == UnitControlType.Knockback || type == UnitControlType.Stun || type == UnitControlType.Fear;
+    }
+
+    public static bool StatesMatch(in UnitControlRuntimeComponent a, in UnitControlRuntimeComponent b)
+    {
+        const float tolerance = 0.0001f;
+        if (a.Entries.Length != b.Entries.Length || a.Immunities.Length != b.Immunities.Length ||
+            a.HardControlImmunityEnabled != b.HardControlImmunityEnabled ||
+            math.abs(a.HardControlImmunityDurationMultiplier - b.HardControlImmunityDurationMultiplier) > tolerance ||
+            math.abs(a.HardControlImmunityMinimumSeconds - b.HardControlImmunityMinimumSeconds) > tolerance)
+            return false;
+        for (int i = 0; i < a.Entries.Length; i++)
+        {
+            UnitControlRuntimeEntry left = a.Entries[i];
+            bool found = false;
+            for (int j = 0; j < b.Entries.Length; j++)
+            {
+                UnitControlRuntimeEntry right = b.Entries[j];
+                if (left.ControlType != right.ControlType)
+                    continue;
+                found = left.Priority == right.Priority && left.LockMove == right.LockMove &&
+                        left.LockCast == right.LockCast && left.InterruptOnApply == right.InterruptOnApply &&
+                        left.SourceEntity == right.SourceEntity &&
+                        math.abs(left.RemainingTime - right.RemainingTime) <= tolerance &&
+                        math.distancesq(left.MotionVelocity, right.MotionVelocity) <= tolerance * tolerance &&
+                        math.abs(left.MotionDamping - right.MotionDamping) <= tolerance;
+                break;
+            }
+            if (!found)
+                return false;
+        }
+        for (int i = 0; i < a.Immunities.Length; i++)
+            if (math.abs(a.Immunities[i].RemainingTime - GetImmunityRemaining(b, a.Immunities[i].ControlType)) > tolerance)
+                return false;
+        return true;
+    }
+
+    public static void ClearAll(EntityManager entityManager, Entity entity)
+    {
+        if (!TryGetRuntime(entityManager, entity, out UnitControlRuntimeComponent runtime))
+            return;
+        if (runtime.Entries.Length == 0 && runtime.Immunities.Length == 0)
+            return;
+        runtime.Entries.Clear();
+        runtime.Immunities.Clear();
+        RefreshResolvedState(ref runtime);
+        runtime.NetworkDirty = 1;
+        entityManager.SetComponentData(entity, runtime);
     }
 
     public static bool HasActiveControl(EntityManager entityManager, Entity entity)
@@ -131,6 +208,16 @@ public static class UnitControlUtility
         UnitControlRuntimeComponent runtime)
     {
         float clampedDuration = math.max(0.01f, durationSeconds);
+        bool protectPlayer = runtime.HardControlImmunityEnabled != 0 &&
+                             entityManager.HasComponent<PlayerInputComponent>(target) && IsHardControl(controlType);
+        if (protectPlayer)
+        {
+            if (GetImmunityRemaining(runtime, controlType) > 0f)
+                return;
+            for (int i = 0; i < runtime.Entries.Length; i++)
+                if (runtime.Entries[i].ControlType == controlType && runtime.Entries[i].RemainingTime > 0f)
+                    return;
+        }
         bool found = false;
 
         for (int i = 0; i < runtime.Entries.Length; i++)
@@ -168,6 +255,16 @@ public static class UnitControlUtility
             });
         }
 
+        if (protectPlayer)
+        {
+            runtime.Immunities.Add(new UnitControlImmunityEntry
+            {
+                ControlType = controlType,
+                RemainingTime = clampedDuration + GetHardControlImmunityInterval(clampedDuration,
+                    runtime.HardControlImmunityDurationMultiplier, runtime.HardControlImmunityMinimumSeconds),
+            });
+        }
+
         RefreshResolvedState(ref runtime);
         runtime.NetworkDirty = 1;
         entityManager.SetComponentData(target, runtime);
@@ -187,7 +284,7 @@ public static class UnitControlUtility
         return true;
     }
 
-    private static void RefreshResolvedState(ref UnitControlRuntimeComponent runtime)
+    public static void RefreshResolvedState(ref UnitControlRuntimeComponent runtime)
     {
         int selectedIndex = -1;
         int selectedPriority = int.MinValue;

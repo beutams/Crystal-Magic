@@ -21,6 +21,8 @@ public sealed class ClientPlayerPredictionSnapshot
     public bool HasExternalResults;
     public bool HasCurrentSkill;
     public bool HasMana;
+    public UnitControlRuntimeComponent Control;
+    public bool HasControl;
 
     public static ClientPlayerPredictionSnapshot Capture(
         EntityManager entityManager,
@@ -34,6 +36,10 @@ public sealed class ClientPlayerPredictionSnapshot
                 entity,
                 unitId),
         };
+
+        snapshot.HasControl = entityManager.HasComponent<UnitControlRuntimeComponent>(entity);
+        if (snapshot.HasControl)
+            snapshot.Control = entityManager.GetComponentData<UnitControlRuntimeComponent>(entity);
 
         if (!entityManager.HasComponent<UnitStateScriptComponent>(entity) ||
             !entityManager.HasBuffer<StateScriptGraphStateElement>(entity) ||
@@ -123,6 +129,17 @@ public sealed class ClientPlayerPredictionSnapshot
         if (HasMana && entityManager.HasComponent<UnitManaComponent>(entity))
             entityManager.SetComponentData(entity, Mana);
         return true;
+    }
+
+    public void RestoreControl(EntityManager entityManager, Entity entity)
+    {
+        if (HasControl)
+        {
+            if (entityManager.HasComponent<UnitControlRuntimeComponent>(entity))
+                entityManager.SetComponentData(entity, Control);
+            else
+                entityManager.AddComponentData(entity, Control);
+        }
     }
 
     public bool TryGetMoveState(out NetworkMoveStateData moveState)

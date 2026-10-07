@@ -1,8 +1,10 @@
 using Unity.Burst;
 using Unity.Collections;
 using Unity.Entities;
+using CrystalMagic.Core;
 
-[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation)]
+[WorldSystemFilter(WorldSystemFilterFlags.LocalSimulation | WorldSystemFilterFlags.ServerSimulation |
+                   WorldSystemFilterFlags.ClientSimulation)]
 [UpdateInGroup(typeof(UnitExecutionSystemGroup))]
 [UpdateBefore(typeof(UnitAvoidanceSystem))]
 [BurstCompile]
@@ -21,6 +23,8 @@ partial struct UnitControlSystem : ISystem
         {
             Scope = SystemAPI.TryGetSingleton(out BattleSimulationScope scope) ? scope : default,
             Players = SystemAPI.GetComponentLookup<PlayerInputComponent>(true),
+            LocalPlayers = SystemAPI.GetComponentLookup<NetworkPlayerComponent>(true),
+            IsClient = SystemAPI.TryGetSingleton(out GameWorldContextComponent context) && context.Role == GameWorldRole.Client,
             DeltaTime = SystemAPI.Time.DeltaTime,
         }.ScheduleParallel(state.Dependency);
     }
@@ -33,9 +37,13 @@ public partial struct UnitControlTickJob : IJobEntity
     public float DeltaTime;
     public BattleSimulationScope Scope;
     [ReadOnly] public ComponentLookup<PlayerInputComponent> Players;
+    [ReadOnly] public ComponentLookup<NetworkPlayerComponent> LocalPlayers;
+    public bool IsClient;
 
     private void Execute(Entity entity, ref UnitControlRuntimeComponent runtime)
     {
+        if (IsClient && !LocalPlayers.HasComponent(entity))
+            return;
         if (Scope.Pass != BattleSimulationPass.All && !Scope.Includes(Players.HasComponent(entity)))
             return;
         UnitControlUtility.TickAndRefresh(ref runtime, DeltaTime);

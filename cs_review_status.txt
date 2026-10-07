@@ -657,7 +657,7 @@ Game\
       UnitAuthoringUtility.cs FALSE
       UnitBuffHookUtility.cs FALSE
       UnitBuffUtility.cs TRUE DIRTY
-      UnitControlUtility.cs TRUE
+      UnitControlUtility.cs TRUE DIRTY
       UnitFacingUtility.cs FALSE
       WorldDropSpawnUtility.cs TRUE DIRTY
       UnitFactionUtility.cs TRUE DIRTY
@@ -1133,3 +1133,21 @@ Game\
     DialogueUITaskValidation.cs TRUE
 
     ProjectileTerrainCollisionTests.cs TRUE
+
+    UnitBlockingUtility.cs TRUE
+
+    UnitBlockingSystem.cs TRUE
+
+    UnitBlockingContactSystem.cs TRUE
+
+    UnitBlockingTests.cs TRUE
+
+    UnitBlockingSnapshot.cs TRUE
+
+    UnitBlockingFinalizeSystem.cs TRUE
+
+    NetworkControlStateData.cs TRUE
+
+    UnitControlAttributeDrawer.cs TRUE
+
+    UnitControlImmunityTests.cs TRUE

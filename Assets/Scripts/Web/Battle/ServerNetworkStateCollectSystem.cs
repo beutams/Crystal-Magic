@@ -483,26 +483,8 @@ public partial class ServerNetworkStateCollectSystem : SystemBase
         if ((onlyDirty && control.NetworkDirty == 0) || identityRef.ValueRO.id == Guid.Empty)
             return;
 
-        NetworkControlStateData state = new() { unitId = identityRef.ValueRO.id };
-        for (int index = 0; index < control.Entries.Length; index++)
-        {
-            UnitControlRuntimeEntry entry = control.Entries[index];
-            state.entries.Add(new NetworkControlEntryStateData
-            {
-                controlType = entry.ControlType,
-                endFrame = GetEndFrame(entry.RemainingTime, currentFrame),
-                priority = entry.Priority,
-                lockMove = entry.LockMove,
-                lockCast = entry.LockCast,
-                interruptOnApply = entry.InterruptOnApply,
-                sourceUnitId = GetNetworkId(entry.SourceEntity),
-                motionVelocityX = entry.MotionVelocity.x,
-                motionVelocityY = entry.MotionVelocity.y,
-                motionDamping = entry.MotionDamping,
-            });
-        }
-
-        states.Add(state);
+        states.Add(NetworkControlStateData.Capture(EntityManager, identityRef.ValueRO.id,
+            control, currentFrame, _frameInterval));
         if (onlyDirty)
         {
             control.NetworkDirty = 0;

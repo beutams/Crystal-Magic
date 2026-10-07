@@ -115,9 +115,9 @@ public partial class BattleSimulationSystemGroup : ComponentSystemGroup
         if (capture != null)
             Move(world.GetExistingSystemManaged<UnitDecisionSystemGroup>(), players, capture);
         AddManaged<StateScriptManagedCommandSystem>(world, players);
+        AddUnmanaged<UnitControlSystem>(world, players);
         if (isServer)
         {
-            AddUnmanaged<UnitControlSystem>(world, players);
             var cooldown = world.GetExistingSystem<PlayerPropCooldownSystem>();
             world.GetExistingSystemManaged<UnitExecutionSystemGroup>().RemoveSystemFromUpdateList(cooldown);
             players.AddSystemToUpdateList(cooldown);
