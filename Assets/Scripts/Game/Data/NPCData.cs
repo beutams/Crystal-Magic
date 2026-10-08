@@ -19,12 +19,12 @@ namespace CrystalMagic.Game.Data
         [JsonIgnore]
         public string DisplayName => LocalizationComponent.Resolve(DisplayNameKey);
 
-        public IEnumerable<NPCInteractionData> GetEnabledInteractions()
+        public IEnumerable<NPCInteractionData> GetEnabledInteractions(bool automatic = false)
         {
             for (int i = 0; i < Interactions.Count; i++)
             {
                 NPCInteractionData interaction = Interactions[i];
-                if (interaction != null && interaction.IsEnabled())
+                if (interaction != null && interaction.Automatic == automatic && interaction.IsEnabled())
                 {
                     yield return interaction;
                 }
@@ -41,6 +41,15 @@ namespace CrystalMagic.Game.Data
 
         public string EnableExpression;
 
+        public bool Automatic;
+
+        public int AutoPriority = 100;
+
+        public float RetrySeconds = 2f;
+
+        // An absent completion variable deliberately skips legacy saves.
+        public string CompletionVariable;
+
         public string EntryNodeGuid;
 
         public List<NPCInteractionNodeData> Nodes = new();
@@ -50,6 +59,12 @@ namespace CrystalMagic.Game.Data
 
         public bool IsEnabled()
         {
+            if (!string.IsNullOrWhiteSpace(CompletionVariable) &&
+                (SaveDataComponent.Instance == null ||
+                 !SaveDataComponent.Instance.ContainsVariable(CompletionVariable) ||
+                 SaveDataComponent.Instance.GetVariable(CompletionVariable) >= 1d))
+                return false;
+
             if (string.IsNullOrWhiteSpace(EnableExpression))
             {
                 return true;

@@ -67,6 +67,21 @@ public partial class StateScriptManagedCommandSystem : SystemBase
     private BattleSimulationScope _scope;
     private bool _replayClientSkills;
 
+    public bool HasNpcInteraction => _npcSessions.Count > 0;
+
+    public void CancelNpcInteraction(Entity target)
+    {
+        if (_npcSessions.TryGetValue(target, out NPCInteractionSession session))
+        {
+            FinishNpcSession(session, true);
+            _npcSessions.Remove(target);
+            if (_npcSessions.Count == 0)
+                ReleaseNpcInput();
+        }
+        else
+            GameInteractionUtility.FailTarget(EntityManager, _interactionEntity, target);
+    }
+
     public void ReplayClientSkills()
     {
         if (_worldRole != GameWorldRole.Client)
@@ -636,7 +651,7 @@ public partial class StateScriptManagedCommandSystem : SystemBase
 
         int dataId = EntityManager.GetComponentData<UnitInteractableComponent>(target).Data.DataId;
         NPCData npcData = DataComponent.Instance.Get<NPCData>(dataId);
-        NPCInteractionData interaction = SelectNpcInteraction(npcData);
+        NPCInteractionData interaction = SelectNpcInteraction(npcData, transaction);
         if (npcData == null || interaction?.GetEntryNode() == null)
         {
             GameInteractionUtility.Complete(
@@ -654,12 +669,13 @@ public partial class StateScriptManagedCommandSystem : SystemBase
         EventComponent.Instance.Publish(new NPCInteractionStartedEvent(target, npcData, interaction));
     }
 
-    private static NPCInteractionData SelectNpcInteraction(NPCData npcData)
+    private static NPCInteractionData SelectNpcInteraction(NPCData npcData, in InteractionTransactionElement transaction)
     {
         if (npcData == null)
             return null;
-        foreach (NPCInteractionData interaction in npcData.GetEnabledInteractions())
-            return interaction;
+        foreach (NPCInteractionData interaction in npcData.GetEnabledInteractions(transaction.IsAutomatic != 0))
+            if (transaction.InteractionKey.IsEmpty || transaction.InteractionKey.ToString() == interaction.Key)
+                return interaction;
         return null;
     }
 
@@ -749,6 +765,23 @@ public partial class StateScriptManagedCommandSystem : SystemBase
 
     private void FinishNpcSession(NPCInteractionSession session, bool wasCancelled)
     {
+        string completionVariable = session.Interaction?.CompletionVariable;
+        if (!wasCancelled && !string.IsNullOrWhiteSpace(completionVariable))
+        {
+            SaveDataComponent save = SaveDataComponent.Instance;
+            if (_worldRole != GameWorldRole.Standalone || save == null || !save.ContainsVariable(completionVariable))
+                wasCancelled = true;
+            else
+            {
+                double previous = save.GetVariable(completionVariable);
+                save.SetVariable(completionVariable, 1d);
+                if (!save.Save())
+                {
+                    save.SetVariable(completionVariable, previous);
+                    wasCancelled = true;
+                }
+            }
+        }
         if (wasCancelled)
             session.Cancel();
         EventComponent.Instance.Publish(new NPCInteractionFinishedEvent(

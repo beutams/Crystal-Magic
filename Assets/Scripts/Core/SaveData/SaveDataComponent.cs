@@ -704,6 +704,7 @@ namespace CrystalMagic.Core {
             GameConfig gameConfig = GetGameConfig();
             data.Stash.Money = gameConfig.StartingGold;
             data.SaveIndex = index;
+            data.Variables.Set(TownIntroTriggerUtility.CompletionVariable, 0d);
 
             try
             {

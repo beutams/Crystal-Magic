@@ -237,6 +237,49 @@
                                       ],
                      "Id":  6,
                      "DisplayNameKey":  "npc.bulletin_board.name"
+                 },
+                 {
+                     "Id": 7,
+                     "NPC": "TownIntroTrigger",
+                     "PrefabPath": "",
+                     "DisplayNameKey": "npc.town_guide.name",
+                     "Interactions": [
+                         {
+                             "Key": "FirstArrival",
+                             "DisplayNameKey": "npc.town_guide.name",
+                             "Automatic": true,
+                             "AutoPriority": 100,
+                             "RetrySeconds": 2.0,
+                             "CompletionVariable": "intro_completed",
+                             "EntryNodeGuid": "intro_welcome",
+                             "Nodes": [
+                                 {
+                                     "Type":"Dialogue", "Guid":"intro_welcome", "ExecutionTargets":1,
+                                     "Speaker":"npc.town_guide.name", "ContentKey":"story.intro.welcome",
+                                     "SpeakerAnchor":1, "CharactersPerSecond":20, "LingerSeconds":1.5,
+                                     "Branches":[{"NextNodeGuid":"intro_chain"}]
+                                 },
+                                 {
+                                     "Type":"Dialogue", "Guid":"intro_chain", "ExecutionTargets":1,
+                                     "Speaker":"npc.town_guide.name", "ContentKey":"story.intro.chain",
+                                     "SpeakerAnchor":1, "CharactersPerSecond":20, "LingerSeconds":2.0,
+                                     "Branches":[{"NextNodeGuid":"intro_stash"}]
+                                 },
+                                 {
+                                     "Type":"Dialogue", "Guid":"intro_stash", "ExecutionTargets":1,
+                                     "Speaker":"npc.town_guide.name", "ContentKey":"story.intro.stash",
+                                     "SpeakerAnchor":1, "CharactersPerSecond":20, "LingerSeconds":2.0,
+                                     "Branches":[{"NextNodeGuid":"intro_training"}]
+                                 },
+                                 {
+                                     "Type":"Dialogue", "Guid":"intro_training", "ExecutionTargets":1,
+                                     "Speaker":"npc.town_guide.name", "ContentKey":"story.intro.training",
+                                     "SpeakerAnchor":1, "CharactersPerSecond":20, "LingerSeconds":1.5,
+                                     "Branches":[]
+                                 }
+                             ]
+                         }
+                     ]
                  }
              ]
 }

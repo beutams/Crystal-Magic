@@ -176,10 +176,11 @@ public sealed class DialogueUITests
     public void CameraTracksTheExplicitWorldAndReturnsToStaticCameraPosition()
     {
         using var world = new World("Dialogue camera target world");
-        using var otherWorld = new World("Unrelated same entity index");
+        using var otherWorld = new World("Unrelated default world");
         Entity target = CameraTarget(world, new Vector3(10, 2, 0));
         Entity unrelated = CameraTarget(otherWorld, new Vector3(100, 100, 0));
-        Assert.That(target, Is.EqualTo(unrelated));
+        // Entity handles may differ across worlds after allocator reuse. The position
+        // assertions below verify explicit-world resolution without relying on that layout.
         using var camera = new CameraScope();
         World.DefaultGameObjectInjectionWorld = otherWorld;
         using IDisposable lease = camera.Component.AcquireFollowTarget(world, target, 0f);

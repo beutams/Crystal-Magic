@@ -1199,6 +1199,36 @@
             "Key": "item.type.spirit",
             "ChineseSimplified": "精灵",
             "English": "Spirit"
+        },
+        {
+            "Id": 210,
+            "Key": "npc.town_guide.name",
+            "ChineseSimplified": "引导者",
+            "English": "Guide"
+        },
+        {
+            "Id": 211,
+            "Key": "story.intro.welcome",
+            "ChineseSimplified": "欢迎来到城镇。先别急着出征，在这里准备好装备和技能，再去探索地牢。",
+            "English": "Welcome to town. Prepare your equipment and skills here before venturing into the dungeon."
+        },
+        {
+            "Id": 212,
+            "Key": "story.intro.chain",
+            "ChineseSimplified": "技能商人出售技能石。把技能编入技能链，前一招施加的状态，就能为后一招创造机会。",
+            "English": "The skill merchant sells skill stones. Arrange skills into a chain: effects from one spell can set up the next."
+        },
+        {
+            "Id": 213,
+            "Key": "story.intro.stash",
+            "ChineseSimplified": "备用物资记得放进仓库。若在地牢倒下，随身的装备、技能和背包物品都会失去，仓库里的物资会保留。",
+            "English": "Keep spare supplies in your stash. Defeat costs your carried equipment, skills and backpack contents, but your stash remains safe."
+        },
+        {
+            "Id": 214,
+            "Key": "story.intro.training",
+            "ChineseSimplified": "准备好后，找训练师先去训练场试试技能链。熟悉施法节奏，再进入地牢，记得活着撤离。",
+            "English": "When ready, ask the trainer to enter the training ground and test your chain. Learn its timing before entering the dungeon, and make it back alive."
         }
     ]
 }

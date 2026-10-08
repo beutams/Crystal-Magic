@@ -443,6 +443,10 @@ namespace CrystalMagic.Editor.Data
                 rows.Add(row);
             }
 
+            // Runtime-only units (e.g. invisible story triggers) are intentionally not prefab-backed.
+            foreach (UnitData row in _rows)
+                if (row != null && string.IsNullOrWhiteSpace(row.PrefabPath) && usedRows.Add(row))
+                    rows.Add(row);
             return rows.OrderBy(static row => row.Id).ToList();
         }
 

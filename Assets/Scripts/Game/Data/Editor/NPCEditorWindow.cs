@@ -238,6 +238,13 @@ namespace CrystalMagic.Editor.Data
             interaction.Key = EditorGUILayout.TextField("Key", interaction.Key ?? string.Empty);
             interaction.DisplayNameKey = EditorGUILayout.TextField("Display Name Key", interaction.DisplayNameKey ?? string.Empty);
             interaction.EnableExpression = EditorGUILayout.TextField("Enable Expression", interaction.EnableExpression ?? string.Empty);
+            interaction.Automatic = EditorGUILayout.Toggle("Automatic", interaction.Automatic);
+            if (interaction.Automatic)
+            {
+                interaction.AutoPriority = EditorGUILayout.IntField("Auto Priority", interaction.AutoPriority);
+                interaction.RetrySeconds = Mathf.Max(0.5f, EditorGUILayout.FloatField("Retry Seconds", interaction.RetrySeconds));
+            }
+            interaction.CompletionVariable = EditorGUILayout.TextField("Completion Variable", interaction.CompletionVariable ?? string.Empty);
             if (EditorGUI.EndChangeCheck())
             {
                 _isDirty = true;
@@ -404,6 +411,12 @@ namespace CrystalMagic.Editor.Data
                     refreshedRows.Add(row);
                 }
             }
+
+            // Runtime-only invisible NPCs have no prefab, but still own editable dialogue graphs.
+            for (int i = 0; i < existingRows.Count; i++)
+                if (existingRows[i] != null && string.IsNullOrWhiteSpace(existingRows[i].PrefabPath) &&
+                    !refreshedRows.Contains(existingRows[i]))
+                    refreshedRows.Add(existingRows[i]);
 
             if (refreshedRows.Count != existingRows.Count)
                 changed = true;

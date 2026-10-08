@@ -35,6 +35,7 @@ public struct UnitInteractableComponent : IComponentData
     public UnitInteractionData Data;
     public float RangeSq;
     public byte IsEnabled;
+    public byte HidePrompt;
     public byte NetworkDirty;
 }
 

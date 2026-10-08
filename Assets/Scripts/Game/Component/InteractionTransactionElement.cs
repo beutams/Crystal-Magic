@@ -1,4 +1,5 @@
 using Unity.Entities;
+using Unity.Collections;
 
 public enum InteractionPhase : byte
 {
@@ -24,6 +25,8 @@ public struct InteractionTransactionElement : IBufferElementData
     public uint RequestId;
     public Entity Actor;
     public Entity Target;
+    public byte IsAutomatic;
+    public FixedString64Bytes InteractionKey;
     public InteractionPhase Phase;
     public InteractionResultCode ResultCode;
     public UnitSourceValue Result;

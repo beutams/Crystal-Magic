@@ -1126,6 +1126,13 @@
       "PrefabPath": "Assets/Res/Prefab/Drop/Drop.prefab",
       "Modules": [],
       "Id": 34
+    },
+    {
+      "Name": "TownIntroTrigger",
+      "Description": "新存档首次进城的隐形引导单位（运行时创建）",
+      "PrefabPath": "",
+      "Modules": [],
+      "Id": 37
     }
   ]
 }

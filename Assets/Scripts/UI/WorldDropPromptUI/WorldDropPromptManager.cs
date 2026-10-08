@@ -156,7 +156,8 @@ namespace CrystalMagic.UI
                 return false;
 
             UnitInteractableComponent interactable = entityManager.GetComponentData<UnitInteractableComponent>(target);
-            if (!GameInteractionTargetUtility.IsAvailable(entityManager, target, interactable))
+            if (interactable.HidePrompt != 0 ||
+                !GameInteractionTargetUtility.IsAvailable(entityManager, target, interactable))
                 return false;
             if (!entityManager.Exists(target) ||
                 !entityManager.HasComponent<LocalToWorld>(target))

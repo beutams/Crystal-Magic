@@ -1,5 +1,6 @@
 using UnityEngine;
 using CrystalMagic.UI;
+using Unity.Entities;
 
 namespace CrystalMagic.Core {
     /// <summary>
@@ -15,6 +16,8 @@ namespace CrystalMagic.Core {
         private NotificationUI _notificationUI;
         private bool _inputBound;
         private bool _playerInputLockedByUI;
+        private World _introWorld;
+        private Entity _introTrigger;
 
         public override void OnEnter()
         {
@@ -45,6 +48,13 @@ namespace CrystalMagic.Core {
 
         public override void OnExit()
         {
+            if (_introWorld != null && _introWorld.IsCreated && _introWorld.EntityManager.Exists(_introTrigger))
+            {
+                _introWorld.GetExistingSystemManaged<StateScriptManagedCommandSystem>()?.CancelNpcInteraction(_introTrigger);
+                _introWorld.EntityManager.DestroyEntity(_introTrigger);
+            }
+            _introWorld = null;
+            _introTrigger = Entity.Null;
             Debug.Log("[TownState] Exited Town");
             _interactionPromptManager?.Dispose();
             _interactionPromptManager = null;
@@ -59,6 +69,14 @@ namespace CrystalMagic.Core {
         {
             _interactionPromptManager?.Tick();
             RefreshUIInputLock();
+            if (_introTrigger == Entity.Null && !TransitionComponent.Instance.IsTransitioning &&
+                TownIntroTriggerUtility.IsPending(SaveDataComponent.Instance) &&
+                GameRuntimeStateUtility.TryGetPlayerEntity(out EntityManager manager, out Entity player))
+            {
+                _introTrigger = TownIntroTriggerUtility.TryCreate(manager, player);
+                if (_introTrigger != Entity.Null)
+                    _introWorld = manager.World;
+            }
         }
 
         public static TransitionData CreateEnterTransitionData(object data = null)
@@ -99,6 +117,8 @@ namespace CrystalMagic.Core {
 
         private void HandleInventory()
         {
+            if (GameWorldManager.GameWorld?.GetExistingSystemManaged<StateScriptManagedCommandSystem>()?.HasNpcInteraction == true)
+                return;
             if (_characterUI == null || !UIComponent.Instance.IsManaged(_characterUI))
             {
                 _characterUI = UIComponent.Instance.Open<CharacterUI>();

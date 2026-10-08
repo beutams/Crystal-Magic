@@ -1,6 +1,7 @@
 using Unity.Mathematics;
 using Unity.Entities;
 using Unity.Transforms;
+using Unity.Collections;
 
 public static class GameInteractionUtility
 {
@@ -8,7 +9,9 @@ public static class GameInteractionUtility
         EntityManager entityManager,
         Entity runtimeEntity,
         Entity actor,
-        Entity target)
+        Entity target,
+        bool automatic = false,
+        string interactionKey = null)
     {
         if (!IsRuntimeValid(entityManager, runtimeEntity) || actor == Entity.Null || !entityManager.Exists(actor))
             return false;
@@ -19,6 +22,12 @@ public static class GameInteractionUtility
             return false;
 
         InteractionResultCode failure = ValidateTarget(entityManager, actor, target);
+        FixedString64Bytes key = default;
+        if (!string.IsNullOrEmpty(interactionKey) && key.CopyFrom(interactionKey) != CopyError.None)
+            return false;
+        if (failure == InteractionResultCode.Success && !automatic &&
+            entityManager.GetComponentData<UnitInteractableComponent>(target).HidePrompt != 0)
+            failure = InteractionResultCode.InvalidTarget;
         if (failure == InteractionResultCode.Success && FindByTarget(transactions, target, includeCompleted: false) >= 0)
             failure = InteractionResultCode.Busy;
 
@@ -33,6 +42,8 @@ public static class GameInteractionUtility
             RequestId = runtime.NextRequestId,
             Actor = actor,
             Target = target,
+            IsAutomatic = automatic ? (byte)1 : (byte)0,
+            InteractionKey = key,
             Phase = failure == InteractionResultCode.Success
                 ? InteractionPhase.Pending
                 : InteractionPhase.Failed,
@@ -41,6 +52,16 @@ public static class GameInteractionUtility
                 : failure,
         });
         return true;
+    }
+
+    // Automatic callers have no actor-side state-script waiting to consume the result.
+    public static void AcknowledgeAutomatic(EntityManager entityManager, Entity runtimeEntity)
+    {
+        if (!TryGetTransactions(entityManager, runtimeEntity, out var transactions))
+            return;
+        for (int index = transactions.Length - 1; index >= 0; index--)
+            if (transactions[index].IsAutomatic != 0 && IsCompleted(transactions[index].Phase))
+                transactions.RemoveAtSwapBack(index);
     }
 
     public static bool TryBegin(

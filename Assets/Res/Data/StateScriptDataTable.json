@@ -104757,6 +104757,35 @@
         }
       ],
       "Id": 36
+    },
+    {
+      "Id": 37,
+      "Graphs": [
+        {
+          "Guid": "town_intro_interaction_graph",
+          "Name": "Interaction",
+          "EntryNodeGuid": "town_intro_entry",
+          "Nodes": [
+            {"Type":"Entry","Guid":"town_intro_entry","EditorPosition":{"x":80,"y":80}},
+            {
+              "Type":"Monitor","Guid":"town_intro_monitor","TickOrder":0,
+              "EditorPosition":{"x":580,"y":80},
+              "Condition":{"ConditionType":0,"CompareType":"IsTrue","Inputs":[
+                {"Kind":1,"GetterKey":"world.interaction.hasPending","Inputs":[
+                  {"Kind":1,"GetterKey":"unit.self.entity","Inputs":[]}
+                ]}
+              ]}
+            },
+            {"Type":"StartNpcInteraction","Guid":"town_intro_start","EditorPosition":{"x":1080,"y":80}}
+          ],
+          "Edges": [
+            {"OutputNodeGuid":"town_intro_entry","OutputPortName":"Out","InputNodeGuid":"town_intro_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"town_intro_monitor","OutputPortName":"True","InputNodeGuid":"town_intro_start","InputPortName":"In"}
+          ],
+          "ViewPosition":{"x":0,"y":0},
+          "ViewScale":1.0
+        }
+      ]
     }
   ]
 }
