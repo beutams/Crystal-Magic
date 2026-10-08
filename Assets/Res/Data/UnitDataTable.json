@@ -249,9 +249,9 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 300.0,
+          "BaseMaxHealth": 400.0,
           "BaseHealthRegenPerSecond": 0.0,
-          "BaseDefense": 2.0
+          "BaseDefense": 5.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
@@ -417,9 +417,9 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 200.0,
+          "BaseMaxHealth": 300.0,
           "BaseHealthRegenPerSecond": 3.0,
-          "BaseDefense": 5.0
+          "BaseDefense": 2.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
@@ -459,9 +459,9 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 150.0,
+          "BaseMaxHealth": 300.0,
           "BaseHealthRegenPerSecond": 0.0,
-          "BaseDefense": 3.0
+          "BaseDefense": 5.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
@@ -501,7 +501,7 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 50.0,
+          "BaseMaxHealth": 150.0,
           "BaseHealthRegenPerSecond": 0.0,
           "BaseDefense": 0.0
         },
@@ -543,9 +543,9 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 250.0,
+          "BaseMaxHealth": 300.0,
           "BaseHealthRegenPerSecond": 5.0,
-          "BaseDefense": 5.0
+          "BaseDefense": 2.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
@@ -585,9 +585,9 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 150.0,
+          "BaseMaxHealth": 250.0,
           "BaseHealthRegenPerSecond": 0.0,
-          "BaseDefense": 1.0
+          "BaseDefense": 2.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
@@ -795,9 +795,9 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 150.0,
+          "BaseMaxHealth": 200.0,
           "BaseHealthRegenPerSecond": 1.0,
-          "BaseDefense": 1.0
+          "BaseDefense": 5.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
@@ -839,7 +839,7 @@
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
           "BaseMaxHealth": 400.0,
           "BaseHealthRegenPerSecond": 3.0,
-          "BaseDefense": 4.0
+          "BaseDefense": 2.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
@@ -921,9 +921,9 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 80.0,
+          "BaseMaxHealth": 200.0,
           "BaseHealthRegenPerSecond": 0.0,
-          "BaseDefense": 0.0
+          "BaseDefense": 2.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
@@ -963,9 +963,9 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 50,
+          "BaseMaxHealth": 150.0,
           "BaseHealthRegenPerSecond": 0.0,
-          "BaseDefense": 1.0
+          "BaseDefense": 2.0
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitAttackModuleData, Assembly-CSharp",
@@ -1005,7 +1005,7 @@
         },
         {
           "$type": "CrystalMagic.Game.Data.UnitVitalityModuleData, Assembly-CSharp",
-          "BaseMaxHealth": 50.0,
+          "BaseMaxHealth": 150.0,
           "BaseHealthRegenPerSecond": 0.0,
           "BaseDefense": 0.0
         },

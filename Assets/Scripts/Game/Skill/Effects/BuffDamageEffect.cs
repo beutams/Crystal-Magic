@@ -15,5 +15,6 @@ namespace CrystalMagic.Game.Skill.Effects
 
         protected override bool SendsOnDamagedHook => false;
         protected override bool SuppressesDamageNumber => true;
+        protected override bool IgnoresDefense => true;
     }
 }

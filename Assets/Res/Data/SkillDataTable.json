@@ -183,7 +183,7 @@
                   "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
                   "BuffId": 0,
                   "TargetSource": 0,
-                  "DurationSeconds": 10.0,
+                  "DurationSeconds": 5.0,
                   "StackCount": 1,
                   "OnlyOncePerPersistentEffect": false,
                   "Conditions": []
@@ -192,7 +192,7 @@
                   "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
                   "TargetSource": 0,
                   "ValueSource": 0,
-                  "DamageCoefficient": 1.0,
+                  "DamageCoefficient": 3.0,
                   "FlatDamageBonus": 0.0,
                   "Element": 2,
                   "Conditions": [
@@ -294,7 +294,7 @@
     {
       "NameKey": "爆炎弹",
       "IsMonsterSkill": false,
-      "DescriptionKey": "释放火球，命中时造成爆炸并将目标的点燃效果转变成爆燃效果",
+      "DescriptionKey": "释放爆炎弹，命中时造成爆炸伤害，并将目标的燃烧层数等量转化为持续5秒的脆弱",
       "RuntimeType": "CommonSkill",
       "InputType": 2,
       "MpCost": 20,
@@ -471,19 +471,10 @@
               "OnlyNearestTarget": false,
               "OnAfterSearch": [
                 {
-                  "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
-                  "BuffId": 0,
-                  "TargetSource": 0,
-                  "DurationSeconds": 10.0,
-                  "StackCount": 1,
-                  "OnlyOncePerPersistentEffect": false,
-                  "Conditions": []
-                },
-                {
                   "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
                   "TargetSource": 0,
                   "ValueSource": 0,
-                  "DamageCoefficient": 2.0,
+                  "DamageCoefficient": 5.0,
                   "FlatDamageBonus": 0.0,
                   "Element": 2,
                   "Conditions": [
@@ -549,6 +540,36 @@
                       ]
                     }
                   ]
+                },
+                {
+                  "$type": "CrystalMagic.Game.Data.Effects.ReadBuffStackEffectData, Assembly-CSharp",
+                  "BuffId": 0,
+                  "PerStackModifiers": [
+                    {
+                      "Channel": 3,
+                      "Factor": 0.0,
+                      "Bonus": 1.0
+                    }
+                  ],
+                  "OnAfterRead": [
+                    {
+                      "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
+                      "BuffId": 1,
+                      "TargetSource": 0,
+                      "DurationSeconds": 5.0,
+                      "StackCount": 0,
+                      "OnlyOncePerPersistentEffect": false,
+                      "Conditions": []
+                    },
+                    {
+                      "$type": "CrystalMagic.Game.Data.Effects.RemoveBuffEffectData, Assembly-CSharp",
+                      "BuffId": 0,
+                      "RemoveAllStacks": true,
+                      "RemoveStackCount": 1,
+                      "Conditions": []
+                    }
+                  ],
+                  "Conditions": []
                 }
               ],
               "Conditions": []
@@ -585,11 +606,11 @@
     {
       "NameKey": "流星",
       "IsMonsterSkill": false,
-      "DescriptionKey": "召唤一颗流星撞击地面，造成爆炸并将目标的点燃效果转变成爆燃效果",
+      "DescriptionKey": "召唤一颗流星撞击地面，造成爆炸并将目标的点燃效果转变为脆弱效果",
       "RuntimeType": "CommonSkill",
       "InputType": 2,
       "MpCost": 30,
-      "ChantDuration": 1.5,
+      "ChantDuration": 2.0,
       "CastingMoveMultiplier": 0.5,
       "IconPath": "Assets/Res/Sprites/Skill/fire_skill_08.png",
       "Conditions": [],
@@ -701,7 +722,7 @@
                   "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
                   "TargetSource": 0,
                   "ValueSource": 0,
-                  "DamageCoefficient": 3.0,
+                  "DamageCoefficient": 6.0,
                   "FlatDamageBonus": 0.0,
                   "Element": 2,
                   "Conditions": []
@@ -857,7 +878,7 @@
               "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
               "BuffId": 0,
               "TargetSource": 0,
-              "DurationSeconds": 10.0,
+              "DurationSeconds": 5.0,
               "StackCount": 2,
               "OnlyOncePerPersistentEffect": false,
               "Conditions": []
@@ -866,7 +887,7 @@
               "$type": "CrystalMagic.Game.Data.Effects.SpawnFollowVfxEffectData, Assembly-CSharp",
               "VfxPrefabName": "Status_Burn",
               "FollowTarget": 1,
-              "Duration": 10.0,
+              "Duration": 5.0,
               "Scale": 1.0,
               "SpawnOffset": {
                 "x": 0.0,
@@ -1022,7 +1043,7 @@
                   "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
                   "TargetSource": 0,
                   "ValueSource": 0,
-                  "DamageCoefficient": 1.0,
+                  "DamageCoefficient": 1.5,
                   "FlatDamageBonus": 0.0,
                   "Element": 2,
                   "Conditions": []
@@ -1031,7 +1052,7 @@
                   "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
                   "BuffId": 0,
                   "TargetSource": 0,
-                  "DurationSeconds": 10.0,
+                  "DurationSeconds": 5.0,
                   "StackCount": 1,
                   "OnlyOncePerPersistentEffect": true,
                   "Conditions": []
@@ -1072,7 +1093,7 @@
     {
       "NameKey": "引爆",
       "IsMonsterSkill": false,
-      "DescriptionKey": "引爆目标的点燃效果和爆燃效果",
+      "DescriptionKey": "消耗目标的点燃和脆弱层数，造成单体伤害",
       "RuntimeType": "CommonSkill",
       "InputType": 2,
       "MpCost": 20,
@@ -1377,7 +1398,7 @@
                   "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
                   "TargetSource": 0,
                   "ValueSource": 0,
-                  "DamageCoefficient": 1.5,
+                  "DamageCoefficient": 3.0,
                   "FlatDamageBonus": 0.0,
                   "Element": 2,
                   "Conditions": []
@@ -1386,7 +1407,7 @@
                   "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
                   "BuffId": 0,
                   "TargetSource": 0,
-                  "DurationSeconds": 10.0,
+                  "DurationSeconds": 5.0,
                   "StackCount": 1,
                   "OnlyOncePerPersistentEffect": false,
                   "Conditions": []
@@ -1627,7 +1648,7 @@
                   "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
                   "TargetSource": 0,
                   "ValueSource": 0,
-                  "DamageCoefficient": 1,
+                  "DamageCoefficient": 2.5,
                   "FlatDamageBonus": 0,
                   "Element": 1,
                   "Conditions": []
@@ -1898,7 +1919,7 @@
               "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
               "TargetSource": 0,
               "ValueSource": 0,
-              "DamageCoefficient": 0.7,
+              "DamageCoefficient": 1.5,
               "FlatDamageBonus": 0,
               "Element": 1,
               "Conditions": []
@@ -2065,7 +2086,7 @@
               "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
               "TargetSource": 0,
               "ValueSource": 0,
-              "DamageCoefficient": 0.9,
+              "DamageCoefficient": 2,
               "FlatDamageBonus": 0,
               "Element": 1,
               "Conditions": []
@@ -2272,9 +2293,9 @@
               "BuffId": 2,
               "PerStackModifiers": [
                 {
-                  "Channel": 101,
+                  "Channel": 100,
                   "Factor": 0,
-                  "Bonus": 12
+                  "Bonus": 0.8
                 },
                 {
                   "Channel": 104,
@@ -2492,7 +2513,7 @@
                   "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
                   "TargetSource": 0,
                   "ValueSource": 0,
-                  "DamageCoefficient": 1.5,
+                  "DamageCoefficient": 3,
                   "FlatDamageBonus": 0,
                   "Element": 3,
                   "Conditions": []
@@ -2504,7 +2525,7 @@
               "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
               "TargetSource": 0,
               "ValueSource": 0,
-              "DamageCoefficient": 1,
+              "DamageCoefficient": 2,
               "FlatDamageBonus": 0,
               "Element": 3,
               "Conditions": []
@@ -2688,7 +2709,7 @@
                   "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
                   "TargetSource": 0,
                   "ValueSource": 0,
-                  "DamageCoefficient": 0.35,
+                  "DamageCoefficient": 0.9,
                   "FlatDamageBonus": 0,
                   "Element": 3,
                   "Conditions": []
@@ -2835,7 +2856,7 @@
                   "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
                   "TargetSource": 0,
                   "ValueSource": 0,
-                  "DamageCoefficient": 0.35,
+                  "DamageCoefficient": 0.9,
                   "FlatDamageBonus": 0,
                   "Element": 3,
                   "Conditions": []
@@ -2944,7 +2965,7 @@
               "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
               "TargetSource": 0,
               "ValueSource": 0,
-              "DamageCoefficient": 0.7,
+              "DamageCoefficient": 2,
               "FlatDamageBonus": 0,
               "Element": 3,
               "Conditions": [
@@ -2974,7 +2995,7 @@
               "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
               "TargetSource": 0,
               "ValueSource": 0,
-              "DamageCoefficient": 0.35,
+              "DamageCoefficient": 1,
               "FlatDamageBonus": 0,
               "Element": 3,
               "Conditions": [
@@ -3157,7 +3178,7 @@
               "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
               "TargetSource": 0,
               "ValueSource": 0,
-              "DamageCoefficient": 2.2,
+              "DamageCoefficient": 3.5,
               "FlatDamageBonus": 0,
               "Element": 3,
               "Conditions": []
@@ -3650,7 +3671,7 @@
               "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
               "TargetSource": 0,
               "ValueSource": 0,
-              "DamageCoefficient": 2.0,
+              "DamageCoefficient": 3.5,
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
@@ -3776,7 +3797,7 @@
               "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
               "TargetSource": 0,
               "ValueSource": 0,
-              "DamageCoefficient": 1.0,
+              "DamageCoefficient": 3.0,
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
@@ -4043,7 +4064,7 @@
               "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
               "TargetSource": 0,
               "ValueSource": 0,
-              "DamageCoefficient": 1.0,
+              "DamageCoefficient": 1.5,
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
@@ -4805,7 +4826,7 @@
               "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
               "TargetSource": 0,
               "ValueSource": 0,
-              "DamageCoefficient": 4.0,
+              "DamageCoefficient": 3.0,
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
@@ -5057,7 +5078,7 @@
               "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
               "TargetSource": 0,
               "ValueSource": 0,
-              "DamageCoefficient": 3.0,
+              "DamageCoefficient": 2.5,
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
@@ -5803,7 +5824,7 @@
               "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
               "TargetSource": 0,
               "ValueSource": 0,
-              "DamageCoefficient": 5.0,
+              "DamageCoefficient": 3.0,
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
@@ -6049,7 +6070,7 @@
               "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
               "TargetSource": 0,
               "ValueSource": 0,
-              "DamageCoefficient": 4.0,
+                  "DamageCoefficient": 3.0,
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
@@ -6427,7 +6448,7 @@
               "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
               "TargetSource": 0,
               "ValueSource": 0,
-              "DamageCoefficient": 3.0,
+              "DamageCoefficient": 2.5,
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
@@ -6679,7 +6700,7 @@
               "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
               "TargetSource": 0,
               "ValueSource": 0,
-              "DamageCoefficient": 5.0,
+              "DamageCoefficient": 4.0,
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
@@ -6802,7 +6823,7 @@
               "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
               "TargetSource": 0,
               "ValueSource": 0,
-              "DamageCoefficient": 1.0,
+              "DamageCoefficient": 0.8,
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []
@@ -6968,7 +6989,7 @@
               "$type": "CrystalMagic.Game.Data.Effects.DamageEffectData, Assembly-CSharp",
               "TargetSource": 0,
               "ValueSource": 0,
-              "DamageCoefficient": 1.0,
+              "DamageCoefficient": 3.0,
               "FlatDamageBonus": 0.0,
               "Element": 0,
               "Conditions": []

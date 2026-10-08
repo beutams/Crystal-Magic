@@ -43,13 +43,40 @@
         "Visual": {
           "VoidVisual": {
             "AbyssRuleTile": {
-              "AssetPath": "Assets/Res/Tile/Black.asset"
+              "AssetPath": "Assets/Res/Tile/Abyss/AbyssBlack.asset"
             },
             "WallRuleTile": {
-              "AssetPath": "Assets/Res/Tile/Black.asset"
+              "AssetPath": "Assets/Res/Tile/Abyss/AbyssWall.asset"
+            },
+            "WallBottomRuleTile": {
+              "AssetPath": "Assets/Res/Tile/Abyss/AbyssWallBottom.asset"
             },
             "TransitionRuleTile": {
-              "AssetPath": "Assets/Res/Tile/Black.asset"
+              "AssetPath": "Assets/Res/Tile/Abyss/AbyssTransition_Grass1.asset"
+            },
+            "LeftTransitionRuleTile": {
+              "AssetPath": "Assets/Res/Tile/Abyss/AbyssTransition_Grass1_Left.asset"
+            },
+            "RightTransitionRuleTile": {
+              "AssetPath": "Assets/Res/Tile/Abyss/AbyssTransition_Grass1_Right.asset"
+            },
+            "LeftFadeRuleTile": {
+              "AssetPath": "Assets/Res/Tile/Abyss/AbyssFade_Left.asset"
+            },
+            "RightFadeRuleTile": {
+              "AssetPath": "Assets/Res/Tile/Abyss/AbyssFade_Right.asset"
+            },
+            "LeftCornerRuleTile": {
+              "AssetPath": "Assets/Res/Tile/Abyss/AbyssCorner_Grass1_Left.asset"
+            },
+            "RightCornerRuleTile": {
+              "AssetPath": "Assets/Res/Tile/Abyss/AbyssCorner_Grass1_Right.asset"
+            },
+            "LeftInnerCornerRuleTile": {
+              "AssetPath": "Assets/Res/Tile/Abyss/AbyssInnerCorner_Grass1_Left.asset"
+            },
+            "RightInnerCornerRuleTile": {
+              "AssetPath": "Assets/Res/Tile/Abyss/AbyssInnerCorner_Grass1_Right.asset"
             }
           },
           "ObstacleVisual": {
@@ -72,6 +99,27 @@
               "Name": "Grass1",
               "BaseRuleTile": {
                 "AssetPath": "Assets/Res/Tile/Grass1.asset"
+              },
+              "VoidTransitionRuleTile": {
+                "AssetPath": "Assets/Res/Tile/Abyss/AbyssTransition_Grass1.asset"
+              },
+              "VoidLeftTransitionRuleTile": {
+                "AssetPath": "Assets/Res/Tile/Abyss/AbyssTransition_Grass1_Left.asset"
+              },
+              "VoidRightTransitionRuleTile": {
+                "AssetPath": "Assets/Res/Tile/Abyss/AbyssTransition_Grass1_Right.asset"
+              },
+              "VoidLeftCornerRuleTile": {
+                "AssetPath": "Assets/Res/Tile/Abyss/AbyssCorner_Grass1_Left.asset"
+              },
+              "VoidRightCornerRuleTile": {
+                "AssetPath": "Assets/Res/Tile/Abyss/AbyssCorner_Grass1_Right.asset"
+              },
+              "VoidLeftInnerCornerRuleTile": {
+                "AssetPath": "Assets/Res/Tile/Abyss/AbyssInnerCorner_Grass1_Left.asset"
+              },
+              "VoidRightInnerCornerRuleTile": {
+                "AssetPath": "Assets/Res/Tile/Abyss/AbyssInnerCorner_Grass1_Right.asset"
               },
               "MountainTransitionRuleTile": {
                 "AssetPath": "Assets/Res/Tile/Mountain/MountainFoot_Grass1.asset"
@@ -372,6 +420,27 @@
               "BaseRuleTile": {
                 "AssetPath": "Assets/Res/Tile/Grass2.asset"
               },
+              "VoidTransitionRuleTile": {
+                "AssetPath": "Assets/Res/Tile/Abyss/AbyssTransition_Grass2.asset"
+              },
+              "VoidLeftTransitionRuleTile": {
+                "AssetPath": "Assets/Res/Tile/Abyss/AbyssTransition_Grass2_Left.asset"
+              },
+              "VoidRightTransitionRuleTile": {
+                "AssetPath": "Assets/Res/Tile/Abyss/AbyssTransition_Grass2_Right.asset"
+              },
+              "VoidLeftCornerRuleTile": {
+                "AssetPath": "Assets/Res/Tile/Abyss/AbyssCorner_Grass2_Left.asset"
+              },
+              "VoidRightCornerRuleTile": {
+                "AssetPath": "Assets/Res/Tile/Abyss/AbyssCorner_Grass2_Right.asset"
+              },
+              "VoidLeftInnerCornerRuleTile": {
+                "AssetPath": "Assets/Res/Tile/Abyss/AbyssInnerCorner_Grass2_Left.asset"
+              },
+              "VoidRightInnerCornerRuleTile": {
+                "AssetPath": "Assets/Res/Tile/Abyss/AbyssInnerCorner_Grass2_Right.asset"
+              },
               "MountainTransitionRuleTile": {
                 "AssetPath": "Assets/Res/Tile/Mountain/MountainFoot_Grass1.asset"
               },
@@ -670,6 +739,27 @@
               "Name": "Grass3",
               "BaseRuleTile": {
                 "AssetPath": "Assets/Res/Tile/Grass3.asset"
+              },
+              "VoidTransitionRuleTile": {
+                "AssetPath": "Assets/Res/Tile/Abyss/AbyssTransition_Grass3.asset"
+              },
+              "VoidLeftTransitionRuleTile": {
+                "AssetPath": "Assets/Res/Tile/Abyss/AbyssTransition_Grass3_Left.asset"
+              },
+              "VoidRightTransitionRuleTile": {
+                "AssetPath": "Assets/Res/Tile/Abyss/AbyssTransition_Grass3_Right.asset"
+              },
+              "VoidLeftCornerRuleTile": {
+                "AssetPath": "Assets/Res/Tile/Abyss/AbyssCorner_Grass3_Left.asset"
+              },
+              "VoidRightCornerRuleTile": {
+                "AssetPath": "Assets/Res/Tile/Abyss/AbyssCorner_Grass3_Right.asset"
+              },
+              "VoidLeftInnerCornerRuleTile": {
+                "AssetPath": "Assets/Res/Tile/Abyss/AbyssInnerCorner_Grass3_Left.asset"
+              },
+              "VoidRightInnerCornerRuleTile": {
+                "AssetPath": "Assets/Res/Tile/Abyss/AbyssInnerCorner_Grass3_Right.asset"
               },
               "MountainTransitionRuleTile": {
                 "AssetPath": "Assets/Res/Tile/Mountain/MountainFoot_Grass1.asset"

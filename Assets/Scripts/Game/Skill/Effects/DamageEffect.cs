@@ -16,6 +16,7 @@ namespace CrystalMagic.Game.Skill.Effects
 
         protected virtual bool SendsOnDamagedHook => true;
         protected virtual bool SuppressesDamageNumber => false;
+        protected virtual bool IgnoresDefense => false;
 
         public DamageEffect(DamageEffectData data) : base(data) => Data = data;
 
@@ -103,7 +104,7 @@ namespace CrystalMagic.Game.Skill.Effects
         {
             float baseValue = ResolveBaseValue(context, entityManager);
             float rawDamage = baseValue * Data.DamageCoefficient + Data.FlatDamageBonus;
-            float defense = Data.ValueSource == DamageValueSource.TriggerValue
+            float defense = IgnoresDefense || Data.ValueSource == DamageValueSource.TriggerValue
                 ? 0f
                 : UnitModifierResolver.GetDefense(entityManager, target);
             return new DamageBreakdown

@@ -59,8 +59,8 @@ namespace CrystalMagic.Game.Data.Effects
     }
 
     /// <summary>
-    /// Damage emitted from a Buff trigger. It uses the standard damage formula,
-    /// but deliberately does not dispatch the OnDamaged hook.
+    /// Damage emitted from a Buff trigger. It ignores defense and does not
+    /// dispatch the OnDamaged hook.
     /// </summary>
     [System.Serializable]
     public sealed class BuffDamageEffectData : DamageEffectData

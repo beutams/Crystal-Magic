@@ -1,0 +1,15 @@
+Generator: built-in image_gen
+Asset: Assets/Res/Sprites/Buff/buff_01_deflagration.png
+Import: preserve the existing Unity .meta/GUID and 64x64 point-filtered sprite settings.
+Style references: Assets/Res/Sprites/Buff/buff_03_frozen.png; Assets/Res/Sprites/Buff/buff_05_block_ward.png
+
+Final prompt:
+Use case: stylized-concept
+Asset type: one fantasy RPG debuff UI sprite, Vulnerable (defense reduced), from the same icon set as the references.
+Input images: image 1 (frozen) and image 2 (shield ward) are style references only, not edit targets.
+Scene/backdrop: genuinely transparent background, a standalone cutout icon.
+Subject: a single battered metal shield split by a large jagged crack, its two halves slightly separated, with two or three small broken metal fragments. The broken shield must immediately communicate lost defense, not a protective buff.
+Style/medium: match the references' chunky hand-placed pixel art, dark stepped outline, bright clustered highlights, limited fantasy-game palette, sharp square pixel edges. Steel-gray and muted violet metal with deep purple shadows and a few vivid violet accents in the crack; no flames or explosion.
+Composition: centered, bold simple silhouette filling roughly 78% of the square with clear padding, readable as a 64x64 game icon. Make the art on a consistent coarse pixel grid, not a detailed painting.
+Constraints: one icon only, no frame or UI badge, no words, no numbers, no watermark, no gradients, no blur, no background scene. Preserve genuine alpha transparency.
+

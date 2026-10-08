@@ -134,7 +134,7 @@
     },
     {
       "NameKey": "爆炎弹",
-      "DescriptionKey": "释放火球，命中时造成爆炸并将目标的点燃效果转变成爆燃效果",
+      "DescriptionKey": "释放爆炎弹，命中时造成爆炸伤害，并将目标的燃烧层数等量转化为持续5秒的脆弱",
       "ItemType": 1,
       "ExtraId": 1,
       "Rarity": 1,
@@ -145,7 +145,7 @@
     },
     {
       "NameKey": "流星",
-      "DescriptionKey": "召唤一颗流星撞击地面，造成爆炸并将目标的点燃效果转变成爆燃效果",
+      "DescriptionKey": "召唤一颗流星撞击地面，造成爆炸并将目标的点燃效果转变为脆弱效果",
       "ItemType": 1,
       "ExtraId": 2,
       "Rarity": 1,
@@ -178,7 +178,7 @@
     },
     {
       "NameKey": "引爆",
-      "DescriptionKey": "引爆目标的点燃效果和爆燃效果",
+      "DescriptionKey": "消耗目标的点燃和脆弱层数，造成单体伤害",
       "ItemType": 1,
       "ExtraId": 5,
       "Rarity": 1,

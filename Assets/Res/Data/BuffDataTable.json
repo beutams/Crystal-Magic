@@ -10,15 +10,18 @@
       "TriggerEntries": [
         {
           "TriggerType": 0,
-          "TickIntervalSeconds": 0.5,
+          "TickIntervalSeconds": 1.0,
           "HookType": 0,
           "ConsumeStackOnTrigger": false,
           "Effects": [
             {
               "$type": "CrystalMagic.Game.Data.Effects.BuffDamageEffectData, Assembly-CSharp",
+              "TargetSource": 0,
+              "ValueSource": 0,
               "DamageCoefficient": 0.0,
-              "FlatDamageBonus": 5.0,
+              "FlatDamageBonus": 1.0,
               "Element": 2,
+              "ExecutionTargets": 5,
               "Conditions": []
             }
           ]
@@ -27,7 +30,7 @@
       "Id": 0
     },
     {
-      "NameKey": "爆燃",
+      "NameKey": "脆弱",
       "IconPath": "Assets/Res/Sprites/Buff/buff_01_deflagration.png",
       "CanStack": true,
       "MaxStacks": 5,
@@ -71,12 +74,12 @@
         {
           "Channel": 0,
           "Factor": -0.3,
-          "Bonus": 0
+          "Bonus": 0.0
         },
         {
           "Channel": 9,
           "Factor": -0.25,
-          "Bonus": 0
+          "Bonus": 0.0
         }
       ],
       "SkillModifiers": [],
@@ -183,6 +186,7 @@
               "DamageCoefficient": 0.5,
               "FlatDamageBonus": 0.0,
               "Element": 0,
+              "ExecutionTargets": 5,
               "Conditions": []
             }
           ]
@@ -241,6 +245,7 @@
               "DurationSeconds": 5.0,
               "StackCount": 1,
               "OnlyOncePerPersistentEffect": false,
+              "ExecutionTargets": 5,
               "Conditions": []
             }
           ]
@@ -264,8 +269,75 @@
       "TriggerEntries": [],
       "Id": 11
     },
-{"NameKey":"Shield Guard","IconPath":"Assets/Res/Sprites/Buff/buff_12_shield_guard.png","CanStack":false,"MaxStacks":1,"PropertyModifiers":[{"Channel":14,"Factor":-0.5,"Bonus":0}],"SkillModifiers":[],"TriggerEntries":[{"TriggerType":1,"TickIntervalSeconds":0,"HookType":5,"ConsumeStackOnTrigger":true,"Effects":[{"$type":"CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp","BuffId":13,"TargetSource":0,"DurationSeconds":0.75,"StackCount":1,"OnlyOncePerPersistentEffect":false,"Conditions":[]}]}],"Id":12},
-    {"NameKey":"Block Reaction","IconPath":"Assets/Res/Sprites/Buff/buff_13_block_reaction.png","CanStack":false,"MaxStacks":1,"PropertyModifiers":[],"SkillModifiers":[],"TriggerEntries":[],"Id":13},
-    {"NameKey":"Werewolf Attack 02 Exposed","IconPath":"Assets/Res/Sprites/Buff/buff_14_werewolf_exposed.png","CanStack":false,"MaxStacks":1,"PropertyModifiers":[],"SkillModifiers":[],"TriggerEntries":[{"TriggerType":1,"TickIntervalSeconds":0,"HookType":5,"ConsumeStackOnTrigger":false,"Effects":[{"$type":"CrystalMagic.Game.Data.Effects.StunEffectData, Assembly-CSharp","DurationSeconds":1,"Conditions":[]}]}],"Id":14}
+    {
+      "NameKey": "Shield Guard",
+      "IconPath": "Assets/Res/Sprites/Buff/buff_12_shield_guard.png",
+      "CanStack": false,
+      "MaxStacks": 1,
+      "PropertyModifiers": [
+        {
+          "Channel": 14,
+          "Factor": -0.5,
+          "Bonus": 0.0
+        }
+      ],
+      "SkillModifiers": [],
+      "TriggerEntries": [
+        {
+          "TriggerType": 1,
+          "TickIntervalSeconds": 0.0,
+          "HookType": 5,
+          "ConsumeStackOnTrigger": true,
+          "Effects": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.ApplyBuffEffectData, Assembly-CSharp",
+              "BuffId": 13,
+              "TargetSource": 0,
+              "DurationSeconds": 0.75,
+              "StackCount": 1,
+              "OnlyOncePerPersistentEffect": false,
+              "ExecutionTargets": 5,
+              "Conditions": []
+            }
+          ]
+        }
+      ],
+      "Id": 12
+    },
+    {
+      "NameKey": "Block Reaction",
+      "IconPath": "Assets/Res/Sprites/Buff/buff_13_block_reaction.png",
+      "CanStack": false,
+      "MaxStacks": 1,
+      "PropertyModifiers": [],
+      "SkillModifiers": [],
+      "TriggerEntries": [],
+      "Id": 13
+    },
+    {
+      "NameKey": "Werewolf Attack 02 Exposed",
+      "IconPath": "Assets/Res/Sprites/Buff/buff_14_werewolf_exposed.png",
+      "CanStack": false,
+      "MaxStacks": 1,
+      "PropertyModifiers": [],
+      "SkillModifiers": [],
+      "TriggerEntries": [
+        {
+          "TriggerType": 1,
+          "TickIntervalSeconds": 0.0,
+          "HookType": 5,
+          "ConsumeStackOnTrigger": false,
+          "Effects": [
+            {
+              "$type": "CrystalMagic.Game.Data.Effects.StunEffectData, Assembly-CSharp",
+              "DurationSeconds": 1.0,
+              "ExecutionTargets": 5,
+              "Conditions": []
+            }
+          ]
+        }
+      ],
+      "Id": 14
+    }
   ]
 }

@@ -5233,6 +5233,34 @@ MonoBehaviour:
     - 1
     Length: 0.75
     IsLooping: 0
+  - ClipPath: Assets/Res/Animation/Necromancer/TeleportInRight.anim
+    SourceClip: {fileID: 7400000, guid: 18d1529d89b418eb8f38bb1659c4ba6b, type: 2}
+    Sprites:
+    - {fileID: 1326099669, guid: c8e5c95b439b235498ad1146f77d309d, type: 3}
+    - {fileID: 120941967, guid: c8e5c95b439b235498ad1146f77d309d, type: 3}
+    - {fileID: 819254551, guid: c8e5c95b439b235498ad1146f77d309d, type: 3}
+    - {fileID: 1526714918, guid: c8e5c95b439b235498ad1146f77d309d, type: 3}
+    - {fileID: -541553442, guid: c8e5c95b439b235498ad1146f77d309d, type: 3}
+    - {fileID: 2123558022, guid: c8e5c95b439b235498ad1146f77d309d, type: 3}
+    - {fileID: -1352542545, guid: c8e5c95b439b235498ad1146f77d309d, type: 3}
+    - {fileID: 884115556, guid: c8e5c95b439b235498ad1146f77d309d, type: 3}
+    - {fileID: -1998636234, guid: c8e5c95b439b235498ad1146f77d309d, type: 3}
+    SpriteTimes:
+    - 0
+    - 0.0833333
+    - 0.1666667
+    - 0.25
+    - 0.3333333
+    - 0.4166667
+    - 0.5
+    - 0.5833333
+    - 0.6666667
+    FlipXTimes:
+    - 0
+    FlipXValues:
+    - 0
+    Length: 0.75
+    IsLooping: 0
   - ClipPath: Assets/Res/Animation/Orc/IdleLeft.anim
     SourceClip: {fileID: 7400000, guid: 299a412e953e44a6a8dcc9a0bdb74c8d, type: 2}
     Sprites:

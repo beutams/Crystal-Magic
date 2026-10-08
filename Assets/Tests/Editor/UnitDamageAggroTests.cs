@@ -107,6 +107,24 @@ public sealed class UnitDamageAggroTests
         Assert.That(f.Memory(victim).DamageTarget, Is.EqualTo(f.Player));
     }
 
+    [Test]
+    public void BuffDamageIgnoresDefenseButDirectDamageDoesNot()
+    {
+        using var f = new Fixture();
+        Entity victim = f.Monster();
+        UnitVitalityComponent vitality = f.Manager.GetComponentData<UnitVitalityComponent>(victim);
+        vitality.BaseDefense = 10f;
+        f.Manager.SetComponentData(victim, vitality);
+
+        new DamageEffect(new DamageEffectData { FlatDamageBonus = 1f })
+            .Execute(f.Context(victim, f.Player));
+        Assert.That(f.Manager.GetComponentData<UnitVitalityComponent>(victim).CurrentHealth, Is.EqualTo(100f));
+
+        new BuffDamageEffect(new BuffDamageEffectData { FlatDamageBonus = 1f })
+            .Execute(f.Context(victim, f.Player));
+        Assert.That(f.Manager.GetComponentData<UnitVitalityComponent>(victim).CurrentHealth, Is.EqualTo(99f));
+    }
+
     [TestCase("dead")]
     [TestCase("destroyed")]
     [TestCase("spectator")]

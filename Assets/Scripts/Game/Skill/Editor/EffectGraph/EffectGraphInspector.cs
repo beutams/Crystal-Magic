@@ -26,11 +26,14 @@ namespace CrystalMagic.Editor.EffectGraph
                 $"EffectGraph.{effect.GetType().FullName}.Conditions",
                 EffectConditionSourceSchema.Get());
 
-            FieldInfo[] fields = effect.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
+            // BuffDamageEffectData declares no fields of its own; its editable damage
+            // settings live on DamageEffectData. Conditions are already drawn above.
+            FieldInfo[] fields = effect.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance);
             for (int index = 0; index < fields.Length; index++)
             {
                 FieldInfo field = fields[index];
-                if (field.IsStatic)
+                if (field.IsStatic || (field.DeclaringType == typeof(EffectData) &&
+                                       field.Name == nameof(EffectData.Conditions)))
                     continue;
 
                 if (model.IsNestedEffectArrayField(field))
@@ -86,7 +89,12 @@ namespace CrystalMagic.Editor.EffectGraph
                 return new LayerMask { value = EditorGUILayout.IntField($"{label} (bitmask)", mask.value) };
             }
             if (type.IsEnum)
-                return EditorGUILayout.EnumPopup(label, value as Enum ?? (Enum)Activator.CreateInstance(type));
+            {
+                Enum selected = value as Enum ?? (Enum)Activator.CreateInstance(type);
+                return type.IsDefined(typeof(FlagsAttribute), false)
+                    ? EditorGUILayout.EnumFlagsField(label, selected)
+                    : EditorGUILayout.EnumPopup(label, selected);
+            }
             if (typeof(UnityEngine.Object).IsAssignableFrom(type))
                 return EditorGUILayout.ObjectField(label, value as UnityEngine.Object, type, false);
             if (type == typeof(List<SkillModifierEntry>))
