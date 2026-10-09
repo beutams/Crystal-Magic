@@ -3,6 +3,8 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using CrystalMagic.Game.Map;
+using CrystalMagic.Game.Data;
+using Newtonsoft.Json.Linq;
 using NUnit.Framework;
 using UnityEditor;
 using UnityEngine;
@@ -11,6 +13,59 @@ public sealed class SceneMapAssetTests
 {
     private const string TownPath = "Assets/Res/Tile/OcclusionMaps/TownMap/TownMap_Occlusion.prefab";
     private const string TrainingPath = "Assets/Res/Tile/OcclusionMaps/TrainingMap/TrainingMap_Occlusion.prefab";
+    private const string TrainingCrystalPath = "Assets/Res/Prefab/Environment/TrainingReturnCrystal.prefab";
+
+    [Test]
+    public void TrainingCrystalHasOneManualSelectOptionLeadingToTown()
+    {
+        JArray rows = (JArray)JObject.Parse(File.ReadAllText("Assets/Res/Data/NPCDataTable.json"))["Rows"];
+        NPCData npc = rows.Single(row => (string)row["PrefabPath"] == TrainingCrystalPath).ToObject<NPCData>();
+        Assert.That(npc.Interactions.Count, Is.EqualTo(1));
+        NPCInteractionData interaction = npc.Interactions.Single();
+        Assert.That(interaction.Automatic, Is.False);
+        var select = interaction.GetEntryNode() as NPCSelectInteractionNodeData;
+        Assert.That(select, Is.Not.Null);
+        Assert.That(select.ExecutionTargets, Is.EqualTo(GameWorldExecutionTarget.Standalone));
+        Assert.That(select.Options.Count, Is.EqualTo(1));
+        Assert.That(interaction.GetNode(select.Options[0].NextNodeGuid), Is.TypeOf<NPCEnterTownInteractionNodeData>());
+        JArray translations = (JArray)JObject.Parse(File.ReadAllText("Assets/Res/Data/LocalizationDataTable.json"))["Rows"];
+        Assert.That((string)translations.Single(row => (string)row["Key"] == select.Options[0].DisplayNameKey)["ChineseSimplified"], Is.EqualTo("返回城镇"));
+        Assert.That((string)translations.Single(row => (string)row["Key"] == npc.DisplayNameKey)["ChineseSimplified"], Is.EqualTo("传送水晶"));
+    }
+
+    [Test]
+    public void TrainingCrystalHasItsOwnUnguardedInteractionScriptAndIdleAnimation()
+    {
+        JArray units = (JArray)JObject.Parse(File.ReadAllText("Assets/Res/Data/UnitDataTable.json"))["Rows"];
+        int unitId = (int)units.Single(row => (string)row["PrefabPath"] == TrainingCrystalPath)["Id"];
+        Assert.That(unitId, Is.Not.EqualTo(32), "Never reuse the guarded dungeon exit's unit ID.");
+        JArray scripts = (JArray)JObject.Parse(File.ReadAllText("Assets/Res/Data/StateScriptDataTable.json"))["Rows"];
+        StateScriptData script = scripts.Single(row => (int)row["Id"] == unitId).ToObject<StateScriptData>();
+        Assert.That(script.Graphs.All(graph => graph.ExecutionConditions.Count == 0), Is.True);
+        Assert.That(StateScriptCompiler.TryBuildRegistry(new[] { script }, out var registry, out string error), Is.True, error);
+        try { Assert.That(StateScriptCompiler.FindUnitIndex(in registry, unitId), Is.GreaterThanOrEqualTo(0)); }
+        finally { if (registry.IsCreated) registry.Dispose(); }
+        JArray profiles = (JArray)JObject.Parse(File.ReadAllText("Assets/Res/Data/UnitAnimationProfileDataTable.json"))["Rows"];
+        JToken idle = profiles.Single(row => (int)row["UnitDataId"] == unitId)["Animations"].Single();
+        Assert.That((string)idle["Name"], Is.EqualTo("Idle"));
+        Assert.That(AssetDatabase.LoadAssetAtPath<AnimationClip>((string)idle["FrontClipPath"]), Is.Not.Null);
+    }
+
+    [Test]
+    public void TrainingSceneContainsExactlyOneCompleteCrystalPrefab()
+    {
+        GameObject crystal = AssetDatabase.LoadAssetAtPath<GameObject>(TrainingCrystalPath);
+        Assert.That(crystal, Is.Not.Null);
+        Assert.That(crystal.GetComponentsInChildren<Component>(true).All(component => component != null), Is.True);
+        Assert.That(crystal.GetComponent<NPCInteractableAuthoring>().InteractRange, Is.EqualTo(2.5f));
+        Assert.That(crystal.GetComponent<UnitStateScriptAuthoring>(), Is.Not.Null);
+        Assert.That(crystal.GetComponent<UnitAnimationAuthoring>(), Is.Not.Null);
+        Assert.That(crystal.GetComponent<SpriteRenderer>().sprite, Is.Not.Null);
+        Assert.That(crystal.GetComponent<Collider>().enabled, Is.True);
+        string reference = "m_SourcePrefab: {fileID: 100100000, guid: " + AssetDatabase.AssetPathToGUID(TrainingCrystalPath) + ", type: 3}";
+        string scene = File.ReadAllText("Assets/Scenes/SubScene/TrainingSubScene.unity");
+        Assert.That(scene.Split(new[] { reference }, System.StringSplitOptions.None).Length - 1, Is.EqualTo(1));
+    }
 
     [Test]
     public void TownDisplayAndPhysicsUseTheSameLocalCoordinateSystem()
@@ -99,6 +154,7 @@ public sealed class SceneMapAssetTests
     [TestCase(TownPath, "TownSubScene", "PlayerTown")]
     [TestCase(TrainingPath, "TrainingSubScene", "Player")]
     [TestCase(TrainingPath, "TrainingSubScene", "MonsterStraw")]
+    [TestCase(TrainingPath, "TrainingSubScene", "TrainingReturnCrystal")]
     public void SavedUnitPositionIsInsideTheMapAndNotBlocked(string mapPath, string sceneName, string unitName)
     {
         string scene = File.ReadAllText("Assets/Scenes/SubScene/" + sceneName + ".unity");

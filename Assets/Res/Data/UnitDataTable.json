@@ -1133,6 +1133,13 @@
       "PrefabPath": "",
       "Modules": [],
       "Id": 37
+    },
+    {
+      "Id": 38,
+      "Name": "TrainingReturnCrystal",
+      "Description": "训练营传送水晶：选择返回城镇，不参与地牢出口守卫判定",
+      "PrefabPath": "Assets/Res/Prefab/Environment/TrainingReturnCrystal.prefab",
+      "Modules": []
     }
   ]
 }

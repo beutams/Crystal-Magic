@@ -280,6 +280,41 @@
                              ]
                          }
                      ]
+                 },
+                 {
+                     "Id": 8,
+                     "NPC": "TrainingReturnCrystal",
+                     "PrefabPath": "Assets/Res/Prefab/Environment/TrainingReturnCrystal.prefab",
+                     "DisplayNameKey": "npc.training_return_crystal.name",
+                     "Interactions": [
+                         {
+                             "Key": "TrainingReturnToTown",
+                             "DisplayNameKey": "npc.training_return_crystal.name",
+                             "EntryNodeGuid": "training_return_select",
+                             "Nodes": [
+                                 {
+                                     "Type": "Select",
+                                     "Guid": "training_return_select",
+                                     "ExecutionTargets": 1,
+                                     "Dialog": "",
+                                     "Options": [
+                                         {
+                                             "DisplayNameKey": "npc.option.return_town",
+                                             "EnableExpression": "",
+                                             "NextNodeGuid": "training_return_town"
+                                         }
+                                     ],
+                                     "Branches": []
+                                 },
+                                 {
+                                     "Type": "EnterTown",
+                                     "Guid": "training_return_town",
+                                     "ExecutionTargets": 1,
+                                     "Branches": []
+                                 }
+                             ]
+                         }
+                     ]
                  }
              ]
 }

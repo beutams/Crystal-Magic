@@ -1151,3 +1151,5 @@ Game\
     UnitControlAttributeDrawer.cs TRUE
 
     UnitControlImmunityTests.cs TRUE
+
+    AbyssTilePlacementTests.cs TRUE

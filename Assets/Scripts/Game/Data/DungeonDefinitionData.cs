@@ -244,45 +244,14 @@ namespace CrystalMagic.Game.Data
     [Serializable]
     public sealed class OpenFieldVoidVisualData
     {
+        // All abyss cells must use the same asset so RuleTile adjacency can
+        // resolve the single-cell grass/cliff/black transition consistently.
         public OpenFieldRuleTileReferenceData AbyssRuleTile = new();
-        public OpenFieldRuleTileReferenceData WallRuleTile = new();
-        public OpenFieldRuleTileReferenceData WallBottomRuleTile = new();
-        public OpenFieldRuleTileReferenceData TransitionRuleTile = new();
-        public OpenFieldRuleTileReferenceData LeftTransitionRuleTile = new();
-        public OpenFieldRuleTileReferenceData RightTransitionRuleTile = new();
-        public OpenFieldRuleTileReferenceData LeftFadeRuleTile = new();
-        public OpenFieldRuleTileReferenceData RightFadeRuleTile = new();
-        public OpenFieldRuleTileReferenceData LeftCornerRuleTile = new();
-        public OpenFieldRuleTileReferenceData RightCornerRuleTile = new();
-        public OpenFieldRuleTileReferenceData LeftInnerCornerRuleTile = new();
-        public OpenFieldRuleTileReferenceData RightInnerCornerRuleTile = new();
 
         public void EnsureValid()
         {
             AbyssRuleTile ??= new OpenFieldRuleTileReferenceData();
             AbyssRuleTile.EnsureValid();
-            WallRuleTile ??= new OpenFieldRuleTileReferenceData();
-            WallRuleTile.EnsureValid();
-            WallBottomRuleTile ??= new OpenFieldRuleTileReferenceData();
-            WallBottomRuleTile.EnsureValid();
-            TransitionRuleTile ??= new OpenFieldRuleTileReferenceData();
-            TransitionRuleTile.EnsureValid();
-            LeftTransitionRuleTile ??= new OpenFieldRuleTileReferenceData();
-            LeftTransitionRuleTile.EnsureValid();
-            RightTransitionRuleTile ??= new OpenFieldRuleTileReferenceData();
-            RightTransitionRuleTile.EnsureValid();
-            LeftFadeRuleTile ??= new OpenFieldRuleTileReferenceData();
-            LeftFadeRuleTile.EnsureValid();
-            RightFadeRuleTile ??= new OpenFieldRuleTileReferenceData();
-            RightFadeRuleTile.EnsureValid();
-            LeftCornerRuleTile ??= new OpenFieldRuleTileReferenceData();
-            LeftCornerRuleTile.EnsureValid();
-            RightCornerRuleTile ??= new OpenFieldRuleTileReferenceData();
-            RightCornerRuleTile.EnsureValid();
-            LeftInnerCornerRuleTile ??= new OpenFieldRuleTileReferenceData();
-            LeftInnerCornerRuleTile.EnsureValid();
-            RightInnerCornerRuleTile ??= new OpenFieldRuleTileReferenceData();
-            RightInnerCornerRuleTile.EnsureValid();
         }
     }
 
@@ -309,13 +278,6 @@ namespace CrystalMagic.Game.Data
     {
         public string Name;
         public OpenFieldRuleTileReferenceData BaseRuleTile = new();
-        public OpenFieldRuleTileReferenceData VoidTransitionRuleTile = new();
-        public OpenFieldRuleTileReferenceData VoidLeftTransitionRuleTile = new();
-        public OpenFieldRuleTileReferenceData VoidRightTransitionRuleTile = new();
-        public OpenFieldRuleTileReferenceData VoidLeftCornerRuleTile = new();
-        public OpenFieldRuleTileReferenceData VoidRightCornerRuleTile = new();
-        public OpenFieldRuleTileReferenceData VoidLeftInnerCornerRuleTile = new();
-        public OpenFieldRuleTileReferenceData VoidRightInnerCornerRuleTile = new();
         // Optional grass-colour variant; an empty path uses ObstacleVisual.TransitionRuleTile.
         public OpenFieldRuleTileReferenceData MountainTransitionRuleTile = new();
         public OpenFieldRuleTileReferenceData MountainWallRuleTile = new();
@@ -328,20 +290,6 @@ namespace CrystalMagic.Game.Data
             Name ??= string.Empty;
             BaseRuleTile ??= new OpenFieldRuleTileReferenceData();
             BaseRuleTile.EnsureValid();
-            VoidTransitionRuleTile ??= new OpenFieldRuleTileReferenceData();
-            VoidTransitionRuleTile.EnsureValid();
-            VoidLeftTransitionRuleTile ??= new OpenFieldRuleTileReferenceData();
-            VoidLeftTransitionRuleTile.EnsureValid();
-            VoidRightTransitionRuleTile ??= new OpenFieldRuleTileReferenceData();
-            VoidRightTransitionRuleTile.EnsureValid();
-            VoidLeftCornerRuleTile ??= new OpenFieldRuleTileReferenceData();
-            VoidLeftCornerRuleTile.EnsureValid();
-            VoidRightCornerRuleTile ??= new OpenFieldRuleTileReferenceData();
-            VoidRightCornerRuleTile.EnsureValid();
-            VoidLeftInnerCornerRuleTile ??= new OpenFieldRuleTileReferenceData();
-            VoidLeftInnerCornerRuleTile.EnsureValid();
-            VoidRightInnerCornerRuleTile ??= new OpenFieldRuleTileReferenceData();
-            VoidRightInnerCornerRuleTile.EnsureValid();
             MountainTransitionRuleTile ??= new OpenFieldRuleTileReferenceData();
             MountainTransitionRuleTile.EnsureValid();
             MountainWallRuleTile ??= new OpenFieldRuleTileReferenceData();

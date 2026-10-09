@@ -49,18 +49,8 @@ namespace CrystalMagic.Editor.Data
             EditorGUILayout.LabelField("Each field stores a RuleTile asset path. Void and obstacle variants are resolved into their own runtime Tilemaps.", EditorStyles.wordWrappedMiniLabel);
 
             EditorGUILayout.LabelField("Void", EditorStyles.miniBoldLabel);
-            visual.VoidVisual.AbyssRuleTile.AssetPath = DrawRuleTilePath("Abyss", visual.VoidVisual.AbyssRuleTile.AssetPath);
-            visual.VoidVisual.WallRuleTile.AssetPath = DrawRuleTilePath("Wall", visual.VoidVisual.WallRuleTile.AssetPath);
-            visual.VoidVisual.WallBottomRuleTile.AssetPath = DrawRuleTilePath("Wall Bottom", visual.VoidVisual.WallBottomRuleTile.AssetPath);
-            visual.VoidVisual.TransitionRuleTile.AssetPath = DrawRuleTilePath("Transition", visual.VoidVisual.TransitionRuleTile.AssetPath);
-            visual.VoidVisual.LeftTransitionRuleTile.AssetPath = DrawRuleTilePath("Left Transition", visual.VoidVisual.LeftTransitionRuleTile.AssetPath);
-            visual.VoidVisual.RightTransitionRuleTile.AssetPath = DrawRuleTilePath("Right Transition", visual.VoidVisual.RightTransitionRuleTile.AssetPath);
-            visual.VoidVisual.LeftFadeRuleTile.AssetPath = DrawRuleTilePath("Left Wall Fade", visual.VoidVisual.LeftFadeRuleTile.AssetPath);
-            visual.VoidVisual.RightFadeRuleTile.AssetPath = DrawRuleTilePath("Right Wall Fade", visual.VoidVisual.RightFadeRuleTile.AssetPath);
-            visual.VoidVisual.LeftCornerRuleTile.AssetPath = DrawRuleTilePath("Left Outer Corner", visual.VoidVisual.LeftCornerRuleTile.AssetPath);
-            visual.VoidVisual.RightCornerRuleTile.AssetPath = DrawRuleTilePath("Right Outer Corner", visual.VoidVisual.RightCornerRuleTile.AssetPath);
-            visual.VoidVisual.LeftInnerCornerRuleTile.AssetPath = DrawRuleTilePath("Left Inner Corner", visual.VoidVisual.LeftInnerCornerRuleTile.AssetPath);
-            visual.VoidVisual.RightInnerCornerRuleTile.AssetPath = DrawRuleTilePath("Right Inner Corner", visual.VoidVisual.RightInnerCornerRuleTile.AssetPath);
+            visual.VoidVisual.AbyssRuleTile.AssetPath = DrawRuleTilePath("Abyss (Single-cell Edge)", visual.VoidVisual.AbyssRuleTile.AssetPath);
+            EditorGUILayout.LabelField("One shared RuleTile: the first abyss cell contains the entire grass/cliff/black transition. No extra wall or fade rows.", EditorStyles.wordWrappedMiniLabel);
 
             GUILayout.Space(3f);
             EditorGUILayout.LabelField("Obstacle", EditorStyles.miniBoldLabel);
@@ -114,13 +104,6 @@ namespace CrystalMagic.Editor.Data
                 {
                     style.Name = EditorGUILayout.TextField("Name", style.Name ?? string.Empty);
                     style.BaseRuleTile.AssetPath = DrawRuleTilePath("Base Rule Tile", style.BaseRuleTile.AssetPath);
-                    style.VoidTransitionRuleTile.AssetPath = DrawRuleTilePath("Abyss Edge", style.VoidTransitionRuleTile.AssetPath);
-                    style.VoidLeftTransitionRuleTile.AssetPath = DrawRuleTilePath("Abyss Left Edge", style.VoidLeftTransitionRuleTile.AssetPath);
-                    style.VoidRightTransitionRuleTile.AssetPath = DrawRuleTilePath("Abyss Right Edge", style.VoidRightTransitionRuleTile.AssetPath);
-                    style.VoidLeftCornerRuleTile.AssetPath = DrawRuleTilePath("Abyss Left Corner", style.VoidLeftCornerRuleTile.AssetPath);
-                    style.VoidRightCornerRuleTile.AssetPath = DrawRuleTilePath("Abyss Right Corner", style.VoidRightCornerRuleTile.AssetPath);
-                    style.VoidLeftInnerCornerRuleTile.AssetPath = DrawRuleTilePath("Abyss Left Inner Corner", style.VoidLeftInnerCornerRuleTile.AssetPath);
-                    style.VoidRightInnerCornerRuleTile.AssetPath = DrawRuleTilePath("Abyss Right Inner Corner", style.VoidRightInnerCornerRuleTile.AssetPath);
                     style.MountainTransitionRuleTile.AssetPath = DrawRuleTilePath("Mountain Foot", style.MountainTransitionRuleTile.AssetPath);
                     style.MountainWallRuleTile.AssetPath = DrawRuleTilePath("Mountain Wall / Sides", style.MountainWallRuleTile.AssetPath);
                     style.MountainTopRuleTile.AssetPath = DrawRuleTilePath("Mountain Summit", style.MountainTopRuleTile.AssetPath);

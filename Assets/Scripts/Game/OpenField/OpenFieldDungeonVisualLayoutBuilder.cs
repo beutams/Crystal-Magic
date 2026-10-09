@@ -190,13 +190,6 @@ namespace CrystalMagic.Game.OpenField
     /// </summary>
     public static class OpenFieldDungeonVisualLayoutBuilder
     {
-        private enum VoidFace : byte
-        {
-            Front,
-            Left,
-            Right,
-        }
-
         private static readonly Vector2Int[] CardinalDirections =
         {
             new Vector2Int(0, 1),
@@ -474,9 +467,6 @@ namespace CrystalMagic.Game.OpenField
             List<OpenFieldRuleTilePlacement> placements = new();
             List<OpenFieldRuleTilePlacement> mountainPlacements = new();
             int[] mountainGroundStyles = ExtendGroundStylesIntoMountains(layout, groundStyleIndices);
-            int[] frontVoidDepths = BuildVoidDepthsBelowGround(layout);
-            int[] leftVoidDepths = BuildVoidDepthsBesideGround(layout, false);
-            int[] rightVoidDepths = BuildVoidDepthsBesideGround(layout, true);
             for (int y = 0; y < layout.Height; y++)
             {
                 for (int x = 0; x < layout.Width; x++)
@@ -503,72 +493,12 @@ namespace CrystalMagic.Game.OpenField
 
                         case OpenFieldTerrainCell.Void:
                         {
-                            int index = layout.GetIndex(x, y);
-                            int frontDepth = frontVoidDepths[index];
-                            int leftDepth = leftVoidDepths[index];
-                            int rightDepth = rightVoidDepths[index];
-                            if (frontDepth == 1 && (leftDepth == 1 || rightDepth == 1))
-                            {
-                                VoidFace cornerFace = leftDepth == 1 ? VoidFace.Left : VoidFace.Right;
-                                int style = groundStyleIndices[layout.GetIndex(x, y + 1)];
-                                placements.Add(new OpenFieldRuleTilePlacement(
-                                    OpenFieldRuleTileLayer.Void,
-                                    GetVoidInnerCornerRuleTile(visual, cornerFace, style), cell));
-                                break;
-                            }
-                            // A void cell diagonally below a grass corner joins the
-                            // horizontal side strip to the vertical front strip.
-                            if (frontDepth != 1 && leftDepth != 1 && rightDepth != 1 &&
-                                y + 1 < layout.Height && layout.GetTerrainCell(x, y + 1) == OpenFieldTerrainCell.Void)
-                            {
-                                if (x + 1 < layout.Width &&
-                                    layout.GetTerrainCell(x + 1, y) == OpenFieldTerrainCell.Void &&
-                                    layout.GetTerrainCell(x + 1, y + 1) == OpenFieldTerrainCell.Ground)
-                                {
-                                    int style = groundStyleIndices[layout.GetIndex(x + 1, y + 1)];
-                                    placements.Add(new OpenFieldRuleTilePlacement(
-                                        OpenFieldRuleTileLayer.Void,
-                                        GetVoidCornerRuleTile(visual, VoidFace.Left, style), cell));
-                                    break;
-                                }
-                                if (x > 0 &&
-                                    layout.GetTerrainCell(x - 1, y) == OpenFieldTerrainCell.Void &&
-                                    layout.GetTerrainCell(x - 1, y + 1) == OpenFieldTerrainCell.Ground)
-                                {
-                                    int style = groundStyleIndices[layout.GetIndex(x - 1, y + 1)];
-                                    placements.Add(new OpenFieldRuleTilePlacement(
-                                        OpenFieldRuleTileLayer.Void,
-                                        GetVoidCornerRuleTile(visual, VoidFace.Right, style), cell));
-                                    break;
-                                }
-                            }
-
-                            VoidFace face = VoidFace.Front;
-                            int depth = frontDepth > 0 ? frontDepth : int.MaxValue;
-                            if (leftDepth > 0 && leftDepth < depth)
-                            {
-                                face = VoidFace.Left;
-                                depth = leftDepth;
-                            }
-                            if (rightDepth > 0 && rightDepth < depth)
-                            {
-                                face = VoidFace.Right;
-                                depth = rightDepth;
-                            }
-                            int adjacentGroundStyle = -1;
-                            if (depth == 1)
-                            {
-                                adjacentGroundStyle = face switch
-                                {
-                                    VoidFace.Front => groundStyleIndices[layout.GetIndex(x, y + 1)],
-                                    VoidFace.Left => groundStyleIndices[layout.GetIndex(x + 1, y)],
-                                    VoidFace.Right => groundStyleIndices[layout.GetIndex(x - 1, y)],
-                                    _ => -1,
-                                };
-                            }
+                            // One shared RuleTile sees the complete abyss mask. Its
+                            // fixed edge sprites already contain grass, wall and fade;
+                            // no depth strips or per-ground-style tiles are placed.
                             placements.Add(new OpenFieldRuleTilePlacement(
                                 OpenFieldRuleTileLayer.Void,
-                                GetVoidRuleTile(visual, face, depth, adjacentGroundStyle),
+                                visual.VoidVisual.AbyssRuleTile,
                                 cell));
                             break;
                         }
@@ -625,133 +555,8 @@ namespace CrystalMagic.Game.OpenField
             // overwrite that cliff's visible wall or foot.
             mountainPlacements.Reverse();
             placements.AddRange(mountainPlacements);
-            AddBoundaryPlacements(layout, visual.BoundaryRuleTile, placements);
+            AddBoundaryPlacements(layout, visual.VoidVisual.AbyssRuleTile, visual.BoundaryRuleTile, placements);
             return placements;
-        }
-
-        private static int[] BuildVoidDepthsBelowGround(OpenFieldDungeonLayout layout)
-        {
-            int[] depths = new int[layout.CellCount];
-            for (int x = 0; x < layout.Width; x++)
-            {
-                int nextDepth = 0;
-                for (int y = layout.Height - 1; y >= 0; y--)
-                {
-                    switch (layout.GetTerrainCell(x, y))
-                    {
-                        case OpenFieldTerrainCell.Ground:
-                            nextDepth = 1;
-                            break;
-                        case OpenFieldTerrainCell.Void:
-                            depths[layout.GetIndex(x, y)] = nextDepth;
-                            if (nextDepth > 0)
-                                nextDepth++;
-                            break;
-                        default:
-                            nextDepth = 0;
-                            break;
-                    }
-                }
-            }
-            return depths;
-        }
-
-        private static int[] BuildVoidDepthsBesideGround(OpenFieldDungeonLayout layout, bool groundOnLeft)
-        {
-            int[] depths = new int[layout.CellCount];
-            for (int y = 0; y < layout.Height; y++)
-            {
-                int nextDepth = 0;
-                for (int step = 0; step < layout.Width; step++)
-                {
-                    int x = groundOnLeft ? step : layout.Width - 1 - step;
-                    switch (layout.GetTerrainCell(x, y))
-                    {
-                        case OpenFieldTerrainCell.Ground:
-                            nextDepth = 1;
-                            break;
-                        case OpenFieldTerrainCell.Void:
-                            depths[layout.GetIndex(x, y)] = nextDepth;
-                            if (nextDepth > 0)
-                                nextDepth++;
-                            break;
-                        default:
-                            nextDepth = 0;
-                            break;
-                    }
-                }
-            }
-            return depths;
-        }
-
-        private static OpenFieldRuleTileReferenceData GetVoidRuleTile(
-            OpenFieldDungeonVisualData visual, VoidFace face, int depth, int adjacentGroundStyle)
-        {
-            if (depth == 1 && adjacentGroundStyle >= 0 && adjacentGroundStyle < visual.GroundStyles.Count)
-            {
-                OpenFieldGroundStyleData style = visual.GroundStyles[adjacentGroundStyle];
-                OpenFieldRuleTileReferenceData styleEdge = face switch
-                {
-                    VoidFace.Left => style.VoidLeftTransitionRuleTile,
-                    VoidFace.Right => style.VoidRightTransitionRuleTile,
-                    _ => style.VoidTransitionRuleTile,
-                };
-                if (!string.IsNullOrWhiteSpace(styleEdge?.AssetPath))
-                    return styleEdge;
-            }
-
-            OpenFieldRuleTileReferenceData selected = (face, depth) switch
-            {
-                (VoidFace.Front, 1) => visual.VoidVisual.TransitionRuleTile,
-                (VoidFace.Left, 1) => visual.VoidVisual.LeftTransitionRuleTile,
-                (VoidFace.Right, 1) => visual.VoidVisual.RightTransitionRuleTile,
-                (_, 2) => visual.VoidVisual.WallRuleTile,
-                (VoidFace.Front, 3) => visual.VoidVisual.WallBottomRuleTile,
-                (VoidFace.Left, 3) => visual.VoidVisual.LeftFadeRuleTile,
-                (VoidFace.Right, 3) => visual.VoidVisual.RightFadeRuleTile,
-                _ => visual.VoidVisual.AbyssRuleTile,
-            };
-            return !string.IsNullOrWhiteSpace(selected?.AssetPath) ? selected : visual.VoidVisual.AbyssRuleTile;
-        }
-
-        private static OpenFieldRuleTileReferenceData GetVoidCornerRuleTile(
-            OpenFieldDungeonVisualData visual, VoidFace face, int adjacentGroundStyle)
-        {
-            if (adjacentGroundStyle >= 0 && adjacentGroundStyle < visual.GroundStyles.Count)
-            {
-                OpenFieldGroundStyleData style = visual.GroundStyles[adjacentGroundStyle];
-                OpenFieldRuleTileReferenceData styleCorner = face == VoidFace.Left
-                    ? style.VoidLeftCornerRuleTile
-                    : style.VoidRightCornerRuleTile;
-                if (!string.IsNullOrWhiteSpace(styleCorner?.AssetPath))
-                    return styleCorner;
-            }
-
-            OpenFieldRuleTileReferenceData fallback = face == VoidFace.Left
-                ? visual.VoidVisual.LeftCornerRuleTile
-                : visual.VoidVisual.RightCornerRuleTile;
-            return !string.IsNullOrWhiteSpace(fallback?.AssetPath) ? fallback : visual.VoidVisual.AbyssRuleTile;
-        }
-
-        private static OpenFieldRuleTileReferenceData GetVoidInnerCornerRuleTile(
-            OpenFieldDungeonVisualData visual, VoidFace face, int adjacentGroundStyle)
-        {
-            if (adjacentGroundStyle >= 0 && adjacentGroundStyle < visual.GroundStyles.Count)
-            {
-                OpenFieldGroundStyleData style = visual.GroundStyles[adjacentGroundStyle];
-                OpenFieldRuleTileReferenceData styleCorner = face == VoidFace.Left
-                    ? style.VoidLeftInnerCornerRuleTile
-                    : style.VoidRightInnerCornerRuleTile;
-                if (!string.IsNullOrWhiteSpace(styleCorner?.AssetPath))
-                    return styleCorner;
-            }
-
-            OpenFieldRuleTileReferenceData fallback = face == VoidFace.Left
-                ? visual.VoidVisual.LeftInnerCornerRuleTile
-                : visual.VoidVisual.RightInnerCornerRuleTile;
-            return !string.IsNullOrWhiteSpace(fallback?.AssetPath)
-                ? fallback
-                : GetVoidRuleTile(visual, VoidFace.Front, 1, adjacentGroundStyle);
         }
 
         private static int[] ExtendGroundStylesIntoMountains(OpenFieldDungeonLayout layout, int[] groundStyles)
@@ -791,31 +596,33 @@ namespace CrystalMagic.Game.OpenField
 
         private static void AddBoundaryPlacements(
             OpenFieldDungeonLayout layout,
+            OpenFieldRuleTileReferenceData abyssRuleTile,
             OpenFieldRuleTileReferenceData boundaryRuleTile,
             List<OpenFieldRuleTilePlacement> placements)
         {
-            for (int x = -1; x <= layout.Width; x++)
+            void AddBoundaryCell(Vector2Int cell)
             {
+                // Continue the abyss rule context under the opaque boundary ring.
+                // Otherwise empty out-of-map neighbours would create a fake grass
+                // shore around the outermost void cells.
+                if (!string.IsNullOrWhiteSpace(abyssRuleTile.AssetPath))
+                {
+                    placements.Add(new OpenFieldRuleTilePlacement(
+                        OpenFieldRuleTileLayer.Void, abyssRuleTile, cell));
+                }
                 placements.Add(new OpenFieldRuleTilePlacement(
-                    OpenFieldRuleTileLayer.Boundary,
-                    boundaryRuleTile,
-                    new Vector2Int(x, -1)));
-                placements.Add(new OpenFieldRuleTilePlacement(
-                    OpenFieldRuleTileLayer.Boundary,
-                    boundaryRuleTile,
-                    new Vector2Int(x, layout.Height)));
+                    OpenFieldRuleTileLayer.Boundary, boundaryRuleTile, cell));
             }
 
+            for (int x = -1; x <= layout.Width; x++)
+            {
+                AddBoundaryCell(new Vector2Int(x, -1));
+                AddBoundaryCell(new Vector2Int(x, layout.Height));
+            }
             for (int y = 0; y < layout.Height; y++)
             {
-                placements.Add(new OpenFieldRuleTilePlacement(
-                    OpenFieldRuleTileLayer.Boundary,
-                    boundaryRuleTile,
-                    new Vector2Int(-1, y)));
-                placements.Add(new OpenFieldRuleTilePlacement(
-                    OpenFieldRuleTileLayer.Boundary,
-                    boundaryRuleTile,
-                    new Vector2Int(layout.Width, y)));
+                AddBoundaryCell(new Vector2Int(-1, y));
+                AddBoundaryCell(new Vector2Int(layout.Width, y));
             }
         }
 

@@ -341,6 +341,16 @@ public sealed class NPCEnterTownInteractionNodeRunner : NPCInteractionNodeRunner
             return;
         }
 
+        if (GameFlowComponent.Instance.IsInState<TrainingState>())
+        {
+            // Training is not a dungeon run: keep the loadout and go straight to town.
+            // Clone while the training player still exists, before the SubScene unloads.
+            LoadGameContext context = SaveDataComponent.Instance.CreateLoadGameContext(SaveAreaType.Town);
+            context.Character = PlayerCharacterUtility.Clone(context.Character);
+            GameFlowComponent.Instance.BeginTransition(TownState.CreateEnterTransitionData(context));
+            return;
+        }
+
         GameFlowComponent.Instance.SetState<DungeonSettlementState>(
             DungeonSettlementStateData.Create(DungeonSettlementOutcome.Escaped));
     }

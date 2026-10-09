@@ -1624,6 +1624,21 @@
         }
       ],
       "Id": 27
+    },
+    {
+      "Id": 31,
+      "UnitDataId": 38,
+      "UnitName": "TrainingReturnCrystal",
+      "Animations": [
+        {
+          "Name": "Idle",
+          "DirectionMode": 0,
+          "FrontClipPath": "Assets/Res/Animation/TeleportStone/Idle.anim",
+          "BackClipPath": "Assets/Res/Animation/TeleportStone/Idle.anim",
+          "LeftClipPath": "Assets/Res/Animation/TeleportStone/Idle.anim",
+          "RightClipPath": "Assets/Res/Animation/TeleportStone/Idle.anim"
+        }
+      ]
     }
   ]
 }

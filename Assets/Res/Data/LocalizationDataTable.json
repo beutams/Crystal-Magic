@@ -1229,6 +1229,18 @@
             "Key": "story.intro.training",
             "ChineseSimplified": "准备好后，找训练师先去训练场试试技能链。熟悉施法节奏，再进入地牢，记得活着撤离。",
             "English": "When ready, ask the trainer to enter the training ground and test your chain. Learn its timing before entering the dungeon, and make it back alive."
+        },
+        {
+            "Id": 215,
+            "Key": "npc.training_return_crystal.name",
+            "ChineseSimplified": "传送水晶",
+            "English": "Teleport Crystal"
+        },
+        {
+            "Id": 216,
+            "Key": "npc.option.return_town",
+            "ChineseSimplified": "返回城镇",
+            "English": "Return to Town"
         }
     ]
 }

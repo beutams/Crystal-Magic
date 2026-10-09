@@ -104786,6 +104786,42 @@
           "ViewScale":1.0
         }
       ]
+    },
+    {
+      "Id": 38,
+      "Graphs": [
+        {
+          "Guid": "training_crystal_interaction_graph",
+          "Name": "Idle and Interaction",
+          "EntryNodeGuid": "training_crystal_entry",
+          "Nodes": [
+            {"Type":"Entry","Guid":"training_crystal_entry","ExecutionTargets":1,"EditorPosition":{"x":80,"y":80}},
+            {
+              "Type":"SetValue","Guid":"training_crystal_idle","ExecutionTargets":1,
+              "EditorPosition":{"x":330,"y":80},
+              "SetterKey":"unit.animation.setName",
+              "Values":[{"Kind":0,"Literal":{"Type":7,"String":"Idle"},"Inputs":[]}]
+            },
+            {
+              "Type":"Monitor","Guid":"training_crystal_monitor","ExecutionTargets":1,"TickOrder":0,
+              "EditorPosition":{"x":580,"y":80},
+              "Condition":{"ConditionType":0,"CompareType":"IsTrue","Inputs":[
+                {"Kind":1,"GetterKey":"world.interaction.hasPending","Inputs":[
+                  {"Kind":1,"GetterKey":"unit.self.entity","Inputs":[]}
+                ]}
+              ]}
+            },
+            {"Type":"StartNpcInteraction","Guid":"training_crystal_start","ExecutionTargets":1,"EditorPosition":{"x":1080,"y":80}}
+          ],
+          "Edges": [
+            {"OutputNodeGuid":"training_crystal_entry","OutputPortName":"Out","InputNodeGuid":"training_crystal_idle","InputPortName":"In"},
+            {"OutputNodeGuid":"training_crystal_idle","OutputPortName":"Out","InputNodeGuid":"training_crystal_monitor","InputPortName":"Start"},
+            {"OutputNodeGuid":"training_crystal_monitor","OutputPortName":"True","InputNodeGuid":"training_crystal_start","InputPortName":"In"}
+          ],
+          "ViewPosition":{"x":0,"y":0},
+          "ViewScale":1.0
+        }
+      ]
     }
   ]
 }

@@ -1,0 +1,1200 @@
+[
+  {
+    "mask": 124,
+    "name": "Abyss_straight-N",
+    "fileId": 21300000,
+    "pngRect": [
+      0,
+      0,
+      16,
+      16
+    ],
+    "sources": [
+      "straight-N"
+    ],
+    "conditions": [
+      2,
+      0,
+      1,
+      1,
+      1,
+      1,
+      1,
+      0
+    ]
+  },
+  {
+    "mask": 241,
+    "name": "Abyss_straight-E",
+    "fileId": 21300001,
+    "pngRect": [
+      16,
+      0,
+      16,
+      16
+    ],
+    "sources": [
+      "straight-E"
+    ],
+    "conditions": [
+      1,
+      0,
+      2,
+      0,
+      1,
+      1,
+      1,
+      1
+    ]
+  },
+  {
+    "mask": 199,
+    "name": "Abyss_straight-S",
+    "fileId": 21300002,
+    "pngRect": [
+      32,
+      0,
+      16,
+      16
+    ],
+    "sources": [
+      "straight-S"
+    ],
+    "conditions": [
+      1,
+      1,
+      1,
+      0,
+      2,
+      0,
+      1,
+      1
+    ]
+  },
+  {
+    "mask": 31,
+    "name": "Abyss_straight-W",
+    "fileId": 21300003,
+    "pngRect": [
+      48,
+      0,
+      16,
+      16
+    ],
+    "sources": [
+      "straight-W"
+    ],
+    "conditions": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      0,
+      2,
+      0
+    ]
+  },
+  {
+    "mask": 28,
+    "name": "Abyss_outer-NW",
+    "fileId": 21300004,
+    "pngRect": [
+      64,
+      0,
+      16,
+      16
+    ],
+    "sources": [
+      "outer-NW"
+    ],
+    "conditions": [
+      2,
+      0,
+      1,
+      1,
+      1,
+      0,
+      2,
+      0
+    ]
+  },
+  {
+    "mask": 112,
+    "name": "Abyss_outer-NE",
+    "fileId": 21300005,
+    "pngRect": [
+      80,
+      0,
+      16,
+      16
+    ],
+    "sources": [
+      "outer-NE"
+    ],
+    "conditions": [
+      2,
+      0,
+      2,
+      0,
+      1,
+      1,
+      1,
+      0
+    ]
+  },
+  {
+    "mask": 193,
+    "name": "Abyss_outer-SE",
+    "fileId": 21300006,
+    "pngRect": [
+      96,
+      0,
+      16,
+      16
+    ],
+    "sources": [
+      "outer-SE"
+    ],
+    "conditions": [
+      1,
+      0,
+      2,
+      0,
+      2,
+      0,
+      1,
+      1
+    ]
+  },
+  {
+    "mask": 7,
+    "name": "Abyss_outer-SW",
+    "fileId": 21300007,
+    "pngRect": [
+      112,
+      0,
+      16,
+      16
+    ],
+    "sources": [
+      "outer-SW"
+    ],
+    "conditions": [
+      1,
+      1,
+      1,
+      0,
+      2,
+      0,
+      2,
+      0
+    ]
+  },
+  {
+    "mask": 127,
+    "name": "Abyss_inner-NW",
+    "fileId": 21300008,
+    "pngRect": [
+      0,
+      16,
+      16,
+      16
+    ],
+    "sources": [
+      "inner-NW"
+    ],
+    "conditions": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      2
+    ]
+  },
+  {
+    "mask": 253,
+    "name": "Abyss_inner-NE",
+    "fileId": 21300009,
+    "pngRect": [
+      16,
+      16,
+      16,
+      16
+    ],
+    "sources": [
+      "inner-NE"
+    ],
+    "conditions": [
+      1,
+      2,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ]
+  },
+  {
+    "mask": 247,
+    "name": "Abyss_inner-SE",
+    "fileId": 21300010,
+    "pngRect": [
+      32,
+      16,
+      16,
+      16
+    ],
+    "sources": [
+      "inner-SE"
+    ],
+    "conditions": [
+      1,
+      1,
+      1,
+      2,
+      1,
+      1,
+      1,
+      1
+    ]
+  },
+  {
+    "mask": 223,
+    "name": "Abyss_inner-SW",
+    "fileId": 21300011,
+    "pngRect": [
+      48,
+      16,
+      16,
+      16
+    ],
+    "sources": [
+      "inner-SW"
+    ],
+    "conditions": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      2,
+      1,
+      1
+    ]
+  },
+  {
+    "mask": 255,
+    "name": "Abyss_black",
+    "fileId": 21300012,
+    "pngRect": [
+      64,
+      16,
+      16,
+      16
+    ],
+    "sources": [
+      "black"
+    ],
+    "conditions": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ]
+  },
+  {
+    "mask": 0,
+    "name": "Abyss_join_000",
+    "fileId": 21300013,
+    "pngRect": [
+      80,
+      16,
+      16,
+      16
+    ],
+    "sources": [
+      "straight-N",
+      "straight-E",
+      "straight-S",
+      "straight-W",
+      "outer-NW",
+      "outer-NE",
+      "outer-SE",
+      "outer-SW"
+    ],
+    "conditions": [
+      2,
+      0,
+      2,
+      0,
+      2,
+      0,
+      2,
+      0
+    ]
+  },
+  {
+    "mask": 1,
+    "name": "Abyss_join_001",
+    "fileId": 21300014,
+    "pngRect": [
+      96,
+      16,
+      16,
+      16
+    ],
+    "sources": [
+      "straight-E",
+      "straight-S",
+      "straight-W",
+      "outer-SE",
+      "outer-SW"
+    ],
+    "conditions": [
+      1,
+      0,
+      2,
+      0,
+      2,
+      0,
+      2,
+      0
+    ]
+  },
+  {
+    "mask": 4,
+    "name": "Abyss_join_004",
+    "fileId": 21300015,
+    "pngRect": [
+      112,
+      16,
+      16,
+      16
+    ],
+    "sources": [
+      "straight-N",
+      "straight-S",
+      "straight-W",
+      "outer-NW",
+      "outer-SW"
+    ],
+    "conditions": [
+      2,
+      0,
+      1,
+      0,
+      2,
+      0,
+      2,
+      0
+    ]
+  },
+  {
+    "mask": 5,
+    "name": "Abyss_join_005",
+    "fileId": 21300016,
+    "pngRect": [
+      0,
+      32,
+      16,
+      16
+    ],
+    "sources": [
+      "straight-S",
+      "straight-W",
+      "inner-NE",
+      "outer-SW"
+    ],
+    "conditions": [
+      1,
+      2,
+      1,
+      0,
+      2,
+      0,
+      2,
+      0
+    ]
+  },
+  {
+    "mask": 16,
+    "name": "Abyss_join_016",
+    "fileId": 21300017,
+    "pngRect": [
+      16,
+      32,
+      16,
+      16
+    ],
+    "sources": [
+      "straight-N",
+      "straight-E",
+      "straight-W",
+      "outer-NW",
+      "outer-NE"
+    ],
+    "conditions": [
+      2,
+      0,
+      2,
+      0,
+      1,
+      0,
+      2,
+      0
+    ]
+  },
+  {
+    "mask": 17,
+    "name": "Abyss_join_017",
+    "fileId": 21300018,
+    "pngRect": [
+      32,
+      32,
+      16,
+      16
+    ],
+    "sources": [
+      "straight-E",
+      "straight-W"
+    ],
+    "conditions": [
+      1,
+      0,
+      2,
+      0,
+      1,
+      0,
+      2,
+      0
+    ]
+  },
+  {
+    "mask": 20,
+    "name": "Abyss_join_020",
+    "fileId": 21300019,
+    "pngRect": [
+      48,
+      32,
+      16,
+      16
+    ],
+    "sources": [
+      "straight-N",
+      "straight-W",
+      "outer-NW",
+      "inner-SE"
+    ],
+    "conditions": [
+      2,
+      0,
+      1,
+      2,
+      1,
+      0,
+      2,
+      0
+    ]
+  },
+  {
+    "mask": 21,
+    "name": "Abyss_join_021",
+    "fileId": 21300020,
+    "pngRect": [
+      64,
+      32,
+      16,
+      16
+    ],
+    "sources": [
+      "straight-W",
+      "inner-NE",
+      "inner-SE"
+    ],
+    "conditions": [
+      1,
+      2,
+      1,
+      2,
+      1,
+      0,
+      2,
+      0
+    ]
+  },
+  {
+    "mask": 23,
+    "name": "Abyss_join_023",
+    "fileId": 21300021,
+    "pngRect": [
+      80,
+      32,
+      16,
+      16
+    ],
+    "sources": [
+      "straight-W",
+      "inner-SE"
+    ],
+    "conditions": [
+      1,
+      1,
+      1,
+      2,
+      1,
+      0,
+      2,
+      0
+    ]
+  },
+  {
+    "mask": 29,
+    "name": "Abyss_join_029",
+    "fileId": 21300022,
+    "pngRect": [
+      96,
+      32,
+      16,
+      16
+    ],
+    "sources": [
+      "straight-W",
+      "inner-NE"
+    ],
+    "conditions": [
+      1,
+      2,
+      1,
+      1,
+      1,
+      0,
+      2,
+      0
+    ]
+  },
+  {
+    "mask": 64,
+    "name": "Abyss_join_064",
+    "fileId": 21300023,
+    "pngRect": [
+      112,
+      32,
+      16,
+      16
+    ],
+    "sources": [
+      "straight-N",
+      "straight-E",
+      "straight-S",
+      "outer-NE",
+      "outer-SE"
+    ],
+    "conditions": [
+      2,
+      0,
+      2,
+      0,
+      2,
+      0,
+      1,
+      0
+    ]
+  },
+  {
+    "mask": 65,
+    "name": "Abyss_join_065",
+    "fileId": 21300024,
+    "pngRect": [
+      0,
+      48,
+      16,
+      16
+    ],
+    "sources": [
+      "straight-E",
+      "straight-S",
+      "inner-NW",
+      "outer-SE"
+    ],
+    "conditions": [
+      1,
+      0,
+      2,
+      0,
+      2,
+      0,
+      1,
+      2
+    ]
+  },
+  {
+    "mask": 68,
+    "name": "Abyss_join_068",
+    "fileId": 21300025,
+    "pngRect": [
+      16,
+      48,
+      16,
+      16
+    ],
+    "sources": [
+      "straight-N",
+      "straight-S"
+    ],
+    "conditions": [
+      2,
+      0,
+      1,
+      0,
+      2,
+      0,
+      1,
+      0
+    ]
+  },
+  {
+    "mask": 69,
+    "name": "Abyss_join_069",
+    "fileId": 21300026,
+    "pngRect": [
+      32,
+      48,
+      16,
+      16
+    ],
+    "sources": [
+      "straight-S",
+      "inner-NW",
+      "inner-NE"
+    ],
+    "conditions": [
+      1,
+      2,
+      1,
+      0,
+      2,
+      0,
+      1,
+      2
+    ]
+  },
+  {
+    "mask": 71,
+    "name": "Abyss_join_071",
+    "fileId": 21300027,
+    "pngRect": [
+      48,
+      48,
+      16,
+      16
+    ],
+    "sources": [
+      "straight-S",
+      "inner-NW"
+    ],
+    "conditions": [
+      1,
+      1,
+      1,
+      0,
+      2,
+      0,
+      1,
+      2
+    ]
+  },
+  {
+    "mask": 80,
+    "name": "Abyss_join_080",
+    "fileId": 21300028,
+    "pngRect": [
+      64,
+      48,
+      16,
+      16
+    ],
+    "sources": [
+      "straight-N",
+      "straight-E",
+      "outer-NE",
+      "inner-SW"
+    ],
+    "conditions": [
+      2,
+      0,
+      2,
+      0,
+      1,
+      2,
+      1,
+      0
+    ]
+  },
+  {
+    "mask": 81,
+    "name": "Abyss_join_081",
+    "fileId": 21300029,
+    "pngRect": [
+      80,
+      48,
+      16,
+      16
+    ],
+    "sources": [
+      "straight-E",
+      "inner-NW",
+      "inner-SW"
+    ],
+    "conditions": [
+      1,
+      0,
+      2,
+      0,
+      1,
+      2,
+      1,
+      2
+    ]
+  },
+  {
+    "mask": 84,
+    "name": "Abyss_join_084",
+    "fileId": 21300030,
+    "pngRect": [
+      96,
+      48,
+      16,
+      16
+    ],
+    "sources": [
+      "straight-N",
+      "inner-SE",
+      "inner-SW"
+    ],
+    "conditions": [
+      2,
+      0,
+      1,
+      2,
+      1,
+      2,
+      1,
+      0
+    ]
+  },
+  {
+    "mask": 85,
+    "name": "Abyss_join_085",
+    "fileId": 21300031,
+    "pngRect": [
+      112,
+      48,
+      16,
+      16
+    ],
+    "sources": [
+      "inner-NW",
+      "inner-NE",
+      "inner-SE",
+      "inner-SW"
+    ],
+    "conditions": [
+      1,
+      2,
+      1,
+      2,
+      1,
+      2,
+      1,
+      2
+    ]
+  },
+  {
+    "mask": 87,
+    "name": "Abyss_join_087",
+    "fileId": 21300032,
+    "pngRect": [
+      0,
+      64,
+      16,
+      16
+    ],
+    "sources": [
+      "inner-NW",
+      "inner-SE",
+      "inner-SW"
+    ],
+    "conditions": [
+      1,
+      1,
+      1,
+      2,
+      1,
+      2,
+      1,
+      2
+    ]
+  },
+  {
+    "mask": 92,
+    "name": "Abyss_join_092",
+    "fileId": 21300033,
+    "pngRect": [
+      16,
+      64,
+      16,
+      16
+    ],
+    "sources": [
+      "straight-N",
+      "inner-SW"
+    ],
+    "conditions": [
+      2,
+      0,
+      1,
+      1,
+      1,
+      2,
+      1,
+      0
+    ]
+  },
+  {
+    "mask": 93,
+    "name": "Abyss_join_093",
+    "fileId": 21300034,
+    "pngRect": [
+      32,
+      64,
+      16,
+      16
+    ],
+    "sources": [
+      "inner-NW",
+      "inner-NE",
+      "inner-SW"
+    ],
+    "conditions": [
+      1,
+      2,
+      1,
+      1,
+      1,
+      2,
+      1,
+      2
+    ]
+  },
+  {
+    "mask": 95,
+    "name": "Abyss_join_095",
+    "fileId": 21300035,
+    "pngRect": [
+      48,
+      64,
+      16,
+      16
+    ],
+    "sources": [
+      "inner-NW",
+      "inner-SW"
+    ],
+    "conditions": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      2,
+      1,
+      2
+    ]
+  },
+  {
+    "mask": 113,
+    "name": "Abyss_join_113",
+    "fileId": 21300036,
+    "pngRect": [
+      64,
+      64,
+      16,
+      16
+    ],
+    "sources": [
+      "straight-E",
+      "inner-NW"
+    ],
+    "conditions": [
+      1,
+      0,
+      2,
+      0,
+      1,
+      1,
+      1,
+      2
+    ]
+  },
+  {
+    "mask": 116,
+    "name": "Abyss_join_116",
+    "fileId": 21300037,
+    "pngRect": [
+      80,
+      64,
+      16,
+      16
+    ],
+    "sources": [
+      "straight-N",
+      "inner-SE"
+    ],
+    "conditions": [
+      2,
+      0,
+      1,
+      2,
+      1,
+      1,
+      1,
+      0
+    ]
+  },
+  {
+    "mask": 117,
+    "name": "Abyss_join_117",
+    "fileId": 21300038,
+    "pngRect": [
+      96,
+      64,
+      16,
+      16
+    ],
+    "sources": [
+      "inner-NW",
+      "inner-NE",
+      "inner-SE"
+    ],
+    "conditions": [
+      1,
+      2,
+      1,
+      2,
+      1,
+      1,
+      1,
+      2
+    ]
+  },
+  {
+    "mask": 119,
+    "name": "Abyss_join_119",
+    "fileId": 21300039,
+    "pngRect": [
+      112,
+      64,
+      16,
+      16
+    ],
+    "sources": [
+      "inner-NW",
+      "inner-SE"
+    ],
+    "conditions": [
+      1,
+      1,
+      1,
+      2,
+      1,
+      1,
+      1,
+      2
+    ]
+  },
+  {
+    "mask": 125,
+    "name": "Abyss_join_125",
+    "fileId": 21300040,
+    "pngRect": [
+      0,
+      80,
+      16,
+      16
+    ],
+    "sources": [
+      "inner-NW",
+      "inner-NE"
+    ],
+    "conditions": [
+      1,
+      2,
+      1,
+      1,
+      1,
+      1,
+      1,
+      2
+    ]
+  },
+  {
+    "mask": 197,
+    "name": "Abyss_join_197",
+    "fileId": 21300041,
+    "pngRect": [
+      16,
+      80,
+      16,
+      16
+    ],
+    "sources": [
+      "straight-S",
+      "inner-NE"
+    ],
+    "conditions": [
+      1,
+      2,
+      1,
+      0,
+      2,
+      0,
+      1,
+      1
+    ]
+  },
+  {
+    "mask": 209,
+    "name": "Abyss_join_209",
+    "fileId": 21300042,
+    "pngRect": [
+      32,
+      80,
+      16,
+      16
+    ],
+    "sources": [
+      "straight-E",
+      "inner-SW"
+    ],
+    "conditions": [
+      1,
+      0,
+      2,
+      0,
+      1,
+      2,
+      1,
+      1
+    ]
+  },
+  {
+    "mask": 213,
+    "name": "Abyss_join_213",
+    "fileId": 21300043,
+    "pngRect": [
+      48,
+      80,
+      16,
+      16
+    ],
+    "sources": [
+      "inner-NE",
+      "inner-SE",
+      "inner-SW"
+    ],
+    "conditions": [
+      1,
+      2,
+      1,
+      2,
+      1,
+      2,
+      1,
+      1
+    ]
+  },
+  {
+    "mask": 215,
+    "name": "Abyss_join_215",
+    "fileId": 21300044,
+    "pngRect": [
+      64,
+      80,
+      16,
+      16
+    ],
+    "sources": [
+      "inner-SE",
+      "inner-SW"
+    ],
+    "conditions": [
+      1,
+      1,
+      1,
+      2,
+      1,
+      2,
+      1,
+      1
+    ]
+  },
+  {
+    "mask": 221,
+    "name": "Abyss_join_221",
+    "fileId": 21300045,
+    "pngRect": [
+      80,
+      80,
+      16,
+      16
+    ],
+    "sources": [
+      "inner-NE",
+      "inner-SW"
+    ],
+    "conditions": [
+      1,
+      2,
+      1,
+      1,
+      1,
+      2,
+      1,
+      1
+    ]
+  },
+  {
+    "mask": 245,
+    "name": "Abyss_join_245",
+    "fileId": 21300046,
+    "pngRect": [
+      96,
+      80,
+      16,
+      16
+    ],
+    "sources": [
+      "inner-NE",
+      "inner-SE"
+    ],
+    "conditions": [
+      1,
+      2,
+      1,
+      2,
+      1,
+      1,
+      1,
+      1
+    ]
+  }
+]
