@@ -63,20 +63,36 @@ public partial class StateScriptManagedCommandSystem : SystemBase
     private Entity _interactionEntity;
     private NPCInteractionNodeRunnerFactory _npcRunnerFactory;
     private bool _npcInputLocked;
+    private bool _tickingNpcSessions;
     private GameWorldRole _worldRole;
     private BattleSimulationScope _scope;
     private bool _replayClientSkills;
 
     public bool HasNpcInteraction => _npcSessions.Count > 0;
+    public bool HasNpcSession(Entity target) => _npcSessions.ContainsKey(target);
+    public bool BlocksInventoryInput
+    {
+        get
+        {
+            foreach (NPCInteractionSession session in _npcSessions.Values)
+            {
+                if (!session.IsActive) continue;
+                if (!session.Interaction.IsSequence ||
+                    session.GetCurrentNode() is not NPCWaitConditionInteractionNodeData { AllowInventory: true })
+                    return true;
+            }
+            return false;
+        }
+    }
 
     public void CancelNpcInteraction(Entity target)
     {
         if (_npcSessions.TryGetValue(target, out NPCInteractionSession session))
         {
             FinishNpcSession(session, true);
-            _npcSessions.Remove(target);
-            if (_npcSessions.Count == 0)
-                ReleaseNpcInput();
+            // EnterDungeon can synchronously leave Town while this dictionary is being ticked.
+            if (!_tickingNpcSessions) _npcSessions.Remove(target);
+            RefreshNpcInput();
         }
         else
             GameInteractionUtility.FailTarget(EntityManager, _interactionEntity, target);
@@ -374,7 +390,8 @@ public partial class StateScriptManagedCommandSystem : SystemBase
                 }
                 break;
             case StateScriptManagedCommandType.RequestInteraction:
-                GameInteractionUtility.TryRequest(EntityManager, _interactionEntity, entity, command.TargetEntity);
+                GameInteractionUtility.TryRequest(EntityManager, _interactionEntity, entity, command.TargetEntity,
+                    requestAllowed: NPCSequenceUtility.AllowsInteraction(EntityManager, command.TargetEntity));
                 break;
             case StateScriptManagedCommandType.CompleteInteraction:
                 GameInteractionUtility.Complete(
@@ -665,7 +682,10 @@ public partial class StateScriptManagedCommandSystem : SystemBase
 
         NPCInteractionSession session = new(target, npcData, interaction, transaction.Actor, World);
         _npcSessions.Add(target, session);
-        AcquireNpcInput();
+        if (interaction.IsSequence)
+            GameInteractionUtility.Complete(EntityManager, _interactionEntity, target,
+                InteractionResultCode.Success, UnitSourceValue.FromBool(true));
+        RefreshNpcInput();
         EventComponent.Instance.Publish(new NPCInteractionStartedEvent(target, npcData, interaction));
     }
 
@@ -682,26 +702,33 @@ public partial class StateScriptManagedCommandSystem : SystemBase
     private void TickNpcSessions(float deltaTime)
     {
         _completedNpcTargets.Clear();
-        foreach (KeyValuePair<Entity, NPCInteractionSession> pair in _npcSessions)
+        _tickingNpcSessions = true;
+        try
         {
-            NPCInteractionSession session = pair.Value;
-            if (!session.IsTargetValid(EntityManager) ||
-                !EntityManager.Exists(session.Actor) ||
-                BattlePlayerStatusUtility.IsInputLocked(EntityManager, session.Actor) ||
-                (EntityManager.HasComponent<UnitDeathComponent>(session.Target) &&
-                 EntityManager.IsComponentEnabled<UnitDeathComponent>(session.Target)))
+            foreach (KeyValuePair<Entity, NPCInteractionSession> pair in _npcSessions)
             {
-                FinishNpcSession(session, true);
-                continue;
+                NPCInteractionSession session = pair.Value;
+                if (!session.IsActive) continue;
+                if (!session.IsTargetValid(EntityManager) ||
+                    !EntityManager.Exists(session.Actor) ||
+                    BattlePlayerStatusUtility.IsInputLocked(EntityManager, session.Actor) ||
+                    (EntityManager.HasComponent<UnitDeathComponent>(session.Target) &&
+                     EntityManager.IsComponentEnabled<UnitDeathComponent>(session.Target)))
+                {
+                    FinishNpcSession(session, true);
+                    continue;
+                }
+
+                AdvanceNpcSessionUntilBlocked(session, deltaTime);
             }
-
-            AdvanceNpcSessionUntilBlocked(session, deltaTime);
         }
-
-        for (int index = 0; index < _completedNpcTargets.Count; index++)
-            _npcSessions.Remove(_completedNpcTargets[index]);
-        if (_npcSessions.Count == 0)
-            ReleaseNpcInput();
+        finally
+        {
+            _tickingNpcSessions = false;
+            for (int index = 0; index < _completedNpcTargets.Count; index++)
+                _npcSessions.Remove(_completedNpcTargets[index]);
+            RefreshNpcInput();
+        }
     }
 
     private void AdvanceNpcSessionUntilBlocked(NPCInteractionSession session, float deltaTime)
@@ -765,6 +792,8 @@ public partial class StateScriptManagedCommandSystem : SystemBase
 
     private void FinishNpcSession(NPCInteractionSession session, bool wasCancelled)
     {
+        if (!session.TryFinish()) return;
+        session.ClearGuide();
         string completionVariable = session.Interaction?.CompletionVariable;
         if (!wasCancelled && !string.IsNullOrWhiteSpace(completionVariable))
         {
@@ -783,13 +812,17 @@ public partial class StateScriptManagedCommandSystem : SystemBase
             }
         }
         if (wasCancelled)
+        {
             session.Cancel();
+            if (session.Interaction.IsSequence)
+                World.GetExistingSystemManaged<AutoInteractionSystem>()?.DeferRetry(session.Actor, session.Target, session.Interaction.RetrySeconds);
+        }
         EventComponent.Instance.Publish(new NPCInteractionFinishedEvent(
             session.Target,
             session.NpcData,
             session.Interaction,
             wasCancelled));
-        GameInteractionUtility.Complete(
+        if (!session.Interaction.IsSequence) GameInteractionUtility.Complete(
             EntityManager,
             _interactionEntity,
             session.Target,
@@ -819,6 +852,17 @@ public partial class StateScriptManagedCommandSystem : SystemBase
             return;
         GameGateComponent.Instance.Lock(GameGateType.PlayerInput, NpcSessionInputLockReason);
         _npcInputLocked = true;
+    }
+
+    private void RefreshNpcInput()
+    {
+        foreach (NPCInteractionSession session in _npcSessions.Values)
+            if (session.IsActive && (!session.Interaction.IsSequence || session.GetCurrentNode() is NPCDialogueInteractionNodeData or NPCCameraInteractionNodeData))
+            {
+                AcquireNpcInput();
+                return;
+            }
+        ReleaseNpcInput();
     }
 
     private void ReleaseNpcInput()

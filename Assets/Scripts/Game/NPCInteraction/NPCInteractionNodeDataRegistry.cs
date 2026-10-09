@@ -1,4 +1,4 @@
-// AUTO-GENERATED - DO NOT EDIT MANUALLY
+﻿// AUTO-GENERATED - DO NOT EDIT MANUALLY
 // Use menu: Tools/Registry/NPC Interaction Node
 
 using System;
@@ -18,6 +18,10 @@ namespace CrystalMagic.Game.Data
             "EnterTrainingGround",
             "EnterTown",
             "RequestBattleExit",
+            "Camera",
+            "Guide",
+            "WaitCondition",
+            "Progress",
         };
 
         private static readonly Dictionary<string, Type> s_types = new(StringComparer.Ordinal)
@@ -30,6 +34,10 @@ namespace CrystalMagic.Game.Data
             { "EnterTrainingGround", typeof(CrystalMagic.Game.Data.NPCEnterTrainingGroundInteractionNodeData) },
             { "EnterTown", typeof(CrystalMagic.Game.Data.NPCEnterTownInteractionNodeData) },
             { "RequestBattleExit", typeof(CrystalMagic.Game.Data.NPCRequestBattleExitInteractionNodeData) },
+            { "Camera", typeof(CrystalMagic.Game.Data.NPCCameraInteractionNodeData) },
+            { "Guide", typeof(CrystalMagic.Game.Data.NPCGuideInteractionNodeData) },
+            { "WaitCondition", typeof(CrystalMagic.Game.Data.NPCWaitConditionInteractionNodeData) },
+            { "Progress", typeof(CrystalMagic.Game.Data.NPCProgressInteractionNodeData) },
         };
 
         private static readonly Dictionary<Type, string> s_keys = new()
@@ -42,6 +50,10 @@ namespace CrystalMagic.Game.Data
             { typeof(CrystalMagic.Game.Data.NPCEnterTrainingGroundInteractionNodeData), "EnterTrainingGround" },
             { typeof(CrystalMagic.Game.Data.NPCEnterTownInteractionNodeData), "EnterTown" },
             { typeof(CrystalMagic.Game.Data.NPCRequestBattleExitInteractionNodeData), "RequestBattleExit" },
+            { typeof(CrystalMagic.Game.Data.NPCCameraInteractionNodeData), "Camera" },
+            { typeof(CrystalMagic.Game.Data.NPCGuideInteractionNodeData), "Guide" },
+            { typeof(CrystalMagic.Game.Data.NPCWaitConditionInteractionNodeData), "WaitCondition" },
+            { typeof(CrystalMagic.Game.Data.NPCProgressInteractionNodeData), "Progress" },
         };
 
         private static readonly Dictionary<string, string> s_displayNames = new(StringComparer.Ordinal)
@@ -54,6 +66,10 @@ namespace CrystalMagic.Game.Data
             { "EnterTrainingGround", "Enter Training Ground" },
             { "EnterTown", "Enter Town" },
             { "RequestBattleExit", "联机出口请求" },
+            { "Camera", "镜头移动" },
+            { "Guide", "引导遮罩" },
+            { "WaitCondition", "等待实际条件" },
+            { "Progress", "保存剧情进度" },
         };
 
         public static IReadOnlyList<string> TypeOrder => s_typeOrder;
@@ -93,6 +109,11 @@ namespace CrystalMagic.Game.Data
             factory.Register("EnterTrainingGround", static () => new CrystalMagic.Game.Data.NPCEnterTrainingGroundInteractionNodeData());
             factory.Register("EnterTown", static () => new CrystalMagic.Game.Data.NPCEnterTownInteractionNodeData());
             factory.Register("RequestBattleExit", static () => new CrystalMagic.Game.Data.NPCRequestBattleExitInteractionNodeData());
+            factory.Register("Camera", static () => new CrystalMagic.Game.Data.NPCCameraInteractionNodeData());
+            factory.Register("Guide", static () => new CrystalMagic.Game.Data.NPCGuideInteractionNodeData());
+            factory.Register("WaitCondition", static () => new CrystalMagic.Game.Data.NPCWaitConditionInteractionNodeData());
+            factory.Register("Progress", static () => new CrystalMagic.Game.Data.NPCProgressInteractionNodeData());
         }
+
     }
 }

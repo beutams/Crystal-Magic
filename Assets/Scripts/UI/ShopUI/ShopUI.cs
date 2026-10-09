@@ -24,6 +24,15 @@ public class ShopUI : UIBase<ShopUIData, ShopUIModel>
     public event Action BackClicked;
     public event Action InventorySortRequested;
 
+    public RectTransform GetGuideTarget(int itemId)
+    {
+        for (int i = 0; i < Model.Commodities.Count && i < _commodityItemViews.Count; i++)
+            if (Model.Commodities[i].ItemId == itemId)
+                return (RectTransform)_commodityItemViews[i].transform;
+        return null;
+    }
+    public RectTransform GuideBack => UI.Back.RectTransform;
+
     public override void OnOpen()
     {
         UI.Back.ButtonPlus.onClick.AddListener(HandleBackClicked);

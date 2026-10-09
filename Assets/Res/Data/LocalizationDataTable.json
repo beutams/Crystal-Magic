@@ -1201,36 +1201,6 @@
             "English": "Spirit"
         },
         {
-            "Id": 210,
-            "Key": "npc.town_guide.name",
-            "ChineseSimplified": "引导者",
-            "English": "Guide"
-        },
-        {
-            "Id": 211,
-            "Key": "story.intro.welcome",
-            "ChineseSimplified": "欢迎来到城镇。先别急着出征，在这里准备好装备和技能，再去探索地牢。",
-            "English": "Welcome to town. Prepare your equipment and skills here before venturing into the dungeon."
-        },
-        {
-            "Id": 212,
-            "Key": "story.intro.chain",
-            "ChineseSimplified": "技能商人出售技能石。把技能编入技能链，前一招施加的状态，就能为后一招创造机会。",
-            "English": "The skill merchant sells skill stones. Arrange skills into a chain: effects from one spell can set up the next."
-        },
-        {
-            "Id": 213,
-            "Key": "story.intro.stash",
-            "ChineseSimplified": "备用物资记得放进仓库。若在地牢倒下，随身的装备、技能和背包物品都会失去，仓库里的物资会保留。",
-            "English": "Keep spare supplies in your stash. Defeat costs your carried equipment, skills and backpack contents, but your stash remains safe."
-        },
-        {
-            "Id": 214,
-            "Key": "story.intro.training",
-            "ChineseSimplified": "准备好后，找训练师先去训练场试试技能链。熟悉施法节奏，再进入地牢，记得活着撤离。",
-            "English": "When ready, ask the trainer to enter the training ground and test your chain. Learn its timing before entering the dungeon, and make it back alive."
-        },
-        {
             "Id": 215,
             "Key": "npc.training_return_crystal.name",
             "ChineseSimplified": "传送水晶",
@@ -1241,6 +1211,402 @@
             "Key": "npc.option.return_town",
             "ChineseSimplified": "返回城镇",
             "English": "Return to Town"
+        },
+        {
+            "Id": 217,
+            "Key": "story.intro.arrival",
+            "ChineseSimplified": "就是这里了……我的第一份独立委托。",
+            "English": "Here it is... my first independent commission."
+        },
+        {
+            "Id": 218,
+            "Key": "story.intro.commission",
+            "ChineseSimplified": "只调查魔晶异常的外围，应该不会太难。",
+            "English": "I'm surveying the outskirts for crystal anomalies. It should be manageable."
+        },
+        {
+            "Id": 219,
+            "Key": "story.intro.prepare",
+            "ChineseSimplified": "不过，真遇到魔物，可没人替我收拾残局。还是先把准备做好。",
+            "English": "But nobody will bail me out if I meet monsters. I'd better prepare."
+        },
+        {
+            "Id": 220,
+            "Key": "story.intro.equipment_reason",
+            "ChineseSimplified": "先找一块合适的魔法石。我熟悉火系法术，火焰石应该不错。",
+            "English": "First, a magic stone. I'm familiar with fire spells, so a Fire Stone should suit me."
+        },
+        {
+            "Id": 221,
+            "Key": "guide.intro.buy_1",
+            "ChineseSimplified": "双击火焰石，购买 1 件（30 金币）。",
+            "English": "Double-click Fire Stone and buy one (30 gold)."
+        },
+        {
+            "Id": 222,
+            "Key": "guide.intro.buy_1.fallback",
+            "ChineseSimplified": "前往金色标记处，按 E 与商人交谈。",
+            "English": "Go to the gold marker and press E to talk to the merchant."
+        },
+        {
+            "Id": 223,
+            "Key": "guide.intro.close_equipment",
+            "ChineseSimplified": "本店物品已买齐。点击返回，继续准备出征。",
+            "English": "Items acquired. Click Back to continue preparing."
+        },
+        {
+            "Id": 224,
+            "Key": "story.intro.props_reason",
+            "ChineseSimplified": "再带点药剂。受伤可以处理，魔力耗尽就只能逃了。",
+            "English": "I should bring potions. Wounds can be treated, but without mana I'll have to run."
+        },
+        {
+            "Id": 225,
+            "Key": "guide.intro.buy_2",
+            "ChineseSimplified": "双击小型体力药剂，购买 1 件（30 金币）。",
+            "English": "Double-click Small Health Potion and buy one (30 gold)."
+        },
+        {
+            "Id": 226,
+            "Key": "guide.intro.buy_2.fallback",
+            "ChineseSimplified": "前往金色标记处，按 E 与商人交谈。",
+            "English": "Go to the gold marker and press E to talk to the merchant."
+        },
+        {
+            "Id": 227,
+            "Key": "guide.intro.buy_3",
+            "ChineseSimplified": "双击小型魔力药剂，购买 1 件（30 金币）。",
+            "English": "Double-click Small Mana Potion and buy one (30 gold)."
+        },
+        {
+            "Id": 228,
+            "Key": "guide.intro.buy_3.fallback",
+            "ChineseSimplified": "前往金色标记处，按 E 与商人交谈。",
+            "English": "Go to the gold marker and press E to talk to the merchant."
+        },
+        {
+            "Id": 229,
+            "Key": "guide.intro.close_props",
+            "ChineseSimplified": "本店物品已买齐。点击返回，继续准备出征。",
+            "English": "Items acquired. Click Back to continue preparing."
+        },
+        {
+            "Id": 230,
+            "Key": "story.intro.skills_reason",
+            "ChineseSimplified": "我想添几招火系法术。只靠火球，总觉得不太够。",
+            "English": "I'd like more fire spells. Fireball alone doesn't feel like enough."
+        },
+        {
+            "Id": 231,
+            "Key": "guide.intro.buy_4",
+            "ChineseSimplified": "双击火球技能石，购买 1 件（30 金币）。",
+            "English": "Double-click Fireball skill stone and buy one (30 gold)."
+        },
+        {
+            "Id": 232,
+            "Key": "guide.intro.buy_4.fallback",
+            "ChineseSimplified": "前往金色标记处，按 E 与商人交谈。",
+            "English": "Go to the gold marker and press E to talk to the merchant."
+        },
+        {
+            "Id": 233,
+            "Key": "guide.intro.buy_18",
+            "ChineseSimplified": "双击火径技能石，购买 1 件（30 金币）。",
+            "English": "Double-click Fire Path skill stone and buy one (30 gold)."
+        },
+        {
+            "Id": 234,
+            "Key": "guide.intro.buy_18.fallback",
+            "ChineseSimplified": "前往金色标记处，按 E 与商人交谈。",
+            "English": "Go to the gold marker and press E to talk to the merchant."
+        },
+        {
+            "Id": 235,
+            "Key": "guide.intro.buy_16",
+            "ChineseSimplified": "双击焦土技能石，购买 1 件（30 金币）。",
+            "English": "Double-click Scorched Earth skill stone and buy one (30 gold)."
+        },
+        {
+            "Id": 236,
+            "Key": "guide.intro.buy_16.fallback",
+            "ChineseSimplified": "前往金色标记处，按 E 与商人交谈。",
+            "English": "Go to the gold marker and press E to talk to the merchant."
+        },
+        {
+            "Id": 237,
+            "Key": "guide.intro.close_skills",
+            "ChineseSimplified": "本店物品已买齐。点击返回，继续准备出征。",
+            "English": "Items acquired. Click Back to continue preparing."
+        },
+        {
+            "Id": 238,
+            "Key": "story.intro.loadout_reason",
+            "ChineseSimplified": "买齐了。先整理一下，放在背包里可发挥不了作用。",
+            "English": "Everything's bought. Time to organize it; it won't help in my backpack."
+        },
+        {
+            "Id": 239,
+            "Key": "guide.intro.equip_1",
+            "ChineseSimplified": "把火焰石拖到魔法石槽。",
+            "English": "Drag the Fire Stone into the magic stone slot."
+        },
+        {
+            "Id": 240,
+            "Key": "guide.intro.equip_1.fallback",
+            "ChineseSimplified": "按 B 打开角色界面，装备魔法石和药剂。",
+            "English": "Press B to open your character and equip your stone and potions."
+        },
+        {
+            "Id": 241,
+            "Key": "guide.intro.equip_2",
+            "ChineseSimplified": "把体力药剂拖到道具槽 1。",
+            "English": "Drag the Health Potion into item slot 1."
+        },
+        {
+            "Id": 242,
+            "Key": "guide.intro.equip_2.fallback",
+            "ChineseSimplified": "按 B 打开角色界面，装备魔法石和药剂。",
+            "English": "Press B to open your character and equip your stone and potions."
+        },
+        {
+            "Id": 243,
+            "Key": "guide.intro.equip_3",
+            "ChineseSimplified": "把魔力药剂拖到道具槽 2。",
+            "English": "Drag the Mana Potion into item slot 2."
+        },
+        {
+            "Id": 244,
+            "Key": "guide.intro.equip_3.fallback",
+            "ChineseSimplified": "按 B 打开角色界面，装备魔法石和药剂。",
+            "English": "Press B to open your character and equip your stone and potions."
+        },
+        {
+            "Id": 246,
+            "Key": "guide.intro.chain_4",
+            "ChineseSimplified": "先用火球起手，再接火径，最后铺下焦土。把火球拖入第一条技能链。",
+            "English": "Fireball first, then Fire Path, and finally Scorched Earth. Drag Fireball into chain 1."
+        },
+        {
+            "Id": 247,
+            "Key": "guide.intro.chain_4.fallback",
+            "ChineseSimplified": "按 B 打开角色界面，切换到技能页。",
+            "English": "Press B to open your character and select Skills."
+        },
+        {
+            "Id": 248,
+            "Key": "guide.intro.chain_18",
+            "ChineseSimplified": "把火径拖到第一条技能链末尾：火球 → 火径 → 焦土。",
+            "English": "Drag Fire Path to the end of chain 1: Fireball → Fire Path → Scorched Earth."
+        },
+        {
+            "Id": 249,
+            "Key": "guide.intro.chain_18.fallback",
+            "ChineseSimplified": "按 B 打开角色界面，切换到技能页。",
+            "English": "Press B to open your character and select Skills."
+        },
+        {
+            "Id": 250,
+            "Key": "guide.intro.chain_16",
+            "ChineseSimplified": "把焦土拖到第一条技能链末尾：火球 → 火径 → 焦土。",
+            "English": "Drag Scorched Earth to the end of chain 1: Fireball → Fire Path → Scorched Earth."
+        },
+        {
+            "Id": 251,
+            "Key": "guide.intro.chain_16.fallback",
+            "ChineseSimplified": "按 B 打开角色界面，切换到技能页。",
+            "English": "Press B to open your character and select Skills."
+        },
+        {
+            "Id": 252,
+            "Key": "guide.intro.close_character",
+            "ChineseSimplified": "配装完成。按 Esc 关闭角色界面。",
+            "English": "Loadout complete. Press Esc to close the character panel."
+        },
+        {
+            "Id": 253,
+            "Key": "story.intro.ready",
+            "ChineseSimplified": "魔法石、药剂、技能……都齐了。去确认一下地牢入口吧。",
+            "English": "Magic stone, potions, spells... ready. Time to check the dungeon entrance."
+        },
+        {
+            "Id": 254,
+            "Key": "guide.intro.enter_dungeon",
+            "ChineseSimplified": "点击「进入地牢」。目标是调查外围，记得活着回来。",
+            "English": "Click Enter Dungeon. Survey the outskirts and come back alive."
+        },
+        {
+            "Id": 255,
+            "Key": "guide.intro.enter_dungeon.fallback",
+            "ChineseSimplified": "前往金色标记处，按 E 与训练师交谈，确认地牢入口。",
+            "English": "Go to the gold marker and press E to ask the trainer about the dungeon entrance."
+        },
+        {
+            "Id": 256,
+            "Key": "story.intro.commission_title",
+            "ChineseSimplified": "第一份委托",
+            "English": "First Commission"
+        },
+        {
+            "Id": 257,
+            "Key": "story.intro.equip.0",
+            "ChineseSimplified": "我接了地牢外围的调查委托，想找块合适的魔法石。",
+            "English": "I've accepted an outskirts survey. I'd like a suitable magic stone."
+        },
+        {
+            "Id": 258,
+            "Key": "story.intro.equip.1",
+            "ChineseSimplified": "第一次出征？你擅长什么法术？",
+            "English": "Your first expedition? What magic do you use?"
+        },
+        {
+            "Id": 259,
+            "Key": "story.intro.equip.2",
+            "ChineseSimplified": "火系，最熟悉的是火球。",
+            "English": "Fire magic. Fireball is my most familiar spell."
+        },
+        {
+            "Id": 260,
+            "Key": "story.intro.equip.3",
+            "ChineseSimplified": "擅长火系？那就选火焰石，能增强你的火系法术。",
+            "English": "Choose a Fire Stone to strengthen your fire spells."
+        },
+        {
+            "Id": 261,
+            "Key": "story.intro.equip.4",
+            "ChineseSimplified": "买好后记得装进魔法石槽。放在包里，它可帮不上忙。",
+            "English": "Equip it in the magic stone slot after buying. It won't help in your backpack."
+        },
+        {
+            "Id": 262,
+            "Key": "story.intro.prop.0",
+            "ChineseSimplified": "要去地牢？药剂准备了吗？",
+            "English": "Heading to the dungeon? Prepared your potions?"
+        },
+        {
+            "Id": 263,
+            "Key": "story.intro.prop.1",
+            "ChineseSimplified": "只是去外围调查，也需要带吗？",
+            "English": "Even for an outskirts survey?"
+        },
+        {
+            "Id": 264,
+            "Key": "story.intro.prop.2",
+            "ChineseSimplified": "魔物可不会看你的委托写了什么。",
+            "English": "Monsters won't read your commission."
+        },
+        {
+            "Id": 265,
+            "Key": "story.intro.prop.3",
+            "ChineseSimplified": "体力药剂处理伤势，魔力药剂补充施法消耗。两种都带上一瓶，别等撑不住了才想起来。",
+            "English": "Health potions treat wounds; mana potions replenish casting energy. Bring one of each before you need them."
+        },
+        {
+            "Id": 266,
+            "Key": "story.intro.prop.4",
+            "ChineseSimplified": "……说得也是，我看看。",
+            "English": "...Fair point. Let me see."
+        },
+        {
+            "Id": 267,
+            "Key": "story.intro.skill.0",
+            "ChineseSimplified": "我想添几招火系法术。只靠火球，总觉得不太够。",
+            "English": "I'd like more fire spells. Fireball alone doesn't feel like enough."
+        },
+        {
+            "Id": 268,
+            "Key": "story.intro.skill.1",
+            "ChineseSimplified": "会几招是一回事，能把它们接起来，又是另一回事。",
+            "English": "Knowing spells is one thing; chaining them is another."
+        },
+        {
+            "Id": 269,
+            "Key": "story.intro.skill.2",
+            "ChineseSimplified": "火球起手，火径攻击直线上的敌人，焦土覆盖一片区域。这三招，够你先熟悉技能链了。",
+            "English": "Start with Fireball, attack along a line with Fire Path, then cover an area with Scorched Earth. These will teach you chains."
+        },
+        {
+            "Id": 270,
+            "Key": "story.intro.skill.3",
+            "ChineseSimplified": "按这个顺序编进去？",
+            "English": "In that order?"
+        },
+        {
+            "Id": 271,
+            "Key": "story.intro.skill.4",
+            "ChineseSimplified": "先这样试。等你摸清每一招的节奏，再换成自己的组合。",
+            "English": "Try that first. Once you learn the rhythm, make your own combination."
+        },
+        {
+            "Id": 272,
+            "Key": "story.intro.skill.5",
+            "ChineseSimplified": "还有，技能石买回去要编进链里。背包不是施法的地方。",
+            "English": "Put skill stones into your chain after buying. You can't cast from your backpack."
+        },
+        {
+            "Id": 273,
+            "Key": "story.intro.trainer.0",
+            "ChineseSimplified": "装备和药剂都准备好了，技能链也编好了。我来确认地牢入口。",
+            "English": "My loadout and skill chain are ready. I'm here to check the dungeon entrance."
+        },
+        {
+            "Id": 274,
+            "Key": "story.intro.trainer.1",
+            "ChineseSimplified": "接的是外围调查？",
+            "English": "An outskirts survey?"
+        },
+        {
+            "Id": 275,
+            "Key": "story.intro.trainer.2",
+            "ChineseSimplified": "对，确认魔晶异常的情况，回来报告。",
+            "English": "Yes. Investigate the crystal anomalies and bring back a report."
+        },
+        {
+            "Id": 276,
+            "Key": "story.intro.trainer.3",
+            "ChineseSimplified": "那就记住你的目标。看清情况、找到撤离的机会，不必和每只魔物纠缠。",
+            "English": "Remember your objective: observe, look for a way out, and don't fight every monster."
+        },
+        {
+            "Id": 277,
+            "Key": "story.intro.trainer.4",
+            "ChineseSimplified": "带出去的东西，倒下就可能丢掉。能活着把消息带回来，这份委托才算完成。",
+            "English": "Defeat may cost you what you carry. Bring the news back alive to finish the commission."
+        },
+        {
+            "Id": 278,
+            "Key": "story.intro.trainer.5",
+            "ChineseSimplified": "明白。让我进去吧。",
+            "English": "Understood. Let me in."
+        },
+        {
+            "Id": 279,
+            "Key": "guide.purchase.confirm",
+            "ChineseSimplified": "确认数量为 1，点击购买（正常扣除金币）。",
+            "English": "Quantity is one. Confirm the purchase; gold is charged."
+        },
+        {
+            "Id": 280,
+            "Key": "guide.purchase.cancel",
+            "ChineseSimplified": "这不是当前需要的物品。先点击取消。",
+            "English": "This isn't the requested item. Click Cancel."
+        },
+        {
+            "Id": 281,
+            "Key": "guide.page.skill",
+            "ChineseSimplified": "点击「技能」页签，编排技能链。",
+            "English": "Click Skills to arrange your chain."
+        },
+        {
+            "Id": 282,
+            "Key": "guide.page.equip",
+            "ChineseSimplified": "点击「装备」页签，放入装备和药剂。",
+            "English": "Click Equipment to equip your stone and potions."
+        },
+        {
+            "Id": 283,
+            "Key": "guide.chain.first",
+            "ChineseSimplified": "点击第一条技能链。",
+            "English": "Select the first skill chain."
         }
     ]
 }

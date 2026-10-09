@@ -46,6 +46,12 @@
         },
         {
             "groupType": 2,
+            "groupName": "Guide",
+            "order": 9000,
+            "uiNames": ["GuideUI"]
+        },
+        {
+            "groupType": 2,
             "groupName": "Debug",
             "order": 20000,
             "uiNames": [

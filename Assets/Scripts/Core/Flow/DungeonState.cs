@@ -206,6 +206,7 @@ namespace CrystalMagic.Core
         protected override string BattleSceneName => SceneName;
         private bool _isProcessingDefeat;
         private MinimapUI _minimapUI;
+        private float _nextIntroSaveAttempt;
 
         public static TransitionData CreateEnterTransitionData(LoadGameContext context)
         {
@@ -242,6 +243,7 @@ namespace CrystalMagic.Core
         protected override void OnEnterBattle()
         {
             _isProcessingDefeat = false;
+            _nextIntroSaveAttempt = 0f;
             EventComponent.Instance?.Subscribe<UnitDiedEvent>(HandleUnitDied);
             Debug.Log("[DungeonState] Entered Dungeon");
             LoadGameContext context = StateData as LoadGameContext;
@@ -251,6 +253,13 @@ namespace CrystalMagic.Core
             Debug.Log($"[DungeonState] Resuming dungeon theme {SaveDataComponent.Instance.GetDungeonRunData()?.ThemeId} at level {dungeonFloor}");
             _minimapUI = UIComponent.Instance.Open<MinimapUI>();
             UIComponent.Instance.SetLifetime(_minimapUI, UILifetime.SceneScoped);
+        }
+
+        protected override void OnUpdateBattle()
+        {
+            if (!TownIntroTriggerUtility.IsPending(SaveDataComponent.Instance) || Time.unscaledTime < _nextIntroSaveAttempt) return;
+            _nextIntroSaveAttempt = Time.unscaledTime + 2f;
+            NPCSequenceUtility.CompleteIntroOnDungeonArrival();
         }
 
         private void HandleUnitDied(UnitDiedEvent gameEvent)

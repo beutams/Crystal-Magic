@@ -107,6 +107,7 @@ namespace CrystalMagic.UI
                 {
                     DisplayIndex = i + 1,
                     SkillIndex = i,
+                    SkillStoneItemId = skillStoneItemId,
                     SkillId = skillData != null ? skillData.Id : -1,
                     Name = skillData != null ? skillData.DisplayName : string.Empty,
                     MpCost = skillData != null ? skillData.MpCost : 0,
@@ -230,6 +231,7 @@ namespace CrystalMagic.UI
 
     public sealed class CharacterSkillDisplayData
     {
+        public int SkillStoneItemId = -1;
         public int DisplayIndex;
         public int SkillIndex;
         public int SkillId;

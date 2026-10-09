@@ -19,5 +19,9 @@ public static class NPCInteractionNodeRunnerRegistry
         factory.Register(typeof(CrystalMagic.Game.Data.NPCEnterTrainingGroundInteractionNodeData), static node => new NPCEnterTrainingGroundInteractionNodeRunner((CrystalMagic.Game.Data.NPCEnterTrainingGroundInteractionNodeData)node));
         factory.Register(typeof(CrystalMagic.Game.Data.NPCEnterTownInteractionNodeData), static node => new NPCEnterTownInteractionNodeRunner((CrystalMagic.Game.Data.NPCEnterTownInteractionNodeData)node));
         factory.Register(typeof(CrystalMagic.Game.Data.NPCRequestBattleExitInteractionNodeData), static node => new NPCRequestBattleExitInteractionNodeRunner((CrystalMagic.Game.Data.NPCRequestBattleExitInteractionNodeData)node));
+        factory.Register(typeof(CrystalMagic.Game.Data.NPCCameraInteractionNodeData), static node => new NPCCameraInteractionNodeRunner((CrystalMagic.Game.Data.NPCCameraInteractionNodeData)node));
+        factory.Register(typeof(CrystalMagic.Game.Data.NPCGuideInteractionNodeData), static node => new NPCGuideInteractionNodeRunner((CrystalMagic.Game.Data.NPCGuideInteractionNodeData)node));
+        factory.Register(typeof(CrystalMagic.Game.Data.NPCWaitConditionInteractionNodeData), static node => new NPCWaitConditionInteractionNodeRunner((CrystalMagic.Game.Data.NPCWaitConditionInteractionNodeData)node));
+        factory.Register(typeof(CrystalMagic.Game.Data.NPCProgressInteractionNodeData), static node => new NPCProgressInteractionNodeRunner((CrystalMagic.Game.Data.NPCProgressInteractionNodeData)node));
     }
 }

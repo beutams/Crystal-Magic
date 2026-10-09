@@ -1,6 +1,7 @@
 using System;
 using CrystalMagic.Core;
 using TMPro;
+using UnityEngine;
 using UnityEngine.UI;
 
 public class ShopBuyUI : UIBase<ShopBuyUIData, CrystalMagic.UI.ShopBuyUIModel>
@@ -10,6 +11,10 @@ public class ShopBuyUI : UIBase<ShopBuyUIData, CrystalMagic.UI.ShopBuyUIModel>
     public event Action<string> QuantityInputChanged;
     public event Action ConfirmRequested;
     public event Action CancelRequested;
+
+    public int GuideItemId => Model.ItemId;
+    public RectTransform GuideConfirm => UI.Sure.RectTransform;
+    public RectTransform GuideCancel => UI.Cancel.RectTransform;
 
     public override void OnOpen()
     {

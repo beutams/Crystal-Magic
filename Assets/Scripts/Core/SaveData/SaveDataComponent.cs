@@ -705,6 +705,12 @@ namespace CrystalMagic.Core {
             data.Stash.Money = gameConfig.StartingGold;
             data.SaveIndex = index;
             data.Variables.Set(TownIntroTriggerUtility.CompletionVariable, 0d);
+            data.Variables.Set(NPCSequenceUtility.StageVariable, 0d);
+            data.Variables.Set("intro_started", 0d);
+            data.Variables.Set("intro_equip_spoken", 0d);
+            data.Variables.Set("intro_prop_spoken", 0d);
+            data.Variables.Set("intro_skill_spoken", 0d);
+            data.Variables.Set("intro_trainer_spoken", 0d);
 
             try
             {

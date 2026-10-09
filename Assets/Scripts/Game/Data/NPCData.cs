@@ -43,6 +43,9 @@ namespace CrystalMagic.Game.Data
 
         public bool Automatic;
 
+        // A scene sequence releases its initiating transaction so other NPCs remain usable.
+        public bool IsSequence;
+
         public int AutoPriority = 100;
 
         public float RetrySeconds = 2f;
@@ -136,8 +139,11 @@ namespace CrystalMagic.Game.Data
 
         public string NextNodeGuid;
 
+        public NPCWaitConditionInteractionNodeData RuntimeCondition;
+
         public bool IsEnabled()
         {
+            if (RuntimeCondition != null && !NPCSequenceUtility.Check(RuntimeCondition)) return false;
             if (string.IsNullOrWhiteSpace(CheckExpression))
             {
                 return true;
@@ -194,6 +200,50 @@ namespace CrystalMagic.Game.Data
         public float StopDistance = 0.5f;
 
         public bool WaitUntilArrived = true;
+    }
+
+    [Serializable, FactoryKey("Camera", 8, "镜头移动")]
+    public sealed class NPCCameraInteractionNodeData : NPCInteractionNodeData
+    {
+        public NPCCameraInteractionNodeData() { ExecutionTargets = GameWorldExecutionTarget.Standalone; }
+        public string Target = "actor";
+        public float Duration = 1.2f;
+        public float Smooth = 5f;
+    }
+
+    [Serializable, FactoryKey("Guide", 9, "引导遮罩")]
+    public sealed class NPCGuideInteractionNodeData : NPCInteractionNodeData
+    {
+        public NPCGuideInteractionNodeData() { ExecutionTargets = GameWorldExecutionTarget.Standalone; }
+        public string Target;
+        public string SecondaryTarget;
+        public string ContentKey;
+        public string FallbackTarget;
+        public string FallbackContentKey;
+        public bool Clear;
+    }
+
+    public enum NPCWaitCondition { Always, Expression, OwnItem, MagicStone, PropSlot, SkillPrefix, UIClosed, UIOpen, All }
+
+    [Serializable, FactoryKey("WaitCondition", 10, "等待实际条件")]
+    public sealed class NPCWaitConditionInteractionNodeData : NPCInteractionNodeData
+    {
+        public NPCWaitConditionInteractionNodeData() { ExecutionTargets = GameWorldExecutionTarget.Standalone; }
+        public NPCWaitCondition Condition;
+        public string Value;
+        public int ItemId = -1;
+        public int Slot;
+        public List<int> Items = new();
+        public bool AllowInventory;
+        public List<NPCWaitConditionInteractionNodeData> Conditions = new();
+    }
+
+    [Serializable, FactoryKey("Progress", 11, "保存剧情进度")]
+    public sealed class NPCProgressInteractionNodeData : NPCInteractionNodeData
+    {
+        public NPCProgressInteractionNodeData() { ExecutionTargets = GameWorldExecutionTarget.Standalone; }
+        public string Variable;
+        public double Value;
     }
 
     [Serializable]

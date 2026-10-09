@@ -519,6 +519,14 @@ namespace CrystalMagic.Core {
             return panel != null && _mvcContexts.ContainsKey(panel);
         }
 
+        public T FindOpen<T>() where T : UIBase
+        {
+            foreach (UIBase panel in _mvcContexts.Keys)
+                if (panel is T view && view.gameObject.activeInHierarchy)
+                    return view;
+            return null;
+        }
+
         public string GetResourceOwnerKey(Component component)
         {
             if (component == null)

@@ -17,6 +17,14 @@ public class InteractionSelectUI : UIBase<InteractionSelectUIData, InteractionSe
 
     public event Action<InteractionSelectOptionDisplayData> OptionClicked;
 
+    public RectTransform GetGuideOption(string key)
+    {
+        for (int i = 0; i < Model.Options.Count && i < _optionViews.Count; i++)
+            if (Model.Options[i].Option.DisplayNameKey == key)
+                return (RectTransform)_optionViews[i].transform;
+        return null;
+    }
+
     public override void OnClose()
     {
         UISubViewBase.ReleaseAllToPool(_optionViews);

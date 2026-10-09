@@ -117,7 +117,7 @@ namespace CrystalMagic.Core {
 
         private void HandleInventory()
         {
-            if (GameWorldManager.GameWorld?.GetExistingSystemManaged<StateScriptManagedCommandSystem>()?.HasNpcInteraction == true)
+            if (GameWorldManager.GameWorld?.GetExistingSystemManaged<StateScriptManagedCommandSystem>()?.BlocksInventoryInput == true)
                 return;
             if (_characterUI == null || !UIComponent.Instance.IsManaged(_characterUI))
             {
@@ -136,6 +136,8 @@ namespace CrystalMagic.Core {
 
         private void HandleUnhandledEscape()
         {
+            if (GameWorldManager.GameWorld?.GetExistingSystemManaged<StateScriptManagedCommandSystem>()?.BlocksInventoryInput == true)
+                return;
             if (_characterUI == null || !UIComponent.Instance.IsManaged(_characterUI))
             {
                 _characterUI = UIComponent.Instance.Open<CharacterUI>(CharacterPage.Setting);
@@ -148,7 +150,7 @@ namespace CrystalMagic.Core {
 
         private void RefreshUIInputLock()
         {
-            bool shouldLock = UIComponent.Instance != null && UIComponent.Instance.HasActiveSceneScopedPanel(SceneName, nameof(NotificationUI));
+            bool shouldLock = UIComponent.Instance != null && UIComponent.Instance.HasActiveSceneScopedPanel(SceneName, nameof(NotificationUI), nameof(GuideUI));
             if (shouldLock == _playerInputLockedByUI)
                 return;
 

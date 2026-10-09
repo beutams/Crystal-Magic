@@ -11,7 +11,8 @@ public static class GameInteractionUtility
         Entity actor,
         Entity target,
         bool automatic = false,
-        string interactionKey = null)
+        string interactionKey = null,
+        bool requestAllowed = true)
     {
         if (!IsRuntimeValid(entityManager, runtimeEntity) || actor == Entity.Null || !entityManager.Exists(actor))
             return false;
@@ -22,6 +23,7 @@ public static class GameInteractionUtility
             return false;
 
         InteractionResultCode failure = ValidateTarget(entityManager, actor, target);
+        if (!requestAllowed) failure = InteractionResultCode.InvalidTarget;
         FixedString64Bytes key = default;
         if (!string.IsNullOrEmpty(interactionKey) && key.CopyFrom(interactionKey) != CopyError.None)
             return false;

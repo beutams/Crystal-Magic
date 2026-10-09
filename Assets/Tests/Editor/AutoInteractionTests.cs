@@ -161,6 +161,7 @@ public sealed class AutoInteractionTests
         fixture.Npc.NPC = TownIntroTriggerUtility.NpcName;
         Assert.That(TownIntroTriggerUtility.TryCreate(fixture.Manager, fixture.Player), Is.EqualTo(Entity.Null));
         fixture.Variables.Set(TownIntroTriggerUtility.CompletionVariable, 0);
+        fixture.Variables.Set(NPCSequenceUtility.StageVariable, 0);
         Entity trigger = TownIntroTriggerUtility.TryCreate(fixture.Manager, fixture.Player);
         Assert.That(trigger, Is.Not.EqualTo(Entity.Null));
         Assert.That(fixture.Manager.GetComponentData<UnitInteractableComponent>(trigger).HidePrompt, Is.EqualTo(1));
@@ -186,17 +187,152 @@ public sealed class AutoInteractionTests
         Assert.That(interaction.Automatic, Is.True);
         Assert.That(interaction.CompletionVariable, Is.EqualTo(TownIntroTriggerUtility.CompletionVariable));
         var visited = new HashSet<string>();
-        for (var node = interaction.GetEntryNode(); node != null;
-             node = interaction.GetNode(node.Branches.FirstOrDefault()?.NextNodeGuid))
+        var queue = new Queue<NPCInteractionNodeData>();
+        queue.Enqueue(interaction.GetEntryNode());
+        while (queue.Count > 0)
         {
-            Assert.That(visited.Add(node.Guid), Is.True, "Introduction must terminate without a cycle.");
+            var node = queue.Dequeue();
+            if (!visited.Add(node.Guid)) continue;
             var dialogue = node as NPCDialogueInteractionNodeData;
-            Assert.That(dialogue, Is.Not.Null);
-            Assert.That(dialogue.SpeakerAnchor, Is.EqualTo(NPCDialogueAnchor.Actor));
-            Assert.That(keys.Contains(dialogue.ContentKey), Is.True);
-            Assert.That(keys.Contains(dialogue.Speaker), Is.True);
+            if (dialogue != null)
+            {
+                Assert.That(dialogue.SpeakerAnchor, Is.EqualTo(NPCDialogueAnchor.Actor));
+                Assert.That(keys.Contains(dialogue.ContentKey), Is.True);
+                Assert.That(string.IsNullOrEmpty(dialogue.Speaker) || keys.Contains(dialogue.Speaker), Is.True);
+            }
+            foreach (var branch in node.Branches)
+            {
+                var next = interaction.GetNode(branch.NextNodeGuid);
+                Assert.That(next, Is.Not.Null, branch.NextNodeGuid);
+                queue.Enqueue(next);
+            }
         }
         Assert.That(visited.Count, Is.EqualTo(interaction.Nodes.Count));
+    }
+
+    [Test]
+    public void SequenceFreesActorAndDoesNotRequeueItsInvisibleTarget()
+    {
+        using var fixture = new Fixture();
+        var story = fixture.Npc.Interactions[0];
+        story.IsSequence = true;
+        story.EntryNodeGuid = "wait";
+        story.Nodes.Add(new NPCWaitConditionInteractionNodeData { Guid = "wait", AllowInventory = true, Condition = NPCWaitCondition.Expression, Value = "never==1" });
+        Entity trigger = fixture.Target(InteractionKind.Npc, hidden: true);
+        fixture.Tick(0);
+        var managed = fixture.World.GetOrCreateSystemManaged<StateScriptManagedCommandSystem>();
+        typeof(StateScriptManagedCommandSystem).GetMethod("StartNpcInteraction", BindingFlags.Instance | BindingFlags.NonPublic)
+            .Invoke(managed, new object[] { trigger });
+        Assert.That(managed.HasNpcSession(trigger), Is.True);
+        Assert.That(managed.BlocksInventoryInput, Is.False);
+        Assert.That(fixture.Gate.IsPlayerInputLocked, Is.False);
+        fixture.Tick(3);
+        Assert.That(fixture.Transactions.Length, Is.Zero, "Active sequences must not submit a second automatic request.");
+        Entity merchant = fixture.Target(InteractionKind.Npc);
+        Assert.That(GameInteractionUtility.TryRequest(fixture.Manager, fixture.Runtime, fixture.Player, merchant), Is.True);
+        Assert.That(fixture.Transactions[0].Phase, Is.EqualTo(InteractionPhase.Pending));
+        managed.CancelNpcInteraction(trigger);
+        Assert.That(fixture.Transactions[0].Phase, Is.EqualTo(InteractionPhase.Pending), "Cancelling a sequence must not complete the merchant transaction.");
+    }
+
+    [Test]
+    public void RejectedGuideInteractionStillReturnsAnAcknowledgableResult()
+    {
+        using var fixture = new Fixture();
+        Entity npc = fixture.Target(InteractionKind.Npc);
+        Assert.That(GameInteractionUtility.TryRequest(fixture.Manager, fixture.Runtime, fixture.Player, npc, requestAllowed: false), Is.True);
+        Assert.That(fixture.Transactions[0].ResultCode, Is.EqualTo(InteractionResultCode.InvalidTarget));
+        GameInteractionUtility.Acknowledge(fixture.Manager, fixture.Runtime, fixture.Player);
+        Assert.That(fixture.Transactions.Length, Is.Zero);
+    }
+
+    [Test]
+    public void FailedProgressSaveRollsBackAndLegacyIntroFlagsDoNotStartTheNewSequence()
+    {
+        using var fixture = new Fixture();
+        fixture.Variables.Set(TownIntroTriggerUtility.CompletionVariable, 0);
+        Assert.That(TownIntroTriggerUtility.IsPending(fixture.Save), Is.False);
+        fixture.Variables.Set(NPCSequenceUtility.StageVariable, 2);
+        Assert.That(TownIntroTriggerUtility.IsPending(fixture.Save), Is.True);
+        typeof(SaveDataComponent).GetField("_currentSaveIndex", BindingFlags.Instance | BindingFlags.NonPublic).SetValue(fixture.Save, -1);
+        UnityEngine.TestTools.LogAssert.Expect(LogType.Error, "[SaveDataComponent] Save failed: no save slot selected.");
+        Assert.That(NPCSequenceUtility.SaveProgress(NPCSequenceUtility.StageVariable, 3), Is.False);
+        Assert.That(fixture.Variables.Get(NPCSequenceUtility.StageVariable), Is.EqualTo(2));
+    }
+
+    [Test]
+    public void SceneExitCanCancelAnotherSessionWhileNpcSessionsAreTicking()
+    {
+        using var fixture = new Fixture();
+        var story = fixture.Npc.Interactions[0];
+        story.IsSequence = true;
+        story.EntryNodeGuid = "wait";
+        story.Nodes.Add(new NPCWaitConditionInteractionNodeData { Guid = "wait" });
+        Entity trigger = fixture.Target(InteractionKind.Npc, hidden: true);
+        fixture.Tick(0);
+        var managed = fixture.World.GetOrCreateSystemManaged<StateScriptManagedCommandSystem>();
+        var start = typeof(StateScriptManagedCommandSystem).GetMethod("StartNpcInteraction", BindingFlags.Instance | BindingFlags.NonPublic);
+        start.Invoke(managed, new object[] { trigger });
+        GameInteractionUtility.AcknowledgeAutomatic(fixture.Manager, fixture.Runtime);
+        Entity merchant = fixture.Target(InteractionKind.Npc);
+        GameInteractionUtility.TryRequest(fixture.Manager, fixture.Runtime, fixture.Player, merchant, true, "Story");
+        start.Invoke(managed, new object[] { merchant });
+        var factory = (NPCInteractionNodeRunnerFactory)typeof(StateScriptManagedCommandSystem).GetField("_npcRunnerFactory", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(managed);
+        factory.Register(typeof(NPCWaitConditionInteractionNodeData), _ => new ExitDuringTickRunner(managed, merchant, trigger));
+        Assert.DoesNotThrow(() => typeof(StateScriptManagedCommandSystem).GetMethod("TickNpcSessions", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(managed, new object[] { .1f }));
+        Assert.That(managed.HasNpcSession(trigger), Is.False);
+        Assert.That(managed.HasNpcSession(merchant), Is.True);
+        managed.CancelNpcInteraction(merchant);
+    }
+
+    [Test]
+    public void FirstVisitMerchantDialogueOnlyRunsAtItsTutorialStageAndOnlyOnce()
+    {
+        using var fixture = new Fixture();
+        fixture.Variables.Set("intro_started", 1);
+        fixture.Variables.Set("intro_completed", 0);
+        var rows = (JArray)JObject.Parse(File.ReadAllText(Path.Combine(Application.dataPath, "Res/Data/NPCDataTable.json")))["Rows"];
+        foreach (var tuple in new[] { (Name: "NPCEquipShop", Stage: 1, Spoken: "intro_equip_spoken"), (Name: "NPCPropShop", Stage: 2, Spoken: "intro_prop_spoken"), (Name: "NPCSkillShop", Stage: 3, Spoken: "intro_skill_spoken"), (Name: "NPCTraining", Stage: 5, Spoken: "intro_trainer_spoken") })
+        {
+            var npc = rows.Single(r => (string)r["NPC"] == tuple.Name).ToObject<NPCData>();
+            fixture.Variables.Set("intro_stage", tuple.Stage);
+            fixture.Variables.Set(tuple.Spoken, 0);
+            Assert.That(npc.GetEnabledInteractions().First().Key.StartsWith("Intro"), Is.True);
+            fixture.Variables.Set(tuple.Spoken, 1);
+            Assert.That(npc.GetEnabledInteractions().First().Key, Is.EqualTo(npc.Interactions[1].Key));
+            fixture.Variables.Set(tuple.Spoken, 0);
+            fixture.Variables.Set("intro_started", 0);
+            Assert.That(npc.GetEnabledInteractions().First().Key, Is.EqualTo(npc.Interactions[1].Key), "Legacy saves use the existing merchant interaction.");
+            fixture.Variables.Set("intro_started", 1);
+        }
+    }
+
+    [Test]
+    public void TutorialInteractionAllowsOnlyTheCurrentMerchantUntilCompletion()
+    {
+        using var fixture = new Fixture();
+        fixture.Variables.Set("intro_completed", 0);
+        fixture.Variables.Set("intro_stage", 1);
+        fixture.Npc.NPC = "NPCEquipShop";
+        Entity target = fixture.Target(InteractionKind.Npc);
+        Assert.That(NPCSequenceUtility.AllowsInteraction(fixture.Manager, target), Is.True);
+        fixture.Npc.NPC = "NPCPropShop";
+        Assert.That(NPCSequenceUtility.AllowsInteraction(fixture.Manager, target), Is.False);
+        fixture.Variables.Set("intro_stage", 2);
+        Assert.That(NPCSequenceUtility.AllowsInteraction(fixture.Manager, target), Is.True);
+        fixture.Variables.Set("intro_stage", 4);
+        Assert.That(NPCSequenceUtility.AllowsInteraction(fixture.Manager, target), Is.False);
+        fixture.Variables.Set("intro_completed", 1);
+        Assert.That(NPCSequenceUtility.AllowsInteraction(fixture.Manager, target), Is.True);
+    }
+
+    private sealed class ExitDuringTickRunner : NPCInteractionNodeRunner
+    {
+        private readonly StateScriptManagedCommandSystem _managed;
+        private readonly Entity _merchant, _trigger;
+        public ExitDuringTickRunner(StateScriptManagedCommandSystem managed, Entity merchant, Entity trigger) { _managed = managed; _merchant = merchant; _trigger = trigger; }
+        public override void Enter(NPCInteractionSession session) { if (session.Target == _merchant) _managed.CancelNpcInteraction(_trigger); }
+        public override bool IsCompleted(NPCInteractionSession session) => false;
     }
 
     private sealed class Fixture : IDisposable

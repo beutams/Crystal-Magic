@@ -22,6 +22,11 @@ public partial class AutoInteractionSystem : SystemBase
     private EntityQuery _playerQuery;
     private EntityQuery _targetQuery;
 
+    public void DeferRetry(Entity actor, Entity target, float seconds)
+    {
+        _retryAt[(actor, target)] = World.Time.ElapsedTime + math.max(.5f, seconds);
+    }
+
     protected override void OnCreate()
     {
         _interactionEntity = GameSingletonUtility.GetEntity<GameInteractionComponent>(EntityManager);
@@ -105,6 +110,8 @@ public partial class AutoInteractionSystem : SystemBase
             for (int targetIndex = 0; targetIndex < targets.Length; targetIndex++)
             {
                 Entity target = targets[targetIndex];
+                if (World.GetExistingSystemManaged<StateScriptManagedCommandSystem>()?.HasNpcSession(target) == true)
+                    continue;
                 if (_retryAt.ContainsKey((player, target)))
                     continue;
 

@@ -1,320 +1,1804 @@
 ﻿{
-    "Rows":  [
-                 {
-                     "NPC":  "NPCEquipShop",
-                     "Interactions":  [
-                                          {
-                                              "Key":  "OpenEquipShop",
-                                              "EnableExpression":  "",
-                                              "EntryNodeGuid":  "3d73650e10a542518488b999161e168f",
-                                              "Nodes":  [
-                                                            {
-                                                                "UIName":  "ShopUI",
-                                                                "OpenData":  "EquipShop",
-                                                                "WaitUntilClosed":  true,
-                                                                "Guid":  "3d73650e10a542518488b999161e168f",
-                                                                "Branches":  [
-
-                                                                             ],
-                                                                "Type":  "OpenUI"
-                                                            }
-                                                        ],
-                                              "DisplayNameKey":  "npc.equipment_shop.name"
-                                          }
-                                      ],
-                     "Id":  0,
-                     "DisplayNameKey":  "npc.equipment_shop.name"
-                 },
-                 {
-                     "NPC":  "NPCPropShop",
-                     "Interactions":  [
-                                          {
-                                              "Key":  "OpenPropShop",
-                                              "EnableExpression":  "",
-                                              "EntryNodeGuid":  "14dfb732e88441b099f7fe7cb07fe71f",
-                                              "Nodes":  [
-                                                            {
-                                                                "UIName":  "ShopUI",
-                                                                "OpenData":  "PropShop",
-                                                                "WaitUntilClosed":  true,
-                                                                "Guid":  "14dfb732e88441b099f7fe7cb07fe71f",
-                                                                "Branches":  [
-
-                                                                             ],
-                                                                "Type":  "OpenUI"
-                                                            }
-                                                        ],
-                                              "DisplayNameKey":  "npc.prop_shop.name"
-                                          }
-                                      ],
-                     "Id":  1,
-                     "DisplayNameKey":  "npc.prop_shop.name"
-                 },
-                 {
-                     "NPC":  "NPCSkillShop",
-                     "Interactions":  [
-                                          {
-                                              "Key":  "OpenSkillShop",
-                                              "EnableExpression":  "",
-                                              "EntryNodeGuid":  "14dfb732e88441b099f7fe7cb07fe71f",
-                                              "Nodes":  [
-                                                            {
-                                                                "UIName":  "ShopUI",
-                                                                "OpenData":  "SkillShop",
-                                                                "WaitUntilClosed":  true,
-                                                                "Guid":  "14dfb732e88441b099f7fe7cb07fe71f",
-                                                                "Branches":  [
-
-                                                                             ],
-                                                                "Type":  "OpenUI"
-                                                            }
-                                                        ],
-                                              "DisplayNameKey":  "npc.skill_shop.name"
-                                          }
-                                      ],
-                     "Id":  2,
-                     "DisplayNameKey":  "npc.skill_shop.name"
-                 },
-                 {
-                     "NPC":  "NPCStash",
-                     "Interactions":  [
-                                          {
-                                              "Key":  "Stash",
-                                              "EnableExpression":  "",
-                                              "EntryNodeGuid":  "e1683275aaa04ce5a827d9fd8e45c10b",
-                                              "Nodes":  [
-                                                            {
-                                                                "UIName":  "StashUI",
-                                                                "OpenData":  "",
-                                                                "WaitUntilClosed":  true,
-                                                                "Guid":  "e1683275aaa04ce5a827d9fd8e45c10b",
-                                                                "Branches":  [
-
-                                                                             ],
-                                                                "Type":  "OpenUI"
-                                                            }
-                                                        ],
-                                              "DisplayNameKey":  "npc.stash.name"
-                                          }
-                                      ],
-                     "Id":  3,
-                     "DisplayNameKey":  "npc.stash.name"
-                 },
-                 {
-                     "NPC":  "NPCTraining",
-                     "Interactions":  [
-                                          {
-                                              "Key":  "Training",
-                                              "EnableExpression":  "",
-                                              "EntryNodeGuid":  "9fa755485fd94a18b7e4b386a3b5307a",
-                                              "Nodes":  [
-                                                            {
-                                                                "Options":  [
-                                                                                {
-                                                                                    "EnableExpression":  "",
-                                                                                    "NextNodeGuid":  "c1a95e3707ff40248bb5153c55295ff8",
-                                                                                    "DisplayNameKey":  "npc.option.enter_dungeon"
-                                                                                },
-                                                                                {
-                                                                                    "EnableExpression":  "",
-                                                                                    "NextNodeGuid":  "3d003138da8c4619980f4cf904066d0d",
-                                                                                    "DisplayNameKey":  "npc.option.enter_training_ground"
-                                                                                }
-                                                                            ],
-                                                                "Guid":  "9fa755485fd94a18b7e4b386a3b5307a",
-                                                                "Branches":  [
-
-                                                                             ],
-                                                                "Type":  "Select"
-                                                            },
-                                                            {
-                                                                "DungeonThemeId":  0,
-                                                                "Guid":  "c1a95e3707ff40248bb5153c55295ff8",
-                                                                "Branches":  [
-
-                                                                             ],
-                                                                "Type":  "EnterDungeon"
-                                                            },
-                                                            {
-                                                                "Guid":  "3d003138da8c4619980f4cf904066d0d",
-                                                                "Branches":  [
-
-                                                                             ],
-                                                                "Type":  "EnterTrainingGround"
-                                                            }
-                                                        ],
-                                              "DisplayNameKey":  "npc.training_ground.name"
-                                          }
-                                      ],
-                     "Id":  4,
-                     "DisplayNameKey":  "npc.training_ground.name"
-                 },
-                 {
-                     "NPC":  "Exit",
-                     "PrefabPath":  "Assets/Res/Prefab/Environment/Exit.prefab",
-                     "Interactions":  [
-                                          {
-                                              "Key":  "DungeonExit",
-                                              "EnableExpression":  "",
-                                              "EntryNodeGuid":  "exit_select",
-                                              "Nodes":  [
-                                                            {
-                                                                "Options":  [
-                                                                                {
-                                                                                    "EnableExpression":  "",
-                                                                                    "NextNodeGuid":  "exit_next_floor",
-                                                                                    "DisplayNameKey":  "npc.option.continue_dungeon"
-                                                                                },
-                                                                                {
-                                                                                    "EnableExpression":  "",
-                                                                                    "NextNodeGuid":  "exit_retreat",
-                                                                                    "DisplayNameKey":  "npc.option.withdraw_dungeon"
-                                                                                }
-                                                                            ],
-                                                                "Guid":  "exit_select",
-                                                                "ExecutionTargets":  3,
-                                                                "Branches":  [
-
-                                                                             ],
-                                                                "Type":  "Select"
-                                                            },
-                                                            {
-                                                                "DungeonThemeId": 0,
-                                                                "Guid": "exit_next_floor",
-                                                                "ExecutionTargets": 1,
-                                                                "Branches": [{ "NextNodeGuid": "exit_request_next_theme" }],
-                                                                "Type": "EnterDungeon"
-                                                            },
-                                                            {
-                                                                "Guid": "exit_retreat",
-                                                                "ExecutionTargets": 1,
-                                                                "Branches": [{ "NextNodeGuid": "exit_request_retreat" }],
-                                                                "Type": "EnterTown"
-                                                            },
-                                                            {
-                                                                "Guid": "exit_request_next_theme",
-                                                                "ExecutionTargets": 2,
-                                                                "RequestType": 0,
-                                                                "Branches": [],
-                                                                "Type": "RequestBattleExit"
-                                                            },
-                                                            {
-                                                                "Guid": "exit_request_retreat",
-                                                                "ExecutionTargets": 2,
-                                                                "RequestType": 1,
-                                                                "Branches": [],
-                                                                "Type": "RequestBattleExit"
-                                                            }
-                                                        ],
-                                              "DisplayNameKey":  "npc.dungeon_exit.name"
-                                          }
-                                      ],
-                     "Id":  5,
-                     "DisplayNameKey":  "npc.dungeon_exit.name"
-                 },
-                 {
-                     "NPC":  "BulletinBoard",
-                     "PrefabPath":  "Assets/Res/Prefab/Unit/BulletinBoard.prefab",
-                     "Interactions":  [
-                                          {
-                                              "Key":  "OpenLobby",
-                                              "EnableExpression":  "",
-                                              "EntryNodeGuid":  "38a8c80798f1499e8680f751de20ef21",
-                                              "Nodes":  [
-                                                            {
-                                                                "UIName":  "LobbyUI",
-                                                                "OpenData":  "",
-                                                                "WaitUntilClosed":  true,
-                                                                "Guid":  "38a8c80798f1499e8680f751de20ef21",
-                                                                "Branches":  [
-
-                                                                             ],
-                                                                "Type":  "OpenUI"
-                                                            }
-                                                        ],
-                                              "DisplayNameKey":  "npc.bulletin_board.name"
-                                          }
-                                      ],
-                     "Id":  6,
-                     "DisplayNameKey":  "npc.bulletin_board.name"
-                 },
-                 {
-                     "Id": 7,
-                     "NPC": "TownIntroTrigger",
-                     "PrefabPath": "",
-                     "DisplayNameKey": "npc.town_guide.name",
-                     "Interactions": [
-                         {
-                             "Key": "FirstArrival",
-                             "DisplayNameKey": "npc.town_guide.name",
-                             "Automatic": true,
-                             "AutoPriority": 100,
-                             "RetrySeconds": 2.0,
-                             "CompletionVariable": "intro_completed",
-                             "EntryNodeGuid": "intro_welcome",
-                             "Nodes": [
-                                 {
-                                     "Type":"Dialogue", "Guid":"intro_welcome", "ExecutionTargets":1,
-                                     "Speaker":"npc.town_guide.name", "ContentKey":"story.intro.welcome",
-                                     "SpeakerAnchor":1, "CharactersPerSecond":20, "LingerSeconds":1.5,
-                                     "Branches":[{"NextNodeGuid":"intro_chain"}]
-                                 },
-                                 {
-                                     "Type":"Dialogue", "Guid":"intro_chain", "ExecutionTargets":1,
-                                     "Speaker":"npc.town_guide.name", "ContentKey":"story.intro.chain",
-                                     "SpeakerAnchor":1, "CharactersPerSecond":20, "LingerSeconds":2.0,
-                                     "Branches":[{"NextNodeGuid":"intro_stash"}]
-                                 },
-                                 {
-                                     "Type":"Dialogue", "Guid":"intro_stash", "ExecutionTargets":1,
-                                     "Speaker":"npc.town_guide.name", "ContentKey":"story.intro.stash",
-                                     "SpeakerAnchor":1, "CharactersPerSecond":20, "LingerSeconds":2.0,
-                                     "Branches":[{"NextNodeGuid":"intro_training"}]
-                                 },
-                                 {
-                                     "Type":"Dialogue", "Guid":"intro_training", "ExecutionTargets":1,
-                                     "Speaker":"npc.town_guide.name", "ContentKey":"story.intro.training",
-                                     "SpeakerAnchor":1, "CharactersPerSecond":20, "LingerSeconds":1.5,
-                                     "Branches":[]
-                                 }
-                             ]
-                         }
-                     ]
-                 },
-                 {
-                     "Id": 8,
-                     "NPC": "TrainingReturnCrystal",
-                     "PrefabPath": "Assets/Res/Prefab/Environment/TrainingReturnCrystal.prefab",
-                     "DisplayNameKey": "npc.training_return_crystal.name",
-                     "Interactions": [
-                         {
-                             "Key": "TrainingReturnToTown",
-                             "DisplayNameKey": "npc.training_return_crystal.name",
-                             "EntryNodeGuid": "training_return_select",
-                             "Nodes": [
-                                 {
-                                     "Type": "Select",
-                                     "Guid": "training_return_select",
-                                     "ExecutionTargets": 1,
-                                     "Dialog": "",
-                                     "Options": [
-                                         {
-                                             "DisplayNameKey": "npc.option.return_town",
-                                             "EnableExpression": "",
-                                             "NextNodeGuid": "training_return_town"
-                                         }
-                                     ],
-                                     "Branches": []
-                                 },
-                                 {
-                                     "Type": "EnterTown",
-                                     "Guid": "training_return_town",
-                                     "ExecutionTargets": 1,
-                                     "Branches": []
-                                 }
-                             ]
-                         }
-                     ]
-                 }
-             ]
+    "Rows": [
+        {
+            "NPC": "NPCEquipShop",
+            "Interactions": [
+                {
+                    "Key": "Introequip",
+                    "DisplayNameKey": "npc.equipment_shop.name",
+                    "EnableExpression": "intro_started==1 && intro_completed==0 && intro_stage==1 && intro_equip_spoken==0",
+                    "EntryNodeGuid": "intro_equip_0",
+                    "Nodes": [
+                        {
+                            "Type": "Dialogue",
+                            "Guid": "intro_equip_0",
+                            "ExecutionTargets": 1,
+                            "ContentKey": "story.intro.equip.0",
+                            "Speaker": "",
+                            "SpeakerAnchor": 1,
+                            "CharactersPerSecond": 24,
+                            "LingerSeconds": 1.5,
+                            "LockCamera": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "intro_equip_1"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Dialogue",
+                            "Guid": "intro_equip_1",
+                            "ExecutionTargets": 1,
+                            "ContentKey": "story.intro.equip.1",
+                            "Speaker": "npc.equipment_shop.name",
+                            "SpeakerAnchor": 0,
+                            "CharactersPerSecond": 24,
+                            "LingerSeconds": 1.5,
+                            "LockCamera": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "intro_equip_2"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Dialogue",
+                            "Guid": "intro_equip_2",
+                            "ExecutionTargets": 1,
+                            "ContentKey": "story.intro.equip.2",
+                            "Speaker": "",
+                            "SpeakerAnchor": 1,
+                            "CharactersPerSecond": 24,
+                            "LingerSeconds": 1.5,
+                            "LockCamera": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "intro_equip_3"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Dialogue",
+                            "Guid": "intro_equip_3",
+                            "ExecutionTargets": 1,
+                            "ContentKey": "story.intro.equip.3",
+                            "Speaker": "npc.equipment_shop.name",
+                            "SpeakerAnchor": 0,
+                            "CharactersPerSecond": 24,
+                            "LingerSeconds": 1.5,
+                            "LockCamera": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "intro_equip_4"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Dialogue",
+                            "Guid": "intro_equip_4",
+                            "ExecutionTargets": 1,
+                            "ContentKey": "story.intro.equip.4",
+                            "Speaker": "npc.equipment_shop.name",
+                            "SpeakerAnchor": 0,
+                            "CharactersPerSecond": 24,
+                            "LingerSeconds": 1.5,
+                            "LockCamera": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "intro_equip_spoken"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Progress",
+                            "Guid": "intro_equip_spoken",
+                            "ExecutionTargets": 1,
+                            "Variable": "intro_equip_spoken",
+                            "Value": 1,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "3d73650e10a542518488b999161e168f"
+                                }
+                            ]
+                        },
+                        {
+                            "UIName": "ShopUI",
+                            "OpenData": "EquipShop",
+                            "WaitUntilClosed": true,
+                            "Guid": "3d73650e10a542518488b999161e168f",
+                            "Branches": [],
+                            "Type": "OpenUI"
+                        }
+                    ]
+                },
+                {
+                    "Key": "OpenEquipShop",
+                    "EnableExpression": "",
+                    "EntryNodeGuid": "3d73650e10a542518488b999161e168f",
+                    "Nodes": [
+                        {
+                            "UIName": "ShopUI",
+                            "OpenData": "EquipShop",
+                            "WaitUntilClosed": true,
+                            "Guid": "3d73650e10a542518488b999161e168f",
+                            "Branches": [],
+                            "Type": "OpenUI"
+                        }
+                    ],
+                    "DisplayNameKey": "npc.equipment_shop.name"
+                }
+            ],
+            "Id": 0,
+            "DisplayNameKey": "npc.equipment_shop.name"
+        },
+        {
+            "NPC": "NPCPropShop",
+            "Interactions": [
+                {
+                    "Key": "Introprop",
+                    "DisplayNameKey": "npc.prop_shop.name",
+                    "EnableExpression": "intro_started==1 && intro_completed==0 && intro_stage==2 && intro_prop_spoken==0",
+                    "EntryNodeGuid": "intro_prop_0",
+                    "Nodes": [
+                        {
+                            "Type": "Dialogue",
+                            "Guid": "intro_prop_0",
+                            "ExecutionTargets": 1,
+                            "ContentKey": "story.intro.prop.0",
+                            "Speaker": "npc.prop_shop.name",
+                            "SpeakerAnchor": 0,
+                            "CharactersPerSecond": 24,
+                            "LingerSeconds": 1.5,
+                            "LockCamera": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "intro_prop_1"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Dialogue",
+                            "Guid": "intro_prop_1",
+                            "ExecutionTargets": 1,
+                            "ContentKey": "story.intro.prop.1",
+                            "Speaker": "",
+                            "SpeakerAnchor": 1,
+                            "CharactersPerSecond": 24,
+                            "LingerSeconds": 1.5,
+                            "LockCamera": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "intro_prop_2"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Dialogue",
+                            "Guid": "intro_prop_2",
+                            "ExecutionTargets": 1,
+                            "ContentKey": "story.intro.prop.2",
+                            "Speaker": "npc.prop_shop.name",
+                            "SpeakerAnchor": 0,
+                            "CharactersPerSecond": 24,
+                            "LingerSeconds": 1.5,
+                            "LockCamera": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "intro_prop_3"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Dialogue",
+                            "Guid": "intro_prop_3",
+                            "ExecutionTargets": 1,
+                            "ContentKey": "story.intro.prop.3",
+                            "Speaker": "npc.prop_shop.name",
+                            "SpeakerAnchor": 0,
+                            "CharactersPerSecond": 24,
+                            "LingerSeconds": 1.5,
+                            "LockCamera": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "intro_prop_4"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Dialogue",
+                            "Guid": "intro_prop_4",
+                            "ExecutionTargets": 1,
+                            "ContentKey": "story.intro.prop.4",
+                            "Speaker": "",
+                            "SpeakerAnchor": 1,
+                            "CharactersPerSecond": 24,
+                            "LingerSeconds": 1.5,
+                            "LockCamera": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "intro_prop_spoken"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Progress",
+                            "Guid": "intro_prop_spoken",
+                            "ExecutionTargets": 1,
+                            "Variable": "intro_prop_spoken",
+                            "Value": 1,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "14dfb732e88441b099f7fe7cb07fe71f"
+                                }
+                            ]
+                        },
+                        {
+                            "UIName": "ShopUI",
+                            "OpenData": "PropShop",
+                            "WaitUntilClosed": true,
+                            "Guid": "14dfb732e88441b099f7fe7cb07fe71f",
+                            "Branches": [],
+                            "Type": "OpenUI"
+                        }
+                    ]
+                },
+                {
+                    "Key": "OpenPropShop",
+                    "EnableExpression": "",
+                    "EntryNodeGuid": "14dfb732e88441b099f7fe7cb07fe71f",
+                    "Nodes": [
+                        {
+                            "UIName": "ShopUI",
+                            "OpenData": "PropShop",
+                            "WaitUntilClosed": true,
+                            "Guid": "14dfb732e88441b099f7fe7cb07fe71f",
+                            "Branches": [],
+                            "Type": "OpenUI"
+                        }
+                    ],
+                    "DisplayNameKey": "npc.prop_shop.name"
+                }
+            ],
+            "Id": 1,
+            "DisplayNameKey": "npc.prop_shop.name"
+        },
+        {
+            "NPC": "NPCSkillShop",
+            "Interactions": [
+                {
+                    "Key": "Introskill",
+                    "DisplayNameKey": "npc.skill_shop.name",
+                    "EnableExpression": "intro_started==1 && intro_completed==0 && intro_stage==3 && intro_skill_spoken==0",
+                    "EntryNodeGuid": "intro_skill_0",
+                    "Nodes": [
+                        {
+                            "Type": "Dialogue",
+                            "Guid": "intro_skill_0",
+                            "ExecutionTargets": 1,
+                            "ContentKey": "story.intro.skill.0",
+                            "Speaker": "",
+                            "SpeakerAnchor": 1,
+                            "CharactersPerSecond": 24,
+                            "LingerSeconds": 1.5,
+                            "LockCamera": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "intro_skill_1"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Dialogue",
+                            "Guid": "intro_skill_1",
+                            "ExecutionTargets": 1,
+                            "ContentKey": "story.intro.skill.1",
+                            "Speaker": "npc.skill_shop.name",
+                            "SpeakerAnchor": 0,
+                            "CharactersPerSecond": 24,
+                            "LingerSeconds": 1.5,
+                            "LockCamera": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "intro_skill_2"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Dialogue",
+                            "Guid": "intro_skill_2",
+                            "ExecutionTargets": 1,
+                            "ContentKey": "story.intro.skill.2",
+                            "Speaker": "npc.skill_shop.name",
+                            "SpeakerAnchor": 0,
+                            "CharactersPerSecond": 24,
+                            "LingerSeconds": 1.5,
+                            "LockCamera": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "intro_skill_3"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Dialogue",
+                            "Guid": "intro_skill_3",
+                            "ExecutionTargets": 1,
+                            "ContentKey": "story.intro.skill.3",
+                            "Speaker": "",
+                            "SpeakerAnchor": 1,
+                            "CharactersPerSecond": 24,
+                            "LingerSeconds": 1.5,
+                            "LockCamera": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "intro_skill_4"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Dialogue",
+                            "Guid": "intro_skill_4",
+                            "ExecutionTargets": 1,
+                            "ContentKey": "story.intro.skill.4",
+                            "Speaker": "npc.skill_shop.name",
+                            "SpeakerAnchor": 0,
+                            "CharactersPerSecond": 24,
+                            "LingerSeconds": 1.5,
+                            "LockCamera": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "intro_skill_5"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Dialogue",
+                            "Guid": "intro_skill_5",
+                            "ExecutionTargets": 1,
+                            "ContentKey": "story.intro.skill.5",
+                            "Speaker": "npc.skill_shop.name",
+                            "SpeakerAnchor": 0,
+                            "CharactersPerSecond": 24,
+                            "LingerSeconds": 1.5,
+                            "LockCamera": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "intro_skill_spoken"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Progress",
+                            "Guid": "intro_skill_spoken",
+                            "ExecutionTargets": 1,
+                            "Variable": "intro_skill_spoken",
+                            "Value": 1,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "14dfb732e88441b099f7fe7cb07fe71f"
+                                }
+                            ]
+                        },
+                        {
+                            "UIName": "ShopUI",
+                            "OpenData": "SkillShop",
+                            "WaitUntilClosed": true,
+                            "Guid": "14dfb732e88441b099f7fe7cb07fe71f",
+                            "Branches": [],
+                            "Type": "OpenUI"
+                        }
+                    ]
+                },
+                {
+                    "Key": "OpenSkillShop",
+                    "EnableExpression": "",
+                    "EntryNodeGuid": "14dfb732e88441b099f7fe7cb07fe71f",
+                    "Nodes": [
+                        {
+                            "UIName": "ShopUI",
+                            "OpenData": "SkillShop",
+                            "WaitUntilClosed": true,
+                            "Guid": "14dfb732e88441b099f7fe7cb07fe71f",
+                            "Branches": [],
+                            "Type": "OpenUI"
+                        }
+                    ],
+                    "DisplayNameKey": "npc.skill_shop.name"
+                }
+            ],
+            "Id": 2,
+            "DisplayNameKey": "npc.skill_shop.name"
+        },
+        {
+            "NPC": "NPCStash",
+            "Interactions": [
+                {
+                    "Key": "Stash",
+                    "EnableExpression": "",
+                    "EntryNodeGuid": "e1683275aaa04ce5a827d9fd8e45c10b",
+                    "Nodes": [
+                        {
+                            "UIName": "StashUI",
+                            "OpenData": "",
+                            "WaitUntilClosed": true,
+                            "Guid": "e1683275aaa04ce5a827d9fd8e45c10b",
+                            "Branches": [],
+                            "Type": "OpenUI"
+                        }
+                    ],
+                    "DisplayNameKey": "npc.stash.name"
+                }
+            ],
+            "Id": 3,
+            "DisplayNameKey": "npc.stash.name"
+        },
+        {
+            "NPC": "NPCTraining",
+            "Interactions": [
+                {
+                    "Key": "Introtrainer",
+                    "DisplayNameKey": "npc.training_ground.name",
+                    "EnableExpression": "intro_started==1 && intro_completed==0 && intro_stage==5 && intro_trainer_spoken==0",
+                    "EntryNodeGuid": "intro_trainer_0",
+                    "Nodes": [
+                        {
+                            "Type": "Dialogue",
+                            "Guid": "intro_trainer_0",
+                            "ExecutionTargets": 1,
+                            "ContentKey": "story.intro.trainer.0",
+                            "Speaker": "",
+                            "SpeakerAnchor": 1,
+                            "CharactersPerSecond": 24,
+                            "LingerSeconds": 1.5,
+                            "LockCamera": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "intro_trainer_1"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Dialogue",
+                            "Guid": "intro_trainer_1",
+                            "ExecutionTargets": 1,
+                            "ContentKey": "story.intro.trainer.1",
+                            "Speaker": "npc.training_ground.name",
+                            "SpeakerAnchor": 0,
+                            "CharactersPerSecond": 24,
+                            "LingerSeconds": 1.5,
+                            "LockCamera": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "intro_trainer_2"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Dialogue",
+                            "Guid": "intro_trainer_2",
+                            "ExecutionTargets": 1,
+                            "ContentKey": "story.intro.trainer.2",
+                            "Speaker": "",
+                            "SpeakerAnchor": 1,
+                            "CharactersPerSecond": 24,
+                            "LingerSeconds": 1.5,
+                            "LockCamera": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "intro_trainer_3"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Dialogue",
+                            "Guid": "intro_trainer_3",
+                            "ExecutionTargets": 1,
+                            "ContentKey": "story.intro.trainer.3",
+                            "Speaker": "npc.training_ground.name",
+                            "SpeakerAnchor": 0,
+                            "CharactersPerSecond": 24,
+                            "LingerSeconds": 1.5,
+                            "LockCamera": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "intro_trainer_4"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Dialogue",
+                            "Guid": "intro_trainer_4",
+                            "ExecutionTargets": 1,
+                            "ContentKey": "story.intro.trainer.4",
+                            "Speaker": "npc.training_ground.name",
+                            "SpeakerAnchor": 0,
+                            "CharactersPerSecond": 24,
+                            "LingerSeconds": 1.5,
+                            "LockCamera": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "intro_trainer_5"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Dialogue",
+                            "Guid": "intro_trainer_5",
+                            "ExecutionTargets": 1,
+                            "ContentKey": "story.intro.trainer.5",
+                            "Speaker": "",
+                            "SpeakerAnchor": 1,
+                            "CharactersPerSecond": 24,
+                            "LingerSeconds": 1.5,
+                            "LockCamera": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "intro_trainer_spoken"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Progress",
+                            "Guid": "intro_trainer_spoken",
+                            "ExecutionTargets": 1,
+                            "Variable": "intro_trainer_spoken",
+                            "Value": 1,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "9fa755485fd94a18b7e4b386a3b5307a"
+                                }
+                            ]
+                        },
+                        {
+                            "Options": [
+                                {
+                                    "EnableExpression": "",
+                                    "NextNodeGuid": "c1a95e3707ff40248bb5153c55295ff8",
+                                    "DisplayNameKey": "npc.option.enter_dungeon"
+                                },
+                                {
+                                    "EnableExpression": "",
+                                    "NextNodeGuid": "3d003138da8c4619980f4cf904066d0d",
+                                    "DisplayNameKey": "npc.option.enter_training_ground"
+                                }
+                            ],
+                            "Guid": "9fa755485fd94a18b7e4b386a3b5307a",
+                            "Branches": [],
+                            "Type": "Select"
+                        },
+                        {
+                            "DungeonThemeId": 0,
+                            "Guid": "c1a95e3707ff40248bb5153c55295ff8",
+                            "Branches": [],
+                            "Type": "EnterDungeon"
+                        },
+                        {
+                            "Guid": "3d003138da8c4619980f4cf904066d0d",
+                            "Branches": [],
+                            "Type": "EnterTrainingGround"
+                        }
+                    ]
+                },
+                {
+                    "Key": "Training",
+                    "EnableExpression": "",
+                    "EntryNodeGuid": "9fa755485fd94a18b7e4b386a3b5307a",
+                    "Nodes": [
+                        {
+                            "Options": [
+                                {
+                                    "EnableExpression": "",
+                                    "NextNodeGuid": "c1a95e3707ff40248bb5153c55295ff8",
+                                    "DisplayNameKey": "npc.option.enter_dungeon"
+                                },
+                                {
+                                    "EnableExpression": "",
+                                    "NextNodeGuid": "3d003138da8c4619980f4cf904066d0d",
+                                    "DisplayNameKey": "npc.option.enter_training_ground"
+                                }
+                            ],
+                            "Guid": "9fa755485fd94a18b7e4b386a3b5307a",
+                            "Branches": [],
+                            "Type": "Select"
+                        },
+                        {
+                            "DungeonThemeId": 0,
+                            "Guid": "c1a95e3707ff40248bb5153c55295ff8",
+                            "Branches": [],
+                            "Type": "EnterDungeon"
+                        },
+                        {
+                            "Guid": "3d003138da8c4619980f4cf904066d0d",
+                            "Branches": [],
+                            "Type": "EnterTrainingGround"
+                        }
+                    ],
+                    "DisplayNameKey": "npc.training_ground.name"
+                }
+            ],
+            "Id": 4,
+            "DisplayNameKey": "npc.training_ground.name"
+        },
+        {
+            "NPC": "Exit",
+            "PrefabPath": "Assets/Res/Prefab/Environment/Exit.prefab",
+            "Interactions": [
+                {
+                    "Key": "DungeonExit",
+                    "EnableExpression": "",
+                    "EntryNodeGuid": "exit_select",
+                    "Nodes": [
+                        {
+                            "Options": [
+                                {
+                                    "EnableExpression": "",
+                                    "NextNodeGuid": "exit_next_floor",
+                                    "DisplayNameKey": "npc.option.continue_dungeon"
+                                },
+                                {
+                                    "EnableExpression": "",
+                                    "NextNodeGuid": "exit_retreat",
+                                    "DisplayNameKey": "npc.option.withdraw_dungeon"
+                                }
+                            ],
+                            "Guid": "exit_select",
+                            "ExecutionTargets": 3,
+                            "Branches": [],
+                            "Type": "Select"
+                        },
+                        {
+                            "DungeonThemeId": 0,
+                            "Guid": "exit_next_floor",
+                            "ExecutionTargets": 1,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "exit_request_next_theme"
+                                }
+                            ],
+                            "Type": "EnterDungeon"
+                        },
+                        {
+                            "Guid": "exit_retreat",
+                            "ExecutionTargets": 1,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "exit_request_retreat"
+                                }
+                            ],
+                            "Type": "EnterTown"
+                        },
+                        {
+                            "Guid": "exit_request_next_theme",
+                            "ExecutionTargets": 2,
+                            "RequestType": 0,
+                            "Branches": [],
+                            "Type": "RequestBattleExit"
+                        },
+                        {
+                            "Guid": "exit_request_retreat",
+                            "ExecutionTargets": 2,
+                            "RequestType": 1,
+                            "Branches": [],
+                            "Type": "RequestBattleExit"
+                        }
+                    ],
+                    "DisplayNameKey": "npc.dungeon_exit.name"
+                }
+            ],
+            "Id": 5,
+            "DisplayNameKey": "npc.dungeon_exit.name"
+        },
+        {
+            "NPC": "BulletinBoard",
+            "PrefabPath": "Assets/Res/Prefab/Unit/BulletinBoard.prefab",
+            "Interactions": [
+                {
+                    "Key": "OpenLobby",
+                    "EnableExpression": "",
+                    "EntryNodeGuid": "38a8c80798f1499e8680f751de20ef21",
+                    "Nodes": [
+                        {
+                            "UIName": "LobbyUI",
+                            "OpenData": "",
+                            "WaitUntilClosed": true,
+                            "Guid": "38a8c80798f1499e8680f751de20ef21",
+                            "Branches": [],
+                            "Type": "OpenUI"
+                        }
+                    ],
+                    "DisplayNameKey": "npc.bulletin_board.name"
+                }
+            ],
+            "Id": 6,
+            "DisplayNameKey": "npc.bulletin_board.name"
+        },
+        {
+            "Id": 7,
+            "NPC": "TownIntroTrigger",
+            "PrefabPath": "",
+            "DisplayNameKey": "story.intro.commission_title",
+            "Interactions": [
+                {
+                    "Key": "FirstExpedition",
+                    "DisplayNameKey": "story.intro.commission_title",
+                    "Automatic": true,
+                    "IsSequence": true,
+                    "AutoPriority": 1000,
+                    "RetrySeconds": 2,
+                    "CompletionVariable": "intro_completed",
+                    "EntryNodeGuid": "resume",
+                    "Nodes": [
+                        {
+                            "Type": "WaitCondition",
+                            "Guid": "resume",
+                            "ExecutionTargets": 1,
+                            "Condition": 0,
+                            "Branches": [
+                                {
+                                    "CheckExpression": "intro_stage==0",
+                                    "NextNodeGuid": "arrival"
+                                },
+                                {
+                                    "CheckExpression": "intro_stage==1",
+                                    "NextNodeGuid": "equipment_reason"
+                                },
+                                {
+                                    "CheckExpression": "intro_stage==2",
+                                    "NextNodeGuid": "props_reason"
+                                },
+                                {
+                                    "CheckExpression": "intro_stage==3",
+                                    "NextNodeGuid": "skills_reason"
+                                },
+                                {
+                                    "CheckExpression": "intro_stage==4",
+                                    "NextNodeGuid": "loadout_reason"
+                                },
+                                {
+                                    "CheckExpression": "intro_stage==5",
+                                    "NextNodeGuid": "ready"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Dialogue",
+                            "Guid": "arrival",
+                            "ExecutionTargets": 1,
+                            "ContentKey": "story.intro.arrival",
+                            "Speaker": "",
+                            "SpeakerAnchor": 1,
+                            "CharactersPerSecond": 24,
+                            "LingerSeconds": 1.5,
+                            "LockCamera": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "commission"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Dialogue",
+                            "Guid": "commission",
+                            "ExecutionTargets": 1,
+                            "ContentKey": "story.intro.commission",
+                            "Speaker": "",
+                            "SpeakerAnchor": 1,
+                            "CharactersPerSecond": 24,
+                            "LingerSeconds": 1.5,
+                            "LockCamera": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "prepare"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Dialogue",
+                            "Guid": "prepare",
+                            "ExecutionTargets": 1,
+                            "ContentKey": "story.intro.prepare",
+                            "Speaker": "",
+                            "SpeakerAnchor": 1,
+                            "CharactersPerSecond": 24,
+                            "LingerSeconds": 1.5,
+                            "LockCamera": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "started"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Progress",
+                            "Guid": "started",
+                            "ExecutionTargets": 1,
+                            "Variable": "intro_started",
+                            "Value": 1,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "stage_equipment"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Progress",
+                            "Guid": "stage_equipment",
+                            "ExecutionTargets": 1,
+                            "Variable": "intro_stage",
+                            "Value": 1,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "equipment_reason"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Dialogue",
+                            "Guid": "equipment_reason",
+                            "ExecutionTargets": 1,
+                            "ContentKey": "story.intro.equipment_reason",
+                            "Speaker": "",
+                            "SpeakerAnchor": 1,
+                            "CharactersPerSecond": 24,
+                            "LingerSeconds": 1.5,
+                            "LockCamera": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "equipment_pan"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Camera",
+                            "Guid": "equipment_pan",
+                            "ExecutionTargets": 1,
+                            "Target": "NPCEquipShop",
+                            "Duration": 1.2,
+                            "Smooth": 5,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "equipment_pan_return"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Camera",
+                            "Guid": "equipment_pan_return",
+                            "ExecutionTargets": 1,
+                            "Target": "actor",
+                            "Duration": 1.2,
+                            "Smooth": 5,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "buy_1"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Guide",
+                            "Guid": "buy_1",
+                            "ExecutionTargets": 1,
+                            "Target": "shop.purchase.1",
+                            "SecondaryTarget": "",
+                            "ContentKey": "guide.intro.buy_1",
+                            "FallbackTarget": "NPCEquipShop",
+                            "FallbackContentKey": "guide.intro.buy_1.fallback",
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "own_1"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "WaitCondition",
+                            "Guid": "own_1",
+                            "ExecutionTargets": 1,
+                            "Condition": 2,
+                            "ItemId": 1,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "own_1_save"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Guide",
+                            "Guid": "close_equipment",
+                            "ExecutionTargets": 1,
+                            "Target": "shop.back",
+                            "SecondaryTarget": "",
+                            "ContentKey": "guide.intro.close_equipment",
+                            "FallbackTarget": "",
+                            "FallbackContentKey": "",
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "equipment_closed"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "WaitCondition",
+                            "Guid": "equipment_closed",
+                            "ExecutionTargets": 1,
+                            "Condition": 6,
+                            "Value": "ShopUI",
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "equipment_clear"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Guide",
+                            "Guid": "equipment_clear",
+                            "ExecutionTargets": 1,
+                            "Clear": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "stage_2"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Progress",
+                            "Guid": "stage_2",
+                            "ExecutionTargets": 1,
+                            "Variable": "intro_stage",
+                            "Value": 2,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "props_reason"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Dialogue",
+                            "Guid": "props_reason",
+                            "ExecutionTargets": 1,
+                            "ContentKey": "story.intro.props_reason",
+                            "Speaker": "",
+                            "SpeakerAnchor": 1,
+                            "CharactersPerSecond": 24,
+                            "LingerSeconds": 1.5,
+                            "LockCamera": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "props_pan"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Camera",
+                            "Guid": "props_pan",
+                            "ExecutionTargets": 1,
+                            "Target": "NPCPropShop",
+                            "Duration": 1.2,
+                            "Smooth": 5,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "props_pan_return"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Camera",
+                            "Guid": "props_pan_return",
+                            "ExecutionTargets": 1,
+                            "Target": "actor",
+                            "Duration": 1.2,
+                            "Smooth": 5,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "buy_2"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Guide",
+                            "Guid": "buy_2",
+                            "ExecutionTargets": 1,
+                            "Target": "shop.purchase.2",
+                            "SecondaryTarget": "",
+                            "ContentKey": "guide.intro.buy_2",
+                            "FallbackTarget": "NPCPropShop",
+                            "FallbackContentKey": "guide.intro.buy_2.fallback",
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "own_2"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "WaitCondition",
+                            "Guid": "own_2",
+                            "ExecutionTargets": 1,
+                            "Condition": 2,
+                            "ItemId": 2,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "own_2_save"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Guide",
+                            "Guid": "buy_3",
+                            "ExecutionTargets": 1,
+                            "Target": "shop.purchase.3",
+                            "SecondaryTarget": "",
+                            "ContentKey": "guide.intro.buy_3",
+                            "FallbackTarget": "NPCPropShop",
+                            "FallbackContentKey": "guide.intro.buy_3.fallback",
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "own_3"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "WaitCondition",
+                            "Guid": "own_3",
+                            "ExecutionTargets": 1,
+                            "Condition": 2,
+                            "ItemId": 3,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "own_3_save"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Guide",
+                            "Guid": "close_props",
+                            "ExecutionTargets": 1,
+                            "Target": "shop.back",
+                            "SecondaryTarget": "",
+                            "ContentKey": "guide.intro.close_props",
+                            "FallbackTarget": "",
+                            "FallbackContentKey": "",
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "props_closed"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "WaitCondition",
+                            "Guid": "props_closed",
+                            "ExecutionTargets": 1,
+                            "Condition": 6,
+                            "Value": "ShopUI",
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "props_clear"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Guide",
+                            "Guid": "props_clear",
+                            "ExecutionTargets": 1,
+                            "Clear": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "stage_3"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Progress",
+                            "Guid": "stage_3",
+                            "ExecutionTargets": 1,
+                            "Variable": "intro_stage",
+                            "Value": 3,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "skills_reason"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Dialogue",
+                            "Guid": "skills_reason",
+                            "ExecutionTargets": 1,
+                            "ContentKey": "story.intro.skills_reason",
+                            "Speaker": "",
+                            "SpeakerAnchor": 1,
+                            "CharactersPerSecond": 24,
+                            "LingerSeconds": 1.5,
+                            "LockCamera": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "skills_pan"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Camera",
+                            "Guid": "skills_pan",
+                            "ExecutionTargets": 1,
+                            "Target": "NPCSkillShop",
+                            "Duration": 1.2,
+                            "Smooth": 5,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "skills_pan_return"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Camera",
+                            "Guid": "skills_pan_return",
+                            "ExecutionTargets": 1,
+                            "Target": "actor",
+                            "Duration": 1.2,
+                            "Smooth": 5,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "buy_4"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Guide",
+                            "Guid": "buy_4",
+                            "ExecutionTargets": 1,
+                            "Target": "shop.purchase.4",
+                            "SecondaryTarget": "",
+                            "ContentKey": "guide.intro.buy_4",
+                            "FallbackTarget": "NPCSkillShop",
+                            "FallbackContentKey": "guide.intro.buy_4.fallback",
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "own_4"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "WaitCondition",
+                            "Guid": "own_4",
+                            "ExecutionTargets": 1,
+                            "Condition": 2,
+                            "ItemId": 4,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "own_4_save"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Guide",
+                            "Guid": "buy_18",
+                            "ExecutionTargets": 1,
+                            "Target": "shop.purchase.18",
+                            "SecondaryTarget": "",
+                            "ContentKey": "guide.intro.buy_18",
+                            "FallbackTarget": "NPCSkillShop",
+                            "FallbackContentKey": "guide.intro.buy_18.fallback",
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "own_18"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "WaitCondition",
+                            "Guid": "own_18",
+                            "ExecutionTargets": 1,
+                            "Condition": 2,
+                            "ItemId": 18,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "own_18_save"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Guide",
+                            "Guid": "buy_16",
+                            "ExecutionTargets": 1,
+                            "Target": "shop.purchase.16",
+                            "SecondaryTarget": "",
+                            "ContentKey": "guide.intro.buy_16",
+                            "FallbackTarget": "NPCSkillShop",
+                            "FallbackContentKey": "guide.intro.buy_16.fallback",
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "own_16"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "WaitCondition",
+                            "Guid": "own_16",
+                            "ExecutionTargets": 1,
+                            "Condition": 2,
+                            "ItemId": 16,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "own_16_save"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Guide",
+                            "Guid": "close_skills",
+                            "ExecutionTargets": 1,
+                            "Target": "shop.back",
+                            "SecondaryTarget": "",
+                            "ContentKey": "guide.intro.close_skills",
+                            "FallbackTarget": "",
+                            "FallbackContentKey": "",
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "skills_closed"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "WaitCondition",
+                            "Guid": "skills_closed",
+                            "ExecutionTargets": 1,
+                            "Condition": 6,
+                            "Value": "ShopUI",
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "skills_clear"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Guide",
+                            "Guid": "skills_clear",
+                            "ExecutionTargets": 1,
+                            "Clear": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "stage_4"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Progress",
+                            "Guid": "stage_4",
+                            "ExecutionTargets": 1,
+                            "Variable": "intro_stage",
+                            "Value": 4,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "loadout_reason"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Dialogue",
+                            "Guid": "loadout_reason",
+                            "ExecutionTargets": 1,
+                            "ContentKey": "story.intro.loadout_reason",
+                            "Speaker": "",
+                            "SpeakerAnchor": 1,
+                            "CharactersPerSecond": 24,
+                            "LingerSeconds": 1.5,
+                            "LockCamera": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "equip_1"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Guide",
+                            "Guid": "equip_1",
+                            "ExecutionTargets": 1,
+                            "Target": "character.inventory.1",
+                            "SecondaryTarget": "character.magicStone",
+                            "ContentKey": "guide.intro.equip_1",
+                            "FallbackTarget": "",
+                            "FallbackContentKey": "guide.intro.equip_1.fallback",
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "equipped_1"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "WaitCondition",
+                            "Guid": "equipped_1",
+                            "ExecutionTargets": 1,
+                            "Condition": 3,
+                            "ItemId": 1,
+                            "Slot": 0,
+                            "AllowInventory": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "equipped_1_save"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Guide",
+                            "Guid": "equip_2",
+                            "ExecutionTargets": 1,
+                            "Target": "character.inventory.2",
+                            "SecondaryTarget": "character.prop.0",
+                            "ContentKey": "guide.intro.equip_2",
+                            "FallbackTarget": "",
+                            "FallbackContentKey": "guide.intro.equip_2.fallback",
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "equipped_2"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "WaitCondition",
+                            "Guid": "equipped_2",
+                            "ExecutionTargets": 1,
+                            "Condition": 4,
+                            "ItemId": 2,
+                            "Slot": 0,
+                            "AllowInventory": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "equipped_2_save"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Guide",
+                            "Guid": "equip_3",
+                            "ExecutionTargets": 1,
+                            "Target": "character.inventory.3",
+                            "SecondaryTarget": "character.prop.1",
+                            "ContentKey": "guide.intro.equip_3",
+                            "FallbackTarget": "",
+                            "FallbackContentKey": "guide.intro.equip_3.fallback",
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "equipped_3"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "WaitCondition",
+                            "Guid": "equipped_3",
+                            "ExecutionTargets": 1,
+                            "Condition": 4,
+                            "ItemId": 3,
+                            "Slot": 1,
+                            "AllowInventory": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "equipped_3_save"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Guide",
+                            "Guid": "chain_4",
+                            "ExecutionTargets": 1,
+                            "Target": "character.inventory.4",
+                            "SecondaryTarget": "character.skill.append",
+                            "ContentKey": "guide.intro.chain_4",
+                            "FallbackTarget": "",
+                            "FallbackContentKey": "guide.intro.chain_4.fallback",
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "chain_has_4"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "WaitCondition",
+                            "Guid": "chain_has_4",
+                            "ExecutionTargets": 1,
+                            "Condition": 5,
+                            "Items": [
+                                4
+                            ],
+                            "AllowInventory": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "chain_has_4_save"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Guide",
+                            "Guid": "chain_18",
+                            "ExecutionTargets": 1,
+                            "Target": "character.inventory.18",
+                            "SecondaryTarget": "character.skill.append",
+                            "ContentKey": "guide.intro.chain_18",
+                            "FallbackTarget": "",
+                            "FallbackContentKey": "guide.intro.chain_18.fallback",
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "chain_has_18"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "WaitCondition",
+                            "Guid": "chain_has_18",
+                            "ExecutionTargets": 1,
+                            "Condition": 5,
+                            "Items": [
+                                4,
+                                18
+                            ],
+                            "AllowInventory": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "chain_has_18_save"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Guide",
+                            "Guid": "chain_16",
+                            "ExecutionTargets": 1,
+                            "Target": "character.inventory.16",
+                            "SecondaryTarget": "character.skill.append",
+                            "ContentKey": "guide.intro.chain_16",
+                            "FallbackTarget": "",
+                            "FallbackContentKey": "guide.intro.chain_16.fallback",
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "chain_has_16"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "WaitCondition",
+                            "Guid": "chain_has_16",
+                            "ExecutionTargets": 1,
+                            "Condition": 5,
+                            "Items": [
+                                4,
+                                18,
+                                16
+                            ],
+                            "AllowInventory": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "chain_has_16_save"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Guide",
+                            "Guid": "close_character",
+                            "ExecutionTargets": 1,
+                            "Target": "",
+                            "SecondaryTarget": "",
+                            "ContentKey": "guide.intro.close_character",
+                            "FallbackTarget": "",
+                            "FallbackContentKey": "",
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "character_closed"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "WaitCondition",
+                            "Guid": "character_closed",
+                            "ExecutionTargets": 1,
+                            "Condition": 6,
+                            "Value": "CharacterUI",
+                            "AllowInventory": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "loadout_clear",
+                                    "RuntimeCondition": {
+                                        "Type": "WaitCondition",
+                                        "Condition": 8,
+                                        "Conditions": [
+                                            {
+                                                "Type": "WaitCondition",
+                                                "Condition": 3,
+                                                "ItemId": 1
+                                            },
+                                            {
+                                                "Type": "WaitCondition",
+                                                "Condition": 4,
+                                                "ItemId": 2,
+                                                "Slot": 0
+                                            },
+                                            {
+                                                "Type": "WaitCondition",
+                                                "Condition": 4,
+                                                "ItemId": 3,
+                                                "Slot": 1
+                                            },
+                                            {
+                                                "Type": "WaitCondition",
+                                                "Condition": 5,
+                                                "Items": [
+                                                    4,
+                                                    18,
+                                                    16
+                                                ]
+                                            }
+                                        ]
+                                    }
+                                },
+                                {
+                                    "NextNodeGuid": "loadout_reason"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Guide",
+                            "Guid": "loadout_clear",
+                            "ExecutionTargets": 1,
+                            "Clear": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "stage_ready"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Progress",
+                            "Guid": "stage_ready",
+                            "ExecutionTargets": 1,
+                            "Variable": "intro_stage",
+                            "Value": 5,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "ready"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Dialogue",
+                            "Guid": "ready",
+                            "ExecutionTargets": 1,
+                            "ContentKey": "story.intro.ready",
+                            "Speaker": "",
+                            "SpeakerAnchor": 1,
+                            "CharactersPerSecond": 24,
+                            "LingerSeconds": 1.5,
+                            "LockCamera": true,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "trainer_pan"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Camera",
+                            "Guid": "trainer_pan",
+                            "ExecutionTargets": 1,
+                            "Target": "NPCTraining",
+                            "Duration": 1.2,
+                            "Smooth": 5,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "trainer_pan_return"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Camera",
+                            "Guid": "trainer_pan_return",
+                            "ExecutionTargets": 1,
+                            "Target": "actor",
+                            "Duration": 1.2,
+                            "Smooth": 5,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "enter_dungeon"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Guide",
+                            "Guid": "enter_dungeon",
+                            "ExecutionTargets": 1,
+                            "Target": "interaction.enterDungeon",
+                            "SecondaryTarget": "",
+                            "ContentKey": "guide.intro.enter_dungeon",
+                            "FallbackTarget": "NPCTraining",
+                            "FallbackContentKey": "guide.intro.enter_dungeon.fallback",
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "dungeon_arrival"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "WaitCondition",
+                            "Guid": "dungeon_arrival",
+                            "ExecutionTargets": 1,
+                            "Condition": 1,
+                            "Value": "intro_completed==1",
+                            "Branches": []
+                        },
+                        {
+                            "Type": "Progress",
+                            "Guid": "own_1_save",
+                            "ExecutionTargets": 1,
+                            "Variable": "intro_stage",
+                            "Value": 1,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "close_equipment"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Progress",
+                            "Guid": "own_2_save",
+                            "ExecutionTargets": 1,
+                            "Variable": "intro_stage",
+                            "Value": 2,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "buy_3"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Progress",
+                            "Guid": "own_3_save",
+                            "ExecutionTargets": 1,
+                            "Variable": "intro_stage",
+                            "Value": 2,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "close_props"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Progress",
+                            "Guid": "own_4_save",
+                            "ExecutionTargets": 1,
+                            "Variable": "intro_stage",
+                            "Value": 3,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "buy_18"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Progress",
+                            "Guid": "own_18_save",
+                            "ExecutionTargets": 1,
+                            "Variable": "intro_stage",
+                            "Value": 3,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "buy_16"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Progress",
+                            "Guid": "own_16_save",
+                            "ExecutionTargets": 1,
+                            "Variable": "intro_stage",
+                            "Value": 3,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "close_skills"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Progress",
+                            "Guid": "equipped_1_save",
+                            "ExecutionTargets": 1,
+                            "Variable": "intro_stage",
+                            "Value": 4,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "equip_2"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Progress",
+                            "Guid": "equipped_2_save",
+                            "ExecutionTargets": 1,
+                            "Variable": "intro_stage",
+                            "Value": 4,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "equip_3"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Progress",
+                            "Guid": "equipped_3_save",
+                            "ExecutionTargets": 1,
+                            "Variable": "intro_stage",
+                            "Value": 4,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "chain_4"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Progress",
+                            "Guid": "chain_has_4_save",
+                            "ExecutionTargets": 1,
+                            "Variable": "intro_stage",
+                            "Value": 4,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "chain_18"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Progress",
+                            "Guid": "chain_has_18_save",
+                            "ExecutionTargets": 1,
+                            "Variable": "intro_stage",
+                            "Value": 4,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "chain_16"
+                                }
+                            ]
+                        },
+                        {
+                            "Type": "Progress",
+                            "Guid": "chain_has_16_save",
+                            "ExecutionTargets": 1,
+                            "Variable": "intro_stage",
+                            "Value": 4,
+                            "Branches": [
+                                {
+                                    "NextNodeGuid": "close_character"
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "Id": 8,
+            "NPC": "TrainingReturnCrystal",
+            "PrefabPath": "Assets/Res/Prefab/Environment/TrainingReturnCrystal.prefab",
+            "DisplayNameKey": "npc.training_return_crystal.name",
+            "Interactions": [
+                {
+                    "Key": "TrainingReturnToTown",
+                    "DisplayNameKey": "npc.training_return_crystal.name",
+                    "EntryNodeGuid": "training_return_select",
+                    "Nodes": [
+                        {
+                            "Type": "Select",
+                            "Guid": "training_return_select",
+                            "ExecutionTargets": 1,
+                            "Dialog": "",
+                            "Options": [
+                                {
+                                    "DisplayNameKey": "npc.option.return_town",
+                                    "EnableExpression": "",
+                                    "NextNodeGuid": "training_return_town"
+                                }
+                            ],
+                            "Branches": []
+                        },
+                        {
+                            "Type": "EnterTown",
+                            "Guid": "training_return_town",
+                            "ExecutionTargets": 1,
+                            "Branches": []
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
 }

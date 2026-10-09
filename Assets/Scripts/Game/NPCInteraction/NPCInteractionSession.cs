@@ -23,6 +23,20 @@ public sealed class NPCInteractionSession
     public string SelectedNextNodeGuid { get; set; }
     public NPCInteractionNodeRunner CurrentRunner { get; set; }
     public bool IsActive { get; private set; }
+    public bool IsFinished { get; private set; }
+    public bool TryFinish()
+    {
+        if (IsFinished) return false;
+        IsFinished = true;
+        return true;
+    }
+    public System.IDisposable Guide { get; set; }
+
+    public void ClearGuide()
+    {
+        Guide?.Dispose();
+        Guide = null;
+    }
 
     public NPCInteractionNodeData GetCurrentNode()
     {
@@ -43,6 +57,7 @@ public sealed class NPCInteractionSession
 
         CurrentRunner?.Cancel(this);
         CurrentRunner = null;
+        ClearGuide();
         IsActive = false;
     }
 }

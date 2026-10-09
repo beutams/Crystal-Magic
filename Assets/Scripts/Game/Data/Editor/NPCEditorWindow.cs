@@ -239,6 +239,7 @@ namespace CrystalMagic.Editor.Data
             interaction.DisplayNameKey = EditorGUILayout.TextField("Display Name Key", interaction.DisplayNameKey ?? string.Empty);
             interaction.EnableExpression = EditorGUILayout.TextField("Enable Expression", interaction.EnableExpression ?? string.Empty);
             interaction.Automatic = EditorGUILayout.Toggle("Automatic", interaction.Automatic);
+            interaction.IsSequence = EditorGUILayout.Toggle("Scene Sequence", interaction.IsSequence);
             if (interaction.Automatic)
             {
                 interaction.AutoPriority = EditorGUILayout.IntField("Auto Priority", interaction.AutoPriority);
@@ -555,7 +556,8 @@ namespace CrystalMagic.Editor.Data
                     EditorGUILayout.HelpBox("This node immediately ends the current interaction and enters the training ground flow.", MessageType.None);
                     break;
                 default:
-                    EditorGUILayout.HelpBox($"Unknown node type: {nodeTypeName}", MessageType.Warning);
+                    if (NPCSequenceNodeDrawer.Draw(node)) DrawBranchList(interaction, node);
+                    else EditorGUILayout.HelpBox($"Unknown node type: {nodeTypeName}", MessageType.Warning);
                     break;
             }
 
@@ -712,6 +714,7 @@ namespace CrystalMagic.Editor.Data
                 EditorGUILayout.EndHorizontal();
 
                 branch.CheckExpression = EditorGUILayout.TextField("Check", branch.CheckExpression ?? string.Empty);
+                NPCSequenceNodeDrawer.DrawBranchCondition(branch);
                 branch.NextNodeGuid = DrawNodeGuidPopup("Next Node", interaction, branch.NextNodeGuid, node.Guid);
                 EditorGUILayout.EndVertical();
             }

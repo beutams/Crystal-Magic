@@ -49,6 +49,43 @@ public class CharacterUI : UIBase<CharacterUIData, CrystalMagic.UI.CharacterUIMo
 
     public void ShowSettings() => PageRequested?.Invoke(CharacterPage.Setting);
 
+    public RectTransform GetGuideTarget(string key)
+    {
+        if (key == "page.skill") return UI.Buttons_Skill.RectTransform;
+        if (key == "page.equip") return UI.Buttons_Equip.RectTransform;
+        if (key == "chain.first") return UI.Skill_ChainTabs_Chain1.RectTransform;
+        if (key.StartsWith("inventory.") && int.TryParse(key.Substring(10), out int itemId))
+        {
+            var views = Model.SelectedPage == CharacterPage.Skill ? _skillInventoryItemViews : _inventoryItemViews;
+            for (int i = 0; i < Model.InventoryItems.Count && i < views.Count; i++)
+                if (Model.InventoryItems[i]?.ItemId == itemId) return (RectTransform)views[i].transform;
+            // Recovery: a mis-dropped item can be dragged from its actual equipped slot.
+            if (Model.SelectedPage == CharacterPage.Skill)
+            {
+                for (int i = 0; i < Model.SkillItems.Count && i < _skillItemViews.Count; i++)
+                    if (Model.SkillItems[i].SkillStoneItemId == itemId) return (RectTransform)_skillItemViews[i].transform;
+            }
+            else
+            {
+                if (Model.EquipItems[0]?.ItemId == itemId) return UI.Equip_MagicStoneBorder.RectTransform;
+                for (int i = 0; i < Model.PropItems.Length; i++)
+                    if (Model.PropItems[i]?.ItemId == itemId)
+                        return i == 0 ? UI.Equip_PropSlot1.RectTransform : i == 1 ? UI.Equip_PropSlot2.RectTransform : UI.Equip_PropSlot3.RectTransform;
+            }
+            return null;
+        }
+        if (key == "magicStone") return UI.Equip_MagicStoneBorder.RectTransform;
+        if (key == "prop.0") return UI.Equip_PropSlot1.RectTransform;
+        if (key == "prop.1") return UI.Equip_PropSlot2.RectTransform;
+        if (key == "skill.append") return UI.Skill_SkillChain_Viewport.RectTransform;
+        return null;
+    }
+
+    public bool GuideSkillPage => Model.SelectedPage == CharacterPage.Skill;
+    public bool GuideEquipPage => Model.SelectedPage == CharacterPage.Equip;
+    public bool GuideFirstChain => Model.SelectedChainIndex == 0;
+    public RectTransform GuideLastSkill => _skillItemViews.Count == 0 ? null : (RectTransform)_skillItemViews[^1].transform;
+
     // The current prefab keeps a drag visual inside each page, not at the book root.
     private UINode ActiveItemDrag => UI.Skill.GameObject.activeInHierarchy ? UI.Skill_SkillDrag : UI.Equip_ItemDrag;
     private UINode ActiveItemDragIcon => UI.Skill.GameObject.activeInHierarchy ? UI.Skill_SkillDrag_Mask_Icon : UI.Equip_ItemDrag_Mask_Icon;

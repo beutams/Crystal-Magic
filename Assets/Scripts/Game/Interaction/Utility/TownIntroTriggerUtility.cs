@@ -11,7 +11,8 @@ public static class TownIntroTriggerUtility
     public const int UnitDataId = 37;
 
     public static bool IsPending(SaveDataComponent save) =>
-        save != null && save.ContainsVariable(CompletionVariable) && save.GetVariable(CompletionVariable) < 1d;
+        save != null && save.ContainsVariable(CompletionVariable) && save.ContainsVariable(NPCSequenceUtility.StageVariable) &&
+        save.GetVariable(CompletionVariable) < 1d;
 
     public static Entity TryCreate(EntityManager manager, Entity player)
     {

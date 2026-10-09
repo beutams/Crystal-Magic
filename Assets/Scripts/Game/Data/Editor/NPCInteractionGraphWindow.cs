@@ -219,6 +219,9 @@ namespace CrystalMagic.Editor.Data
                 case NPCRequestBattleExitInteractionNodeData request:
                     request.RequestType = (Server.BattleExitRequestType)EditorGUILayout.EnumPopup("出口操作", request.RequestType);
                     break;
+                default:
+                    if (NPCSequenceNodeDrawer.Draw(_selectedNode)) DrawBranches(_selectedNode);
+                    break;
             }
 
             if (EditorGUI.EndChangeCheck())
@@ -274,6 +277,7 @@ namespace CrystalMagic.Editor.Data
                 }
                 EditorGUILayout.EndHorizontal();
                 branch.CheckExpression = EditorGUILayout.TextField("Check", branch.CheckExpression ?? string.Empty);
+                NPCSequenceNodeDrawer.DrawBranchCondition(branch);
                 EditorGUILayout.LabelField("Next Node", "Connect the bottom port in the graph.", EditorStyles.miniLabel);
                 EditorGUILayout.EndVertical();
             }
