@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using CrystalMagic.Core;
+using CrystalMagic.Editor.Data;
 using CrystalMagic.Editor.Resource;
 using UnityEditor;
 using UnityEditor.Build;
@@ -93,12 +94,15 @@ public static class CrystalMagicBuild
         if (configChanged || !File.Exists(BundleBuildUtility.ConfigPath))
             BundleBuildUtility.SaveConfig(config);
 
+        // Finish pending animation imports before bundling; the player cannot
+        // rebuild tracks from AnimationUtility at runtime.
+        UnitAnimationFrameLibraryBuilder.RebuildFromSavedProfiles();
+        EnsureRuntimeShaders();
+
         if (!BundleBuildUtility.Build(config))
         {
             throw new BuildFailedException("Failed to build runtime AssetBundles.");
         }
-
-        EnsureRuntimeShaders();
     }
 
     private static void EnsureRuntimeShaders()
@@ -157,6 +161,10 @@ public static class CrystalMagicBuild
     {
         string outputFolder = Path.Combine(BuildRoot, folderName);
         Directory.CreateDirectory(outputFolder);
+        string bundleFolder = BundleBuildUtility.GetOutputPath(BundleBuildUtility.LoadConfig());
+        string bundleManifest = Path.Combine(bundleFolder, Path.GetFileName(bundleFolder) + ".manifest");
+        if (!File.Exists(bundleManifest))
+            throw new BuildFailedException($"Runtime AssetBundle manifest is missing: {bundleManifest}");
 
         BuildPlayerOptions options = new BuildPlayerOptions
         {
@@ -164,6 +172,9 @@ public static class CrystalMagicBuild
             locationPathName = Path.Combine(outputFolder, fileName + ".exe"),
             target = BuildTarget.StandaloneWindows64,
             targetGroup = BuildTargetGroup.Standalone,
+            // Preserve engine/component types used only by dynamically loaded
+            // UI, animation, particle and audio assets.
+            assetBundleManifestPath = bundleManifest,
             subtarget = dedicatedServer
                 ? (int)StandaloneBuildSubtarget.Server
                 : (int)StandaloneBuildSubtarget.Player,

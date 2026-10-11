@@ -345,6 +345,7 @@ namespace Server
             player.characterData = realMessage.data;
             player.entered = true;
             connectDic[connect] = player;
+            connect.BeginHeartbeatGrace(ServerUtility.BattleInitializeTimeout);
             Debug.Log(
                 $"[BattleTrace][Server] C2B_EnterBattle accepted: room={room.battleId}, " +
                 $"account={player.accountId}, connect={connect.RemoteEndpoint}, player={DescribePlayer(player)}");
@@ -416,6 +417,7 @@ namespace Server
             }
 
             connect.UnRegisterCallback(MessageCodec.GetOpcode<C2B_ReloadBattle>(), OnReloadBattle);
+            connect.BeginHeartbeatGrace(ServerUtility.BattleInitializeTimeout);
             connect.Send(new B2C_ReloadBattleResult
             {
                 type = BattleRequestType.ReloadBattleSuccess,
@@ -460,6 +462,7 @@ namespace Server
             }
 
             player.ready = true;
+            connect.EndHeartbeatGrace();
             Debug.Log(
                 $"[BattleTrace][Server] C2B_BattleReady accepted: room={player.room.battleId}, " +
                 $"account={player.accountId}, connect={connect.RemoteEndpoint}, player={DescribePlayer(player)}");
@@ -526,6 +529,7 @@ namespace Server
 
             StopReloadTimeout(player);
             player.runningReload = false;
+            connect.EndHeartbeatGrace();
             player.reloadSnapshotRequested = false;
             player.reloadSnapshotSent = false;
             player.active = true;
@@ -675,6 +679,9 @@ namespace Server
             player.entitiesSent = false;
             player.ready = false;
             player.active = false;
+            player.connect.BeginHeartbeatGrace(player.runningReload
+                ? ServerUtility.BattleInitializeTimeout
+                : ServerUtility.BattleReadyTimeout);
             player.connect.Send(new B2C_EnterBattleScene
             {
                 battleData = room.battleData,
@@ -1160,6 +1167,7 @@ namespace Server
                         PlayerCharacterComponent character =
                             entityManager.GetComponentObject<PlayerCharacterComponent>(player.entity);
                         player.characterData = PlayerCharacterUtility.Clone(character.Data);
+                        CaptureAcquisitions(player, character);
                         player.hasTransferVitals = true;
                         player.reviveOnTransfer = entityManager.GetComponentData<BattlePlayerStatusComponent>(player.entity).LifeState == BattlePlayerLifeState.Dead;
                         player.transferHealth = entityManager.GetComponentData<UnitVitalityComponent>(player.entity).CurrentHealth;
@@ -1250,6 +1258,7 @@ namespace Server
                         PlayerCharacterComponent character =
                             entityManager.GetComponentObject<PlayerCharacterComponent>(player.entity);
                         player.characterData = PlayerCharacterUtility.Clone(character.Data);
+                        CaptureAcquisitions(player, character);
                     }
                 }
             }
@@ -1280,9 +1289,10 @@ namespace Server
                     connectVersion = player.connectVersion,
                     sceneVersion = room.sceneVersion,
                     outcome = outcome,
-                    characterData = outcome == BattleSettlementOutcome.Escaped
-                        ? PlayerCharacterUtility.Clone(player.characterData)
-                        : null,
+                    acquiredItems = player.acquiredItems,
+                    acquiredMoney = player.acquiredMoney,
+                    reachedFloor = (int)room.sceneVersion,
+                    characterData = PlayerCharacterUtility.Clone(player.characterData),
                 };
                 pendingSettlements[connect] = settlement;
                 settlementDeadlines[connect] = NetworkTimer.Instance.TimeNow + ServerUtility.SettlementTimeout;
@@ -1293,6 +1303,16 @@ namespace Server
             battleRooms.Remove(room.battleId);
             try { room.world?.Dispose(); }
             finally { room.world = null; SessionEnded?.Invoke(room.sessionId); }
+        }
+
+        private static void CaptureAcquisitions(BattlePlayer player, PlayerCharacterComponent character)
+        {
+            foreach (InventoryItemData item in character.AcquiredItems)
+                DungeonSettlementUtility.Add(player.acquiredItems, item.ItemId, item.Quantity);
+            player.acquiredMoney = player.acquiredMoney > long.MaxValue - character.AcquiredMoney
+                ? long.MaxValue : player.acquiredMoney + character.AcquiredMoney;
+            character.AcquiredItems.Clear();
+            character.AcquiredMoney = 0;
         }
 
         private bool TryGetTicketPlayer(string ticket, out BattleRoom room, out BattlePlayer player)

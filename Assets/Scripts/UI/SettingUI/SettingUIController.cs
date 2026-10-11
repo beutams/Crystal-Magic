@@ -17,6 +17,9 @@ namespace CrystalMagic.UI
             Bindings.Bind(() => View.SfxVolumeChanged += OnSfxVolumeChanged, () => View.SfxVolumeChanged -= OnSfxVolumeChanged);
             Bindings.Bind(() => View.PreviousLanguageRequested += OnPreviousLanguageRequested, () => View.PreviousLanguageRequested -= OnPreviousLanguageRequested);
             Bindings.Bind(() => View.NextLanguageRequested += OnNextLanguageRequested, () => View.NextLanguageRequested -= OnNextLanguageRequested);
+            Bindings.Bind(() => View.DisplayModeRequested += OnDisplayModeRequested, () => View.DisplayModeRequested -= OnDisplayModeRequested);
+            Bindings.Bind(() => View.ResolutionRequested += OnResolutionRequested, () => View.ResolutionRequested -= OnResolutionRequested);
+            Bindings.Bind(() => View.SkipTutorialRequested += OnSkipTutorialRequested, () => View.SkipTutorialRequested -= OnSkipTutorialRequested);
             Bindings.Bind(() => View.SaveRequested += OnSaveRequested, () => View.SaveRequested -= OnSaveRequested);
             Bindings.Bind(() => View.ResetRequested += OnResetRequested, () => View.ResetRequested -= OnResetRequested);
             Bindings.Bind(() => View.BackRequested += OnBackRequested, () => View.BackRequested -= OnBackRequested);
@@ -28,6 +31,15 @@ namespace CrystalMagic.UI
         private void OnSfxVolumeChanged(float value) => Model.SetSfxVolume(value);
         private void OnPreviousLanguageRequested() => Model.ShiftLanguage(-1);
         private void OnNextLanguageRequested() => Model.ShiftLanguage(1);
+        private void OnDisplayModeRequested() => Model.ToggleFullscreen();
+        private void OnResolutionRequested(int offset) => Model.ShiftResolution(offset);
+        private void OnSkipTutorialRequested()
+        {
+            GameSettingsData settings = GameSettingsComponent.Instance.GetSettingsCopy();
+            settings.SkipTutorial = !settings.SkipTutorial;
+            GameSettingsComponent.Instance.SetSettings(settings, true);
+            Model.ReloadFromSettings();
+        }
         private void OnSaveRequested() => Model.Save();
         private void OnResetRequested() => Model.RestoreVisibleDefaults();
         private void OnBackRequested() => View.Close();

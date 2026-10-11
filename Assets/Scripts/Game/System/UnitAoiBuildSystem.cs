@@ -81,27 +81,33 @@ public partial struct UnitAoiBuildSystem : ISystem
         DynamicBuffer<UnitAoiObserverEntry> spectatorObservers =
             state.EntityManager.GetBuffer<UnitAoiObserverEntry>(_singletonEntity);
         spectatorObservers.ResizeUninitialized(_spectatorObserverQuery.CalculateEntityCount());
-        JobHandle gatherSpectatorsHandle = new UnitAoiSpectatorObserverGatherJob
+        // Capture buffer aliases and lookups before a job owns their safety handles.
+        // Calling AsNativeArray again after scheduling the observer writer is a main-thread read.
+        NativeArray<UnitAoiObserverEntry> observerArray = spectatorObservers.AsNativeArray();
+        NativeArray<UnitQueryEntry> entryArray = treeEntries.AsNativeArray();
+        NativeArray<UnitQueryNode> nodeArray = treeNodes.AsNativeArray();
+        ComponentLookup<UnitAoiStateComponent> aoiStates = SystemAPI.GetComponentLookup<UnitAoiStateComponent>();
+        state.Dependency = new UnitAoiSpectatorObserverGatherJob
         {
-            Observers = spectatorObservers.AsNativeArray(),
+            Observers = observerArray,
         }.ScheduleParallel(_spectatorObserverQuery, state.Dependency);
 
-        JobHandle buildHandle = new UnitAoiBuildJob
+        state.Dependency = new UnitAoiBuildJob
         {
             Version = singleton.Version,
             QueryRadius = singleton.MaxQueryRadius,
-            Entries = treeEntries.AsNativeArray(),
-            AdditionalObservers = spectatorObservers.AsNativeArray(),
-            Tree = new UnitQueryTree(treeNodes.AsNativeArray(), treeEntries.AsNativeArray()),
-            AoiStates = SystemAPI.GetComponentLookup<UnitAoiStateComponent>(),
-        }.Schedule(gatherSpectatorsHandle);
+            Entries = entryArray,
+            AdditionalObservers = observerArray,
+            Tree = new UnitQueryTree(nodeArray, entryArray),
+            AoiStates = aoiStates,
+        }.Schedule(state.Dependency);
 
         state.Dependency = new UnitAoiActiveStateJob
         {
             Version = singleton.Version,
             EnterDistanceSq = UnitAoiRanges.AnimationEnterRadius * UnitAoiRanges.AnimationEnterRadius,
             ExitDistanceSq = UnitAoiRanges.AnimationExitRadius * UnitAoiRanges.AnimationExitRadius,
-        }.ScheduleParallel(_activeStateQuery, buildHandle);
+        }.ScheduleParallel(_activeStateQuery, state.Dependency);
 
         // The tree is exposed through DynamicBuffer NativeArray aliases. The next frame's
         // UnitQueryBuildSystem resizes those buffers through EntityManager, which cannot

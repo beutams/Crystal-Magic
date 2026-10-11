@@ -8,16 +8,21 @@ public class LobbyUI_RoomItemView : UISubView<LobbyUI_RoomItemData>
 
     private ulong roomId;
     private bool buttonEventsBound;
+    private bool roomAvailable;
 
     public void Render(SimpleRoomData room)
     {
         Rebind();
         EnsureButtonEventsBound();
         roomId = room.roomId;
-        UI.Open_Index.TextMeshProUGUI.text = room.roomName;
-        UI.Open_RoomName.TextMeshProUGUI.text = $"Theme {room.themeKey}";
-        UI.Open_Player.TextMeshProUGUI.text = $"{room.enterNum} / {room.maxNum}";
-        UI.Open_Delete.GameObject.SetActive(false);
+        UI.RoomName.TextMeshProUGUI.text = room.roomName;
+        UI.HostName.TextMeshProUGUI.text = room.ownerName;
+        UI.PlayerCount.TextMeshProUGUI.text = $"{room.enterNum} / {room.maxNum}";
+        roomAvailable = !room.start && room.enterNum < room.maxNum;
+        string stateKey = room.start ? "ui.lobby.started" : roomAvailable ? "ui.lobby.waiting" : "ui.lobby.full";
+        UI.State.TextMeshProUGUI.text = LocalizationComponent.Resolve(stateKey);
+        UI.Join_Label.TextMeshProUGUI.text = LocalizationComponent.Resolve(roomAvailable ? "ui.lobby.join" : stateKey);
+        UI.Join.CanvasGroup.alpha = roomAvailable ? 1f : 0.55f;
     }
 
     public void ClearListeners()
@@ -27,7 +32,7 @@ public class LobbyUI_RoomItemView : UISubView<LobbyUI_RoomItemData>
 
     public void SetInteractable(bool interactable)
     {
-        GetComponent<ButtonPlus>().enabled = interactable;
+        UI.Join.ButtonPlus.enabled = interactable && roomAvailable;
     }
 
     private void EnsureButtonEventsBound()
@@ -35,7 +40,7 @@ public class LobbyUI_RoomItemView : UISubView<LobbyUI_RoomItemData>
         if (buttonEventsBound)
             return;
 
-        GetComponent<ButtonPlus>().onClick.AddListener(OnClicked);
+        UI.Join.ButtonPlus.onClick.AddListener(OnClicked);
         buttonEventsBound = true;
     }
 

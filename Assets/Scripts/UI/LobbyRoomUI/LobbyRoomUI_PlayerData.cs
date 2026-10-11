@@ -1,20 +1,27 @@
+﻿// AUTO-GENERATED — DO NOT EDIT MANUALLY
+// Right-click Prefab → Assets/Tools/Generate UIData to regenerate
+
 using UnityEngine;
 using CrystalMagic.Core;
 
-public sealed class LobbyRoomUI_PlayerData : UIData
+public class LobbyRoomUI_PlayerData : UIData
 {
+    public UINode Surface;
+    public UINode Selected;
+    public UINode Number;
+    public UINode HostIcon;
+    public UINode Role;
     public UINode PlayerName;
-    public UINode Ready;
-    public UINode Ready_Ready;
-    public UINode Ready_Not;
-    public UINode KickOut;
+    public UINode Status;
 
     public override void Bind(Transform root)
     {
+        Surface = UINode.From(Find(root, "Surface"));
+        Selected = UINode.From(Find(root, "Selected"));
+        Number = UINode.From(Find(root, "Number"));
+        HostIcon = UINode.From(Find(root, "HostIcon"));
+        Role = UINode.From(Find(root, "Role"));
         PlayerName = UINode.From(Find(root, "PlayerName"));
-        Ready = UINode.From(Find(root, "Ready"));
-        Ready_Ready = UINode.From(Find(root, "Ready/Ready"));
-        Ready_Not = UINode.From(Find(root, "Ready/Not"));
-        KickOut = UINode.From(Find(root, "KickOut"));
+        Status = UINode.From(Find(root, "Status"));
     }
 }

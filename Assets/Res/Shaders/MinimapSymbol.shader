@@ -74,7 +74,7 @@ Shader "CrystalMagic/UI/MinimapSymbol"
             }
             fixed4 frag(v2f i) : SV_Target
             {
-                // Keep the existing sprite silhouette; use Image.color for both cyan and neutral gray.
+                // Keep the existing sprite silhouette; use Image.color for size colors and cleared gray.
                 fixed4 color = i.color;
                 color.a *= (tex2D(_MainTex, i.uv) + _TextureSampleAdd).a;
                 #ifdef UNITY_UI_CLIP_RECT

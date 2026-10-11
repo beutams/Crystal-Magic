@@ -12,7 +12,7 @@ using Steamworks;
 namespace CrystalMagic.Core
 {
     /// <summary>
-    /// 管理 Steamworks 生命周期及本次启动的客户端身份；本地测试模式可跳过 Steam。
+    /// 管理 Steamworks 生命周期及客户端会话身份；本地测试模式可跳过 Steam。
     /// </summary>
     public class SteamComponent : GameComponent<SteamComponent>
     {
@@ -35,7 +35,8 @@ namespace CrystalMagic.Core
         {
             base.Initialize();
             Account = default;
-            accountConfig = ClientAccountPolicy.ForLaunch(ConfigComponent.Instance.Get<LobbyAccountConfig>(),
+            accountConfig = ClientAccountPolicy.ForLaunch(ClientAccountDebugPreferences.Apply(
+                ConfigComponent.Instance.Get<LobbyAccountConfig>(), ClientAccountPolicy.DevelopmentAccountsAllowed),
                 Environment.GetCommandLineArgs(), ClientAccountPolicy.DevelopmentAccountsAllowed);
             if (!ClientAccountPolicy.ShouldSkipSteam(accountConfig, ClientAccountPolicy.DevelopmentAccountsAllowed))
                 InitializeSteamworks();
@@ -60,6 +61,50 @@ namespace CrystalMagic.Core
             accountId = Account.NetworkAccountId;
             playerName = Account.Name;
             return Account.IsValid;
+        }
+
+        public bool TrySwitchDebugAccount(bool local, string localId, out string error)
+        {
+            if (!ClientAccountDebugPreferences.TrySelect(accountConfig, local, localId,
+                ClientAccountPolicy.DevelopmentAccountsAllowed, out LobbyAccountConfig selected, out error)) return false;
+            var network = Server.NetworkComponent.Instance;
+            if (!DebugComponent.Instance.IsEnabled || network.Role != Server.NetworkRole.Client ||
+                !GameFlowComponent.Instance.IsInState<MainMenuState>() || TransitionComponent.Instance.IsTransitioning)
+            {
+                error = "请先回到主菜单，再切换账号。";
+                return false;
+            }
+            if (network.clientBattleManager.HasPreBattleSnapshot || network.clientBattleManager.HasPendingSettlement ||
+                network.clientBattleManager.battleConnect != null || network.battleHostManager.IsHosting ||
+                network.clientLobbyManager.BattleControlActive)
+            {
+                error = "仍有联机战斗或待恢复存档，请完成回城/结算后再切换。";
+                return false;
+            }
+
+            // Preflight before disconnecting or touching save selection. A failed
+            // Steam initialization leaves the current account and its saves intact.
+            string previousFailure = FailureReason;
+            if (!local && !initialized) InitializeSteamworks();
+            ClientAccountIdentity candidate = ClientAccountPolicy.Resolve(selected, true, steamId, personaName);
+            if (!candidate.IsValid)
+            {
+                error = "Steam 不可用，请先启动 Steam 并登录。\n" + FailureReason;
+                FailureReason = previousFailure;
+                return false;
+            }
+
+            // Dispose old callbacks/transports before changing the identity or
+            // shutting down Steam. Rebuild only networking, not the entire game.
+            network.Cleanup();
+            if (local) ShutdownSteamworks();
+            accountConfig = selected;
+            Account = candidate;
+            FailureReason = local ? "Local test account selected; Steam P2P is unavailable." : string.Empty;
+            SaveDataComponent.Instance.ResetForAccountChange();
+            network.Initialize();
+            ClientAccountDebugPreferences.Save(selected);
+            return true;
         }
 
         private void InitializeSteamworks()

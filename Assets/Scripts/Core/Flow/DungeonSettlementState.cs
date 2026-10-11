@@ -1,4 +1,6 @@
 using CrystalMagic.UI;
+using Server;
+using System;
 using UnityEngine;
 
 namespace CrystalMagic.Core
@@ -8,6 +10,8 @@ namespace CrystalMagic.Core
         public DungeonSettlementResult Result { get; private set; }
         public LoadGameContext ReturnContext { get; private set; }
         public bool IsSaved { get; private set; }
+        private Func<bool> _save;
+        private Func<TransitionData> _returnTransition;
 
         private DungeonSettlementStateData() { }
 
@@ -31,9 +35,24 @@ namespace CrystalMagic.Core
         public bool TrySave()
         {
             if (!IsSaved)
-                IsSaved = SaveDataComponent.Instance.SaveDungeonSettlement(ReturnContext);
+                IsSaved = _save != null ? _save() : SaveDataComponent.Instance.SaveDungeonSettlement(ReturnContext);
             return IsSaved;
         }
+
+        public static DungeonSettlementStateData CreateOnline(ClientBattleManager manager)
+        {
+            DungeonSettlementStateData data = new()
+            {
+                Result = manager.PendingSettlementResult,
+                _save = () => manager.PersistPendingSettlement(out _),
+                _returnTransition = () => OnlineBattlePreparationState.CreateReturnToTownTransitionData(manager),
+            };
+            data.TrySave();
+            return data;
+        }
+
+        public TransitionData CreateReturnTransition() => _returnTransition != null
+            ? _returnTransition() : TownState.CreateEnterTransitionData(ReturnContext);
     }
 
     public sealed class DungeonSettlementState : GameState
@@ -81,7 +100,7 @@ namespace CrystalMagic.Core
                 return false;
 
             _isReturningToTown = true;
-            GameFlowComponent.Instance.BeginTransition(TownState.CreateEnterTransitionData(data.ReturnContext));
+            GameFlowComponent.Instance.BeginTransition(data.CreateReturnTransition());
             return true;
         }
 

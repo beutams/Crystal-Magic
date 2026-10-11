@@ -27,6 +27,22 @@ public sealed class HostedLobbyLifecycleTests
     }
 
     [Test]
+    public void BothLobbyMembersKeepTheirConnectionsWhileBuildingTheBattleMap()
+    {
+        using Fixture f = new(localGuest: true);
+        f.StartRoom();
+        f.Host.Send(new C2L_HostBattleReady { result = f.ReadyResult() });
+        f.Pump(() => f.Tickets == 2);
+        foreach (Player player in f.Manager.playerList.Values)
+            player.connect.LastReceiveTime = NetworkTimer.Instance.TimeNow - 17_300;
+        f.Tick(3);
+        Assert.That(f.Host.State, Is.EqualTo(ConnectState.Connected));
+        Assert.That(f.Guest.State, Is.EqualTo(ConnectState.Connected));
+        foreach (Player player in f.Manager.playerList.Values)
+            Assert.That(player.connect.State, Is.EqualTo(ConnectState.Connected));
+    }
+
+    [Test]
     public void HostDisconnectDuringStartResetsRoomAndDoesNotStrandRemainingPlayer()
     {
         using Fixture f = new();

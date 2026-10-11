@@ -8,7 +8,7 @@ namespace Server
     [Serializable]
     public sealed class BattleConnectionInfo
     {
-        public const int CurrentProtocolVersion = 2;
+        public const int CurrentProtocolVersion = 4;
         public int protocolVersion = CurrentProtocolVersion;
         public string sessionId;
         public BattleTransportKind kind;

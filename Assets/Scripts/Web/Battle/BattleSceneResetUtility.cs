@@ -56,6 +56,7 @@ namespace Server
 
             NetworkEntitySpawnUtility.ClearSpawnQueue(manager);
             ClearBuffer<WorldVariableElement>(manager);
+            ClearBuffer<DungeonRevengeSquadMapElement>(manager);
             ClearBuffer<InteractionTransactionElement>(manager);
             ClearBuffer<ClientPresentationEventElement>(manager);
             ClearBuffer<ClientSkillVisualRequestElement>(manager);

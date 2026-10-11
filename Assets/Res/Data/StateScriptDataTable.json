@@ -7130,6 +7130,46 @@
               }
             },
             {
+              "Type": "SetValue",
+              "Guid": "werewolf_init_attack01_coolingDown",
+              "EditorPosition": {
+                "x": 580,
+                "y": -220
+              },
+              "SetterKey": "unit.variables.set",
+              "SourceTarget": 0,
+              "Key": "ai.attack01.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "Values": []
+            },
+            {
+              "Type": "SetValue",
+              "Guid": "werewolf_init_attack02_coolingDown",
+              "EditorPosition": {
+                "x": 930,
+                "y": -220
+              },
+              "SetterKey": "unit.variables.set",
+              "SourceTarget": 0,
+              "Key": "ai.attack02.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "Values": []
+            },
+            {
               "Condition": {
                 "ConditionType": 0,
                 "CompareType": "Equal",
@@ -7657,7 +7697,7 @@
                     "Index": 0,
                     "Version": 0
                   },
-                  "String": "Walk"
+                  "String": "Move"
                 },
                 "GetterKey": "",
                 "OperationType": "",
@@ -7831,6 +7871,18 @@
           "Edges": [
             {
               "OutputNodeGuid": "werewolf_locomotion_entry",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "werewolf_init_attack01_coolingDown",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "werewolf_init_attack01_coolingDown",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "werewolf_init_attack02_coolingDown",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "werewolf_init_attack02_coolingDown",
               "OutputPortName": "Out",
               "InputNodeGuid": "werewolf_init_skill_ready",
               "InputPortName": "In"
@@ -10802,6 +10854,66 @@
               }
             },
             {
+              "Type": "SetValue",
+              "Guid": "werebear_init_attack01_coolingDown",
+              "EditorPosition": {
+                "x": 580,
+                "y": -220
+              },
+              "SetterKey": "unit.variables.set",
+              "SourceTarget": 0,
+              "Key": "ai.attack01.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "Values": []
+            },
+            {
+              "Type": "SetValue",
+              "Guid": "werebear_init_attack02_coolingDown",
+              "EditorPosition": {
+                "x": 930,
+                "y": -220
+              },
+              "SetterKey": "unit.variables.set",
+              "SourceTarget": 0,
+              "Key": "ai.attack02.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "Values": []
+            },
+            {
+              "Type": "SetValue",
+              "Guid": "werebear_init_attack03_coolingDown",
+              "EditorPosition": {
+                "x": 1280,
+                "y": -220
+              },
+              "SetterKey": "unit.variables.set",
+              "SourceTarget": 0,
+              "Key": "ai.attack03.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "Values": []
+            },
+            {
               "Condition": {
                 "ConditionType": 0,
                 "CompareType": "Equal",
@@ -11329,7 +11441,7 @@
                     "Index": 0,
                     "Version": 0
                   },
-                  "String": "Walk"
+                  "String": "Move"
                 },
                 "GetterKey": "",
                 "OperationType": "",
@@ -11503,6 +11615,24 @@
           "Edges": [
             {
               "OutputNodeGuid": "werebear_locomotion_entry",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "werebear_init_attack01_coolingDown",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "werebear_init_attack01_coolingDown",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "werebear_init_attack02_coolingDown",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "werebear_init_attack02_coolingDown",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "werebear_init_attack03_coolingDown",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "werebear_init_attack03_coolingDown",
               "OutputPortName": "Out",
               "InputNodeGuid": "werebear_init_skill_ready",
               "InputPortName": "In"
@@ -15727,6 +15857,66 @@
               }
             },
             {
+              "Type": "SetValue",
+              "Guid": "swordsman_init_attack01_coolingDown",
+              "EditorPosition": {
+                "x": 580,
+                "y": -220
+              },
+              "SetterKey": "unit.variables.set",
+              "SourceTarget": 0,
+              "Key": "ai.attack01.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "Values": []
+            },
+            {
+              "Type": "SetValue",
+              "Guid": "swordsman_init_attack02_coolingDown",
+              "EditorPosition": {
+                "x": 930,
+                "y": -220
+              },
+              "SetterKey": "unit.variables.set",
+              "SourceTarget": 0,
+              "Key": "ai.attack02.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "Values": []
+            },
+            {
+              "Type": "SetValue",
+              "Guid": "swordsman_init_attack03_coolingDown",
+              "EditorPosition": {
+                "x": 1280,
+                "y": -220
+              },
+              "SetterKey": "unit.variables.set",
+              "SourceTarget": 0,
+              "Key": "ai.attack03.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "Values": []
+            },
+            {
               "Condition": {
                 "ConditionType": 0,
                 "CompareType": "Equal",
@@ -16428,6 +16618,24 @@
           "Edges": [
             {
               "OutputNodeGuid": "swordsman_locomotion_entry",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "swordsman_init_attack01_coolingDown",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "swordsman_init_attack01_coolingDown",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "swordsman_init_attack02_coolingDown",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "swordsman_init_attack02_coolingDown",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "swordsman_init_attack03_coolingDown",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "swordsman_init_attack03_coolingDown",
               "OutputPortName": "Out",
               "InputNodeGuid": "swordsman_init_skill_ready",
               "InputPortName": "In"
@@ -23880,6 +24088,66 @@
               }
             },
             {
+              "Type": "SetValue",
+              "Guid": "armored_axeman_init_attack01_coolingDown",
+              "EditorPosition": {
+                "x": 580,
+                "y": -220
+              },
+              "SetterKey": "unit.variables.set",
+              "SourceTarget": 0,
+              "Key": "ai.attack01.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "Values": []
+            },
+            {
+              "Type": "SetValue",
+              "Guid": "armored_axeman_init_attack02_coolingDown",
+              "EditorPosition": {
+                "x": 930,
+                "y": -220
+              },
+              "SetterKey": "unit.variables.set",
+              "SourceTarget": 0,
+              "Key": "ai.attack02.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "Values": []
+            },
+            {
+              "Type": "SetValue",
+              "Guid": "armored_axeman_init_attack03_coolingDown",
+              "EditorPosition": {
+                "x": 1280,
+                "y": -220
+              },
+              "SetterKey": "unit.variables.set",
+              "SourceTarget": 0,
+              "Key": "ai.attack03.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "Values": []
+            },
+            {
               "Condition": {
                 "ConditionType": 0,
                 "CompareType": "Equal",
@@ -24581,6 +24849,24 @@
           "Edges": [
             {
               "OutputNodeGuid": "armored_axeman_locomotion_entry",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "armored_axeman_init_attack01_coolingDown",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "armored_axeman_init_attack01_coolingDown",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "armored_axeman_init_attack02_coolingDown",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "armored_axeman_init_attack02_coolingDown",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "armored_axeman_init_attack03_coolingDown",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "armored_axeman_init_attack03_coolingDown",
               "OutputPortName": "Out",
               "InputNodeGuid": "armored_axeman_init_skill_ready",
               "InputPortName": "In"
@@ -38006,7 +38292,7 @@
                   "Type": 3,
                   "Bool": false,
                   "Int": 0,
-                  "Float": 0.0,
+                  "Float": 0.5,
                   "Float2": {
                     "x": 0.0,
                     "y": 0.0
@@ -39684,6 +39970,172 @@
               }
             },
             {
+              "Type": "SetValue",
+              "Guid": "bat_init_attack01_coolingDown",
+              "EditorPosition": {
+                "x": 580,
+                "y": -220
+              },
+              "SetterKey": "unit.variables.set",
+              "SourceTarget": 0,
+              "Key": "ai.attack01.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "Values": []
+            },
+            {
+              "Type": "SetValue",
+              "Guid": "bat_init_attack02_coolingDown",
+              "EditorPosition": {
+                "x": 930,
+                "y": -220
+              },
+              "SetterKey": "unit.variables.set",
+              "SourceTarget": 0,
+              "Key": "ai.attack02.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "Values": []
+            },
+            {
+              "Type": "SetValue",
+              "Guid": "bat_init_bat_dashCoolingDown",
+              "EditorPosition": {
+                "x": 1280,
+                "y": -220
+              },
+              "SetterKey": "unit.variables.set",
+              "SourceTarget": 0,
+              "Key": "ai.bat.dashCoolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "Values": []
+            },
+            {
+              "Type": "SetValue",
+              "Guid": "bat_init_bat_dashing",
+              "EditorPosition": {
+                "x": 1630,
+                "y": -220
+              },
+              "SetterKey": "unit.variables.set",
+              "SourceTarget": 0,
+              "Key": "ai.bat.dashing",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "Values": []
+            },
+            {
+              "Type": "SetValue",
+              "Guid": "bat_init_bat_comboReady",
+              "EditorPosition": {
+                "x": 1980,
+                "y": -220
+              },
+              "SetterKey": "unit.variables.set",
+              "SourceTarget": 0,
+              "Key": "ai.bat.comboReady",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "Values": []
+            },
+            {
+              "Type": "SetValue",
+              "Guid": "bat_init_bat_randomFlying",
+              "EditorPosition": {
+                "x": 2330,
+                "y": -220
+              },
+              "SetterKey": "unit.variables.set",
+              "SourceTarget": 0,
+              "Key": "ai.bat.randomFlying",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": true
+                },
+                "Inputs": []
+              },
+              "Values": []
+            },
+            {
+              "Type": "SetValue",
+              "Guid": "bat_init_bat_wander_roll",
+              "EditorPosition": {
+                "x": 2680,
+                "y": -220
+              },
+              "SetterKey": "unit.variables.set",
+              "SourceTarget": 0,
+              "Key": "ai.bat.wander.roll",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 2,
+                  "Int": 0
+                },
+                "Inputs": []
+              },
+              "Values": []
+            },
+            {
+              "Type": "SetValue",
+              "Guid": "bat_init_bat_wander_direction",
+              "EditorPosition": {
+                "x": 3030,
+                "y": -220
+              },
+              "SetterKey": "unit.variables.set",
+              "SourceTarget": 0,
+              "Key": "ai.bat.wander.direction",
+              "Value": {
+                "Kind": 1,
+                "GetterKey": "unit.random.direction2",
+                "Inputs": [
+                  {
+                    "Kind": 0,
+                    "Literal": {
+                      "Type": 2,
+                      "Int": 0
+                    },
+                    "Inputs": []
+                  }
+                ]
+              },
+              "Values": []
+            },
+            {
               "Condition": {
                 "ConditionType": 0,
                 "CompareType": "Equal",
@@ -39940,7 +40392,7 @@
                     "Index": 0,
                     "Version": 0
                   },
-                  "String": "Idle"
+                  "String": "Flying"
                 },
                 "GetterKey": "",
                 "OperationType": "",
@@ -40211,7 +40663,7 @@
                     "Index": 0,
                     "Version": 0
                   },
-                  "String": "Walk"
+                  "String": "Flying"
                 },
                 "GetterKey": "",
                 "OperationType": "",
@@ -40385,6 +40837,54 @@
           "Edges": [
             {
               "OutputNodeGuid": "bat_locomotion_entry",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "bat_init_attack01_coolingDown",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "bat_init_attack01_coolingDown",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "bat_init_attack02_coolingDown",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "bat_init_attack02_coolingDown",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "bat_init_bat_dashCoolingDown",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "bat_init_bat_dashCoolingDown",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "bat_init_bat_dashing",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "bat_init_bat_dashing",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "bat_init_bat_comboReady",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "bat_init_bat_comboReady",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "bat_init_bat_randomFlying",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "bat_init_bat_randomFlying",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "bat_init_bat_wander_roll",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "bat_init_bat_wander_roll",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "bat_init_bat_wander_direction",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "bat_init_bat_wander_direction",
               "OutputPortName": "Out",
               "InputNodeGuid": "bat_init_skill_ready",
               "InputPortName": "In"
@@ -41099,7 +41599,7 @@
                     "Index": 0,
                     "Version": 0
                   },
-                  "String": "Idle"
+                  "String": "Flying"
                 },
                 "GetterKey": "",
                 "OperationType": "",
@@ -41911,7 +42411,7 @@
                     "Index": 0,
                     "Version": 0
                   },
-                  "String": "Idle"
+                  "String": "Flying"
                 },
                 "GetterKey": "",
                 "OperationType": "",
@@ -54441,6 +54941,66 @@
               }
             },
             {
+              "Type": "SetValue",
+              "Guid": "knight_init_attack01_coolingDown",
+              "EditorPosition": {
+                "x": 580,
+                "y": -220
+              },
+              "SetterKey": "unit.variables.set",
+              "SourceTarget": 0,
+              "Key": "ai.attack01.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "Values": []
+            },
+            {
+              "Type": "SetValue",
+              "Guid": "knight_init_attack02_coolingDown",
+              "EditorPosition": {
+                "x": 930,
+                "y": -220
+              },
+              "SetterKey": "unit.variables.set",
+              "SourceTarget": 0,
+              "Key": "ai.attack02.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "Values": []
+            },
+            {
+              "Type": "SetValue",
+              "Guid": "knight_init_attack03_coolingDown",
+              "EditorPosition": {
+                "x": 1280,
+                "y": -220
+              },
+              "SetterKey": "unit.variables.set",
+              "SourceTarget": 0,
+              "Key": "ai.attack03.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "Values": []
+            },
+            {
               "Condition": {
                 "ConditionType": 0,
                 "CompareType": "Equal",
@@ -55142,6 +55702,24 @@
           "Edges": [
             {
               "OutputNodeGuid": "knight_locomotion_entry",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "knight_init_attack01_coolingDown",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "knight_init_attack01_coolingDown",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "knight_init_attack02_coolingDown",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "knight_init_attack02_coolingDown",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "knight_init_attack03_coolingDown",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "knight_init_attack03_coolingDown",
               "OutputPortName": "Out",
               "InputNodeGuid": "knight_init_skill_ready",
               "InputPortName": "In"
@@ -60713,6 +61291,66 @@
               }
             },
             {
+              "Type": "SetValue",
+              "Guid": "knight_templar_init_attack01_coolingDown",
+              "EditorPosition": {
+                "x": 580,
+                "y": -220
+              },
+              "SetterKey": "unit.variables.set",
+              "SourceTarget": 0,
+              "Key": "ai.attack01.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "Values": []
+            },
+            {
+              "Type": "SetValue",
+              "Guid": "knight_templar_init_attack02_coolingDown",
+              "EditorPosition": {
+                "x": 930,
+                "y": -220
+              },
+              "SetterKey": "unit.variables.set",
+              "SourceTarget": 0,
+              "Key": "ai.attack02.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "Values": []
+            },
+            {
+              "Type": "SetValue",
+              "Guid": "knight_templar_init_attack03_coolingDown",
+              "EditorPosition": {
+                "x": 1280,
+                "y": -220
+              },
+              "SetterKey": "unit.variables.set",
+              "SourceTarget": 0,
+              "Key": "ai.attack03.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "Values": []
+            },
+            {
               "Condition": {
                 "ConditionType": 0,
                 "CompareType": "Equal",
@@ -61240,7 +61878,7 @@
                     "Index": 0,
                     "Version": 0
                   },
-                  "String": "Walk"
+                  "String": "Walk01"
                 },
                 "GetterKey": "",
                 "OperationType": "",
@@ -61414,6 +62052,24 @@
           "Edges": [
             {
               "OutputNodeGuid": "knight_templar_locomotion_entry",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "knight_templar_init_attack01_coolingDown",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "knight_templar_init_attack01_coolingDown",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "knight_templar_init_attack02_coolingDown",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "knight_templar_init_attack02_coolingDown",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "knight_templar_init_attack03_coolingDown",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "knight_templar_init_attack03_coolingDown",
               "OutputPortName": "Out",
               "InputNodeGuid": "knight_templar_init_skill_ready",
               "InputPortName": "In"
@@ -65634,6 +66290,66 @@
               }
             },
             {
+              "Type": "SetValue",
+              "Guid": "lancer_init_attack01_coolingDown",
+              "EditorPosition": {
+                "x": 580,
+                "y": -220
+              },
+              "SetterKey": "unit.variables.set",
+              "SourceTarget": 0,
+              "Key": "ai.attack01.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "Values": []
+            },
+            {
+              "Type": "SetValue",
+              "Guid": "lancer_init_attack02_coolingDown",
+              "EditorPosition": {
+                "x": 930,
+                "y": -220
+              },
+              "SetterKey": "unit.variables.set",
+              "SourceTarget": 0,
+              "Key": "ai.attack02.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "Values": []
+            },
+            {
+              "Type": "SetValue",
+              "Guid": "lancer_init_attack03_coolingDown",
+              "EditorPosition": {
+                "x": 1280,
+                "y": -220
+              },
+              "SetterKey": "unit.variables.set",
+              "SourceTarget": 0,
+              "Key": "ai.attack03.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "Values": []
+            },
+            {
               "Condition": {
                 "ConditionType": 0,
                 "CompareType": "Equal",
@@ -66335,6 +67051,24 @@
           "Edges": [
             {
               "OutputNodeGuid": "lancer_locomotion_entry",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "lancer_init_attack01_coolingDown",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "lancer_init_attack01_coolingDown",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "lancer_init_attack02_coolingDown",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "lancer_init_attack02_coolingDown",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "lancer_init_attack03_coolingDown",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "lancer_init_attack03_coolingDown",
               "OutputPortName": "Out",
               "InputNodeGuid": "lancer_init_skill_ready",
               "InputPortName": "In"
@@ -71322,7 +72056,7 @@
                 "Kind": 0,
                 "Literal": {
                   "Type": 3,
-                  "Float": 0.3333333333333333
+                  "Float": 0.5
                 },
                 "Inputs": []
               }
@@ -71339,7 +72073,7 @@
                 "Kind": 0,
                 "Literal": {
                   "Type": 3,
-                  "Float": 0.4166666666666667
+                  "Float": 0.25
                 },
                 "Inputs": []
               }
@@ -81635,7 +82369,7 @@
                   "Type": 3,
                   "Bool": false,
                   "Int": 0,
-                  "Float": 0.0,
+                  "Float": 1.0,
                   "Float2": {
                     "x": 0.0,
                     "y": 0.0
@@ -84651,6 +85385,46 @@
               }
             },
             {
+              "Type": "SetValue",
+              "Guid": "priest_init_attack01_coolingDown",
+              "EditorPosition": {
+                "x": 580,
+                "y": -220
+              },
+              "SetterKey": "unit.variables.set",
+              "SourceTarget": 0,
+              "Key": "ai.attack01.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "Values": []
+            },
+            {
+              "Type": "SetValue",
+              "Guid": "priest_init_heal_coolingDown",
+              "EditorPosition": {
+                "x": 930,
+                "y": -220
+              },
+              "SetterKey": "unit.variables.set",
+              "SourceTarget": 0,
+              "Key": "ai.heal.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "Values": []
+            },
+            {
               "Condition": {
                 "ConditionType": 0,
                 "CompareType": "Equal",
@@ -85352,6 +86126,18 @@
           "Edges": [
             {
               "OutputNodeGuid": "priest_locomotion_entry",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "priest_init_attack01_coolingDown",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "priest_init_attack01_coolingDown",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "priest_init_heal_coolingDown",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "priest_init_heal_coolingDown",
               "OutputPortName": "Out",
               "InputNodeGuid": "priest_init_skill_ready",
               "InputPortName": "In"
@@ -93854,6 +94640,26 @@
               }
             },
             {
+              "Type": "SetValue",
+              "Guid": "skeleton_archer_init_attack01_coolingDown",
+              "EditorPosition": {
+                "x": 580,
+                "y": -220
+              },
+              "SetterKey": "unit.variables.set",
+              "SourceTarget": 0,
+              "Key": "ai.attack01.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "Values": []
+            },
+            {
               "Condition": {
                 "ConditionType": 0,
                 "CompareType": "Equal",
@@ -94555,6 +95361,12 @@
           "Edges": [
             {
               "OutputNodeGuid": "skeleton_archer_locomotion_entry",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "skeleton_archer_init_attack01_coolingDown",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "skeleton_archer_init_attack01_coolingDown",
               "OutputPortName": "Out",
               "InputNodeGuid": "skeleton_archer_init_skill_ready",
               "InputPortName": "In"
@@ -96217,6 +97029,46 @@
               }
             },
             {
+              "Type": "SetValue",
+              "Guid": "slime_init_attack01_coolingDown",
+              "EditorPosition": {
+                "x": 580,
+                "y": -220
+              },
+              "SetterKey": "unit.variables.set",
+              "SourceTarget": 0,
+              "Key": "ai.attack01.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "Values": []
+            },
+            {
+              "Type": "SetValue",
+              "Guid": "slime_init_attack02_coolingDown",
+              "EditorPosition": {
+                "x": 930,
+                "y": -220
+              },
+              "SetterKey": "unit.variables.set",
+              "SourceTarget": 0,
+              "Key": "ai.attack02.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "Values": []
+            },
+            {
               "Condition": {
                 "ConditionType": 0,
                 "CompareType": "Equal",
@@ -96918,6 +97770,18 @@
           "Edges": [
             {
               "OutputNodeGuid": "slime_locomotion_entry",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "slime_init_attack01_coolingDown",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "slime_init_attack01_coolingDown",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "slime_init_attack02_coolingDown",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "slime_init_attack02_coolingDown",
               "OutputPortName": "Out",
               "InputNodeGuid": "slime_init_skill_ready",
               "InputPortName": "In"
@@ -99859,6 +100723,66 @@
               }
             },
             {
+              "Type": "SetValue",
+              "Guid": "soldier_init_attack01_coolingDown",
+              "EditorPosition": {
+                "x": 580,
+                "y": -220
+              },
+              "SetterKey": "unit.variables.set",
+              "SourceTarget": 0,
+              "Key": "ai.attack01.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "Values": []
+            },
+            {
+              "Type": "SetValue",
+              "Guid": "soldier_init_attack02_coolingDown",
+              "EditorPosition": {
+                "x": 930,
+                "y": -220
+              },
+              "SetterKey": "unit.variables.set",
+              "SourceTarget": 0,
+              "Key": "ai.attack02.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "Values": []
+            },
+            {
+              "Type": "SetValue",
+              "Guid": "soldier_init_attack03_coolingDown",
+              "EditorPosition": {
+                "x": 1280,
+                "y": -220
+              },
+              "SetterKey": "unit.variables.set",
+              "SourceTarget": 0,
+              "Key": "ai.attack03.coolingDown",
+              "Value": {
+                "Kind": 0,
+                "Literal": {
+                  "Type": 1,
+                  "Bool": false
+                },
+                "Inputs": []
+              },
+              "Values": []
+            },
+            {
               "Condition": {
                 "ConditionType": 0,
                 "CompareType": "Equal",
@@ -100560,6 +101484,24 @@
           "Edges": [
             {
               "OutputNodeGuid": "soldier_locomotion_entry",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "soldier_init_attack01_coolingDown",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "soldier_init_attack01_coolingDown",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "soldier_init_attack02_coolingDown",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "soldier_init_attack02_coolingDown",
+              "OutputPortName": "Out",
+              "InputNodeGuid": "soldier_init_attack03_coolingDown",
+              "InputPortName": "In"
+            },
+            {
+              "OutputNodeGuid": "soldier_init_attack03_coolingDown",
               "OutputPortName": "Out",
               "InputNodeGuid": "soldier_init_skill_ready",
               "InputPortName": "In"

@@ -17,6 +17,10 @@
         {
           "Channel": 7,
           "BaseBonus": 1000.0
+        },
+        {
+          "Channel": 3,
+          "BaseBonus": 100.0
         }
       ],
       "Id": 1

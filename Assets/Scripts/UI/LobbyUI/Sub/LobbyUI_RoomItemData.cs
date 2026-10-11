@@ -1,20 +1,29 @@
-using CrystalMagic.Core;
+﻿// AUTO-GENERATED — DO NOT EDIT MANUALLY
+// Right-click Prefab → Assets/Tools/Generate UIData to regenerate
+
 using UnityEngine;
+using CrystalMagic.Core;
 
 public class LobbyUI_RoomItemData : UIData
 {
-    public UINode Open;
-    public UINode Open_RoomName;
-    public UINode Open_Player;
-    public UINode Open_Index;
-    public UINode Open_Delete;
+    public UINode RoomName;
+    public UINode HostName;
+    public UINode PlayerCount;
+    public UINode State;
+    public UINode Join;
+    public UINode Join_Default;
+    public UINode Join_Click;
+    public UINode Join_Label;
 
     public override void Bind(Transform root)
     {
-        Open = UINode.From(Find(root, "Open"));
-        Open_RoomName = UINode.From(Find(root, "Open/RoomName"));
-        Open_Player = UINode.From(Find(root, "Open/Player"));
-        Open_Index = UINode.From(Find(root, "Open/Index"));
-        Open_Delete = UINode.From(Find(root, "Open/Delete"));
+        RoomName = UINode.From(Find(root, "RoomName"));
+        HostName = UINode.From(Find(root, "HostName"));
+        PlayerCount = UINode.From(Find(root, "PlayerCount"));
+        State = UINode.From(Find(root, "State"));
+        Join = UINode.From(Find(root, "Join"));
+        Join_Default = UINode.From(Find(root, "Join/Default"));
+        Join_Click = UINode.From(Find(root, "Join/Click"));
+        Join_Label = UINode.From(Find(root, "Join/Label"));
     }
 }

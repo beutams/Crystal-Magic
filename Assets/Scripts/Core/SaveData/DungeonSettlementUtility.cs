@@ -48,20 +48,28 @@ namespace CrystalMagic.Core
             return items;
         }
 
-        public static void RecordItemAcquired(EntityManager manager, int itemId, int quantity)
+        public static void RecordItemAcquired(EntityManager manager, int itemId, int quantity, Entity actor = default)
         {
-            if (GameWorldContextUtility.GetSceneMode(manager) != GameSceneMode.Dungeon ||
-                !GameRuntimeStateUtility.TryGetComponentObject(manager, out DungeonRunComponent run))
+            if (GameWorldContextUtility.GetSceneMode(manager) != GameSceneMode.Dungeon) return;
+            if (manager.Exists(actor) && manager.HasComponent<PlayerCharacterComponent>(actor))
+                Add(manager.GetComponentObject<PlayerCharacterComponent>(actor).AcquiredItems, itemId, quantity);
+            if (!GameRuntimeStateUtility.TryGetComponentObject(manager, out DungeonRunComponent run))
                 return;
 
             run.AcquiredItems ??= new List<InventoryItemData>();
             Add(run.AcquiredItems, itemId, quantity);
         }
 
-        public static void RecordMoneyAcquired(EntityManager manager, int quantity)
+        public static void RecordMoneyAcquired(EntityManager manager, int quantity, Entity actor = default)
         {
-            if (quantity <= 0 || GameWorldContextUtility.GetSceneMode(manager) != GameSceneMode.Dungeon ||
-                !GameRuntimeStateUtility.TryGetComponentObject(manager, out DungeonRunComponent run))
+            if (quantity <= 0 || GameWorldContextUtility.GetSceneMode(manager) != GameSceneMode.Dungeon) return;
+            if (quantity > 0 && manager.Exists(actor) && manager.HasComponent<PlayerCharacterComponent>(actor))
+            {
+                PlayerCharacterComponent character = manager.GetComponentObject<PlayerCharacterComponent>(actor);
+                character.AcquiredMoney = character.AcquiredMoney > long.MaxValue - quantity
+                    ? long.MaxValue : character.AcquiredMoney + quantity;
+            }
+            if (!GameRuntimeStateUtility.TryGetComponentObject(manager, out DungeonRunComponent run))
                 return;
 
             run.AcquiredMoney = run.AcquiredMoney > long.MaxValue - quantity
@@ -78,7 +86,7 @@ namespace CrystalMagic.Core
             return result;
         }
 
-        private static void Add(List<InventoryItemData> items, int itemId, int quantity)
+        public static void Add(List<InventoryItemData> items, int itemId, int quantity)
         {
             if (itemId < 0 || quantity <= 0)
                 return;

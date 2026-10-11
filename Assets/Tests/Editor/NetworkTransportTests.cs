@@ -194,6 +194,106 @@ public sealed class NetworkTransportTests
     }
 
     [Test]
+    public void TcpReceiverDrainsBurstLargerThanEightKilobytesInOneUpdate()
+    {
+        MessageCodec.Init();
+        ReceiveProbeServer server = new();
+        ClientService client = new();
+        Connect accepted = null;
+        List<long> received = new();
+        server.OnAccept += connection =>
+        {
+            accepted = connection;
+            connection.RegisterCallback(MessageCodec.GetOpcode<C2S_Ping>(), (message, _) => received.Add(((C2S_Ping)message).Time));
+        };
+        try
+        {
+            server.Init(); client.Init();
+            client.Connect(server.LocalEndpoint, out Connect connection);
+            PumpUntil(server, client, () => accepted != null && connection.State == ConnectState.Connected);
+            byte[] payload = System.Text.Encoding.UTF8.GetBytes("{\"Time\":1,\"padding\":\"" + new string('x', 48 * 1024) + "\"}");
+            byte[] large = MessageCodec.Encode(MessageCodec.GetOpcode<C2S_Ping>(), payload);
+            byte[] tail = MessageCodec.Encode(new C2S_Ping { Time = 2 });
+            using MemoryStream burst = new();
+            burst.Write(TCPPacketCode.Pack(large));
+            burst.Write(TCPPacketCode.Pack(tail));
+            int burstLength = (int)burst.Length;
+            connection.TrySend(new C2S_Ping { Time = 0 });
+            PumpUntil(server, client, () => received.Count == 1);
+            received.Clear();
+            server.Socket.ReceiveBufferSize = 256 * 1024;
+            server.SendFromPeer(connection, client, burst.GetBuffer(), burstLength);
+            Stopwatch wait = Stopwatch.StartNew();
+            while (server.Socket.Available < burstLength && wait.ElapsedMilliseconds < 2000) Thread.Sleep(1);
+            Assert.That(server.Socket.Available, Is.GreaterThanOrEqualTo(burstLength));
+            server.Update();
+            CollectionAssert.AreEqual(new long[] { 1, 2 }, received);
+            Assert.That(connection.State, Is.EqualTo(ConnectState.Connected));
+        }
+        finally { client.Shutdown(); server.Shutdown(); }
+    }
+
+    private sealed class ReceiveProbeServer : ServerService
+    {
+        public ReceiveProbeServer() : base(new TcpEndpoint(new IPEndPoint(IPAddress.Loopback, 0))) { }
+        public Socket Socket
+        {
+            get { foreach (TCPPair pair in connects.Values) return pair.socket; throw new InvalidOperationException("No accepted peer."); }
+        }
+        public void SendFromPeer(Connect connection, ClientService client, byte[] buffer, int length)
+        {
+            var pairs = (Dictionary<Guid, TCPPair>)typeof(Service).GetField("connects",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(client);
+            foreach (TCPPair pair in pairs.Values)
+            {
+                if (pair.connect != connection) continue;
+                int sent = 0;
+                while (sent < length) sent += pair.socket.Send(buffer, sent, length - sent, SocketFlags.None);
+                return;
+            }
+            Assert.Fail("No connected sender.");
+        }
+    }
+
+    [Test]
+    public void TcpReceiveBudgetKeepsBufferedMessagesForTheNextUpdateWithoutMoreSocketData()
+    {
+        MessageCodec.Init();
+        ReceiveProbeServer server = new();
+        ClientService client = new();
+        Connect accepted = null;
+        int received = 0;
+        server.OnAccept += connection =>
+        {
+            accepted = connection;
+            connection.RegisterCallback(MessageCodec.GetOpcode<C2S_Ping>(), (_, _) => received++);
+        };
+        try
+        {
+            server.Init(); client.Init();
+            client.Connect(server.LocalEndpoint, out Connect connection);
+            PumpUntil(server, client, () => accepted != null && connection.State == ConnectState.Connected);
+            using MemoryStream burst = new();
+            for (int index = 0; index < 200; index++)
+                burst.Write(TCPPacketCode.Pack(MessageCodec.Encode(MessageCodec.GetOpcode<C2S_Ping>(),
+                    System.Text.Encoding.UTF8.GetBytes("{\"Time\":" + index + "}"))));
+            int length = (int)burst.Length;
+            Assert.That(length, Is.LessThan(8192));
+            server.SendFromPeer(connection, client, burst.GetBuffer(), length);
+            Stopwatch wait = Stopwatch.StartNew();
+            while (server.Socket.Available < length && wait.ElapsedMilliseconds < 2000) Thread.Sleep(1);
+            Assert.That(server.Socket.Available, Is.GreaterThanOrEqualTo(length));
+            server.Update();
+            Assert.That(received, Is.EqualTo(128));
+            Assert.That(server.Socket.Available, Is.Zero);
+            server.Update();
+            Assert.That(received, Is.EqualTo(200));
+            Assert.That(accepted.State, Is.EqualTo(ConnectState.Connected));
+        }
+        finally { client.Shutdown(); server.Shutdown(); }
+    }
+
+    [Test]
     public void TcpShutdownInsideConnectingCallbackDoesNotContinueOrDispatch()
     {
         ClientService client = new();
@@ -288,6 +388,97 @@ public sealed class NetworkTransportTests
             Assert.That(disconnected, Is.EqualTo(2));
         }
         finally { client.Shutdown(); server.Shutdown(); }
+    }
+
+    [TestCase(true)]
+    [TestCase(false)]
+    public void TcpLoadingPeersSurviveSeventeenSecondsOfSilenceAndKeepBoundedDisconnects(bool loadingCompleted)
+    {
+        MessageCodec.Init();
+        ServerService server = new(new TcpEndpoint(new IPEndPoint(IPAddress.Loopback, 0)));
+        ClientService client = new();
+        List<Connect> accepted = new();
+        server.OnAccept += accepted.Add;
+        try
+        {
+            server.Init(); client.Init();
+            client.Connect(server.LocalEndpoint, out Connect first);
+            client.Connect(server.LocalEndpoint, out Connect second);
+            PumpUntil(server, client, () => accepted.Count == 2 &&
+                first.State == ConnectState.Connected && second.State == ConnectState.Connected);
+            foreach (Connect connection in accepted)
+            {
+                connection.BeginHeartbeatGrace(ServerUtility.BattleReadyTimeout);
+                connection.LastReceiveTime = NetworkTimer.Instance.TimeNow - 17_300;
+            }
+            foreach (Connect connection in new[] { first, second })
+            {
+                connection.BeginHeartbeatGrace(ServerUtility.BattleInitializeTimeout);
+                connection.LastReceiveTime = NetworkTimer.Instance.TimeNow - 17_300;
+            }
+            server.Update(); client.Update();
+            Assert.That(accepted.TrueForAll(connection => connection.State == ConnectState.Connected), Is.True);
+            Assert.That(first.State, Is.EqualTo(ConnectState.Connected));
+            Assert.That(second.State, Is.EqualTo(ConnectState.Connected));
+
+            // 加载结束仍能交入 SceneReady；正常战斗和一直卡住的加载都必须最终断线。
+            int sceneReady = 0;
+            foreach (Connect connection in accepted)
+                connection.RegisterCallback(MessageCodec.GetOpcode<C2B_BattleSceneReady>(), (_, _) => sceneReady++);
+            first.Send(new C2B_BattleSceneReady());
+            second.Send(new C2B_BattleSceneReady());
+            PumpUntil(server, client, () => sceneReady == 2);
+            foreach (Connect connection in accepted)
+            {
+                connection.LastReceiveTime = NetworkTimer.Instance.TimeNow - ServerUtility.Timeout - 1;
+                if (loadingCompleted) connection.EndHeartbeatGrace();
+                else connection.BeginHeartbeatGrace(0);
+            }
+            server.Update();
+            Assert.That(accepted.TrueForAll(connection => connection.State == ConnectState.Close), Is.True);
+            foreach (Connect connection in accepted)
+                Assert.That(connection.LastDisconnectInfo.Reason, Is.EqualTo(DisconnectReason.Timeout));
+        }
+        finally { client.Shutdown(); server.Shutdown(); }
+    }
+
+    [TestCase(30_000)]
+    [TestCase(45_000)]
+    public void LoadingGraceExpiresWithoutAnyFurtherReceiveOrUpdate(long loadingTimeout)
+    {
+        using Connect connection = new();
+        connection.LastReceiveTime = NetworkTimer.Instance.TimeNow - 17_300;
+        connection.BeginHeartbeatGrace(loadingTimeout);
+        long graceDeadline = (long)typeof(Connect).GetField("heartbeatGraceDeadline",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(connection);
+        Assert.That(connection.HasHeartbeatTimedOut(graceDeadline - 1), Is.False);
+        Assert.That(connection.HasHeartbeatTimedOut(graceDeadline), Is.True);
+        connection.LastReceiveTime = graceDeadline;
+        Assert.That(connection.HasHeartbeatTimedOut(graceDeadline + ServerUtility.Timeout - 1), Is.False);
+        Assert.That(connection.HasHeartbeatTimedOut(graceDeadline + ServerUtility.Timeout), Is.True);
+    }
+
+    [Test]
+    public void NetworkMessageLoadingGraceSurvivesSilenceAndEndsOnReadiness()
+    {
+        MessageCodec.Init();
+        StalledTransport transport = new();
+        try
+        {
+            transport.Init();
+            transport.Connect(new TestEndpoint(), out Connect connection);
+            transport.MakeReady(connection);
+            transport.Update();
+            connection.BeginHeartbeatGrace(ServerUtility.BattleReadyTimeout);
+            connection.LastReceiveTime = NetworkTimer.Instance.TimeNow - 17_300;
+            transport.Update();
+            Assert.That(connection.State, Is.EqualTo(ConnectState.Connected));
+            connection.EndHeartbeatGrace();
+            transport.Update();
+            Assert.That(connection.State, Is.EqualTo(ConnectState.Close));
+            Assert.That(connection.LastDisconnectInfo.Phase, Is.EqualTo("HeartbeatTimeout"));
+        }
+        finally { transport.Shutdown(); }
     }
 
     [Test]

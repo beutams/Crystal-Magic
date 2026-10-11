@@ -50,6 +50,9 @@ namespace Server
                 data.enterNum = room.enterNum;
                 data.maxNum = room.maxNum;
                 data.themeKey = room.themeKey;
+                data.ownerName = room.players.TryGetValue(room.ownerAccountId, out Player owner)
+                    ? owner.username : string.Empty;
+                data.start = room.start;
                 listData.roomList.Add(data);
             }
             return listData;
@@ -61,6 +64,8 @@ namespace Server
         public ulong roomId;
         public ulong ownerAccountId;
         public string roomName;
+        public string ownerName;
+        public bool start;
         public int enterNum;
         public int maxNum;
         public int themeKey;

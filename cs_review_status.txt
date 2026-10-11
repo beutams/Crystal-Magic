@@ -109,7 +109,7 @@ Core\
   SaveData\
     CurrencyUtility.cs WAIT
     DungeonSettlementResult.cs TRUE DIRTY
-    DungeonSettlementUtility.cs TRUE
+    DungeonSettlementUtility.cs TRUE DIRTY
     InventoryUtility.cs WAIT
     PropInventoryUtility.cs WAIT
     SaveData.cs TRUE DIRTY
@@ -133,6 +133,7 @@ Core\
   Settings\
     GameSettingsComponent.cs TRUE DIRTY
     GameSettingsData.cs TRUE DIRTY
+    GameDisplaySettings.cs TRUE
   Timer\
     TimerComponent.cs TRUE
   Transition\
@@ -142,6 +143,7 @@ Core\
       PropSlotPrefabSetup.cs FALSE
       UIClassGenerator.cs FALSE
       UIDataGenerator.cs FALSE
+      LobbyUIPrefabBuilder.cs TRUE DIRTY
       UINodeConfig.cs FALSE
       UINodeConfigWindow.cs FALSE
       UISubClassGenerator.cs FALSE
@@ -207,7 +209,7 @@ Game\
       ShopDataEditorWindow.cs TRUE DIRTY
       SkillAdditionEditorWindow.cs TRUE DIRTY
       SpriteEffectAnimationAssetGenerator.cs TRUE
-      UnitAnimationFrameLibraryBuilder.cs TRUE
+      UnitAnimationFrameLibraryBuilder.cs TRUE DIRTY
       UnitAvoidanceAttributeDrawer.cs TRUE
       UnitEditorAttributeDrawerFactory.cs FALSE
       UnitEditorAttributeDrawers.cs TRUE DIRTY
@@ -444,7 +446,7 @@ Game\
       ProjectileEntityPrefabRegistryEntry.cs FALSE
       SkillProjectileAuthoring.cs TRUE DIRTY
       SkillProjectileRuntime.cs TRUE DIRTY
-      SpriteEffectAnimationAuthoring.cs TRUE
+      SpriteEffectAnimationAuthoring.cs TRUE DIRTY
       UnitAnimationAuthoring.cs TRUE DIRTY
       UnitAnimationRuntimeComponent.cs TRUE DIRTY
       UnitAoiRuntimeComponent.cs TRUE DIRTY
@@ -741,9 +743,9 @@ UI\
     EffectSelectUIModel.cs TRUE
   SettingUI\
     SettingUI.cs TRUE DIRTY
-    SettingUIController.cs TRUE
+    SettingUIController.cs TRUE DIRTY
     SettingUIData.cs TRUE DIRTY
-    SettingUIModel.cs TRUE
+    SettingUIModel.cs TRUE DIRTY
   InteractionSelectUI\
     Sub\
       InteractionSelectUI_OptionData.cs FALSE
@@ -760,20 +762,25 @@ UI\
     LoadUIController.cs TRUE
     LoadUIData.cs TRUE
     LoadUIModel.cs TRUE DIRTY
+  CreateRoomUI\
+    CreateRoomUI.cs TRUE
+    CreateRoomUIController.cs TRUE
+    CreateRoomUIData.cs TRUE
+    CreateRoomUIModel.cs TRUE
   LobbyUI\
     Sub\
-      LobbyUI_RoomItemData.cs TRUE
+      LobbyUI_RoomItemData.cs TRUE DIRTY
       LobbyUI_RoomItemView.cs TRUE DIRTY
     LobbyUI.cs TRUE DIRTY
     LobbyUIController.cs TRUE DIRTY
-    LobbyUIData.cs TRUE
-    LobbyUIModel.cs TRUE
+    LobbyUIData.cs TRUE DIRTY
+    LobbyUIModel.cs TRUE DIRTY
   LobbyRoomUI\
     LobbyRoomUI.cs TRUE DIRTY
     LobbyRoomUIController.cs TRUE DIRTY
-    LobbyRoomUIData.cs TRUE
-    LobbyRoomUIModel.cs TRUE
-    LobbyRoomUI_PlayerData.cs TRUE
+    LobbyRoomUIData.cs TRUE DIRTY
+    LobbyRoomUIModel.cs TRUE DIRTY
+    LobbyRoomUI_PlayerData.cs TRUE DIRTY
   MinimapUI\
     MinimapUI.cs TRUE DIRTY
     MinimapUIController.cs TRUE
@@ -928,10 +935,13 @@ Web\
   Lobby\
     ClientLobbyManager.cs TRUE DIRTY
     Room.cs TRUE DIRTY
-    RoomData.cs TRUE
+    RoomData.cs TRUE DIRTY
+    RoomCreationRules.cs TRUE
     ServerLobbyManager.cs TRUE DIRTY
     Protocol\
       C2L_SetDungeonFloor.cs TRUE
+      C2L_CreateRoom.cs TRUE DIRTY
+      C2L_RefreshRoomList.cs TRUE
       L2B_StartRoom.cs TRUE DIRTY
   Battle\
     BattleEnterData.cs TRUE DIRTY
@@ -967,7 +977,10 @@ Tests\
     MainMenuLayoutTests.cs TRUE
     LoadUIPaperLayoutTests.cs TRUE DIRTY
     SaveUIPaperLayoutTests.cs TRUE
-    SettingUIPaperLayoutTests.cs TRUE
+    SettingUIPaperLayoutTests.cs TRUE DIRTY
+    DisplaySettingsTests.cs TRUE
+    DisplaySettingsTaskValidation.cs TRUE DIRTY
+    TrainingCameraTaskValidation.cs TRUE
     CharacterUISettingsTests.cs TRUE DIRTY
     BattleUIChantTests.cs TRUE
     UICanvasStabilityTests.cs TRUE
@@ -990,11 +1003,14 @@ Core\
     AtomicSaveFile.cs TRUE
   Steam\
     SteamComponent.cs TRUE DIRTY
-    ClientAccountIdentity.cs TRUE
+    ClientAccountIdentity.cs TRUE DIRTY
+    ClientAccountDebugPreferences.cs TRUE
 Tests\
   Editor\
     HostedLobbyLifecycleTests.cs TRUE DIRTY
     ClientAccountIdentityTests.cs TRUE
+    DebugAccountTests.cs TRUE
+    DebugAccountTaskValidation.cs TRUE
     MixedBattleTransportTests.cs TRUE
     SceneLoadTimingTests.cs TRUE
     SubSceneImportWarmupTests.cs TRUE DIRTY
@@ -1040,7 +1056,7 @@ Tests\
     InventorySortTests.cs FALSE
     SkillChainLimitTests.cs FALSE
     InteractionSelectUILayoutTests.cs FALSE
-    MinimapUIFlagsTests.cs FALSE
+    MinimapUIFlagsTests.cs TRUE DIRTY
     DungeonSettlementTests.cs TRUE DIRTY
     DungeonSettlementUILayoutTests.cs TRUE
     DungeonThreatTests.cs TRUE
@@ -1068,6 +1084,7 @@ Tests\
     DungeonMonsterDistanceTests.cs TRUE DIRTY
     EntitySpawnRegistryTests.cs TRUE
     InteractionPromptPlayerTests.cs TRUE
+    PlayerNameplateTests.cs TRUE DIRTY
 
     BattleSimulationTimingTests.cs TRUE DIRTY
     DebugQueryVisualizationTests.cs TRUE
@@ -1106,7 +1123,7 @@ Game\
       TileOcclusionExample.cs TRUE
       TownTilemapBakeUtility.cs TRUE
       SceneMapPreviewUtility.cs TRUE DIRTY
-      BattlePreparationFailureTests.cs TRUE
+      BattlePreparationFailureTests.cs TRUE DIRTY
 
     GameWorldPreload.cs TRUE DIRTY
     GameWorldPreloadTests.cs TRUE DIRTY
@@ -1120,7 +1137,7 @@ Game\
     SavePlayerSnapshotTests.cs TRUE
     InteractionPromptUI.cs TRUE DIRTY
     InteractionPromptUIData.cs TRUE
-    InteractionPromptUIModel.cs TRUE
+    InteractionPromptUIModel.cs TRUE DIRTY
     InteractionPromptUIController.cs TRUE
     InteractionPromptPresentationTests.cs TRUE DIRTY
     DialoguePlayback.cs TRUE DIRTY
@@ -1152,4 +1169,33 @@ Game\
 
     UnitControlImmunityTests.cs TRUE
 
+    UnitAoiBuildSystemTests.cs TRUE
+
+    BattleDeathSpectatorTests.cs TRUE
+
+    SpriteEffectAnimationRuntimeTests.cs TRUE
+    UIResourceConfigTests.cs TRUE
+
     AbyssTilePlacementTests.cs TRUE
+
+    MountainFixed16RuleTileTests.cs TRUE
+    BakeMountain.cs TRUE
+    MonsterStartupRegressionTests.cs TRUE
+    MonsterStartupBehaviorDriverSystem.cs TRUE
+    TownIntroTriggerUtility.cs TRUE
+    AutoInteractionTests.cs TRUE
+
+    CreateRoomUITests.cs TRUE DIRTY
+    RoomCreationNetworkTests.cs TRUE
+    LobbyUITaskValidation.cs TRUE DIRTY
+
+Game\
+  System\
+    DungeonRevengeSquadSystem.cs TRUE
+Web\
+  Battle\
+    StateData\
+      NetworkRevengeSquadMapStateData.cs TRUE
+Tests\
+  Editor\
+    TeamDungeonTests.cs TRUE

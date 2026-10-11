@@ -14,6 +14,8 @@ namespace CrystalMagic.Game.Map
         public TileOcclusionPreset Preset;
         public TileCollisionData CollisionData;
         public GameObject CollisionPrefab;
+        [Tooltip("Optional opaque rectangular backdrop. Extends camera bounds only; collision/navigation stay unchanged.")]
+        public SpriteRenderer CameraBackdrop;
         public bool CollisionNeedsRebuild;
         public List<TileOcclusionLayer> Layers = new();
         public List<TileOcclusionRegion> Regions = new();

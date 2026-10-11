@@ -108,9 +108,8 @@ public partial class ClientPresentationEventSystem : SystemBase
     private void PlayDamage(in ClientPresentationEventElement presentationEvent)
     {
         Entity target = presentationEvent.Target;
-        if (target == Entity.Null || !EntityManager.Exists(target))
-            return;
-
+        // The event carries the confirmed hit position and amount even when a
+        // later frame in this receive batch has already despawned its target.
         if (presentationEvent.FlagB == 0)
         {
             EventComponent.Instance?.Publish(new DamageAppliedEvent(
@@ -119,7 +118,8 @@ public partial class ClientPresentationEventSystem : SystemBase
                 presentationEvent.ValueA,
                 presentationEvent.FlagA != 0));
         }
-        if (!EntityManager.HasComponent<UnitVitalityComponent>(target))
+        if (target == Entity.Null || !EntityManager.Exists(target) ||
+            !EntityManager.HasComponent<UnitVitalityComponent>(target))
             return;
 
         UnitVitalityComponent vitality = EntityManager.GetComponentData<UnitVitalityComponent>(target);

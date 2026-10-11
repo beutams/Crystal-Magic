@@ -10,6 +10,17 @@ public static class TownIntroTriggerUtility
     public const string NpcName = "TownIntroTrigger";
     public const int UnitDataId = 37;
 
+    public static void InitializeNewGame(SaveVariableData variables, bool skipTutorial)
+    {
+        variables.Set(CompletionVariable, skipTutorial ? 1d : 0d);
+        variables.Set(NPCSequenceUtility.StageVariable, 0d);
+        variables.Set("intro_started", 0d);
+        variables.Set("intro_equip_spoken", 0d);
+        variables.Set("intro_prop_spoken", 0d);
+        variables.Set("intro_skill_spoken", 0d);
+        variables.Set("intro_trainer_spoken", 0d);
+    }
+
     public static bool IsPending(SaveDataComponent save) =>
         save != null && save.ContainsVariable(CompletionVariable) && save.ContainsVariable(NPCSequenceUtility.StageVariable) &&
         save.GetVariable(CompletionVariable) < 1d;

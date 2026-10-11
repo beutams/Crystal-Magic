@@ -68,6 +68,17 @@ namespace CrystalMagic.Core {
         {
             base.Cleanup();
         }
+
+        // Called only after the old game has been unloaded at the main menu.
+        // Keep save files and event subscriptions; discard the old slot identity.
+        internal void ResetForAccountChange()
+        {
+            _currentSaveIndex = -1;
+            _currentSaveGuid = null;
+            _lastBattleSettlementId = null;
+            _globalData = new GlobalData();
+            _variables = new SaveVariableData();
+        }
         #endregion
 
         /// <summary>
@@ -704,13 +715,8 @@ namespace CrystalMagic.Core {
             GameConfig gameConfig = GetGameConfig();
             data.Stash.Money = gameConfig.StartingGold;
             data.SaveIndex = index;
-            data.Variables.Set(TownIntroTriggerUtility.CompletionVariable, 0d);
-            data.Variables.Set(NPCSequenceUtility.StageVariable, 0d);
-            data.Variables.Set("intro_started", 0d);
-            data.Variables.Set("intro_equip_spoken", 0d);
-            data.Variables.Set("intro_prop_spoken", 0d);
-            data.Variables.Set("intro_skill_spoken", 0d);
-            data.Variables.Set("intro_trainer_spoken", 0d);
+            TownIntroTriggerUtility.InitializeNewGame(data.Variables,
+                GameSettingsComponent.Instance.GetSettingsCopy().SkipTutorial);
 
             try
             {

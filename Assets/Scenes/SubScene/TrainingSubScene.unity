@@ -162,10 +162,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: MonsterStraw
       objectReference: {fileID: 0}
-    - target: {fileID: 369335172190857825, guid: 712d8fa16958ab141b3013e09376820b, type: 3}
-      propertyPath: 'm_Materials.Array.data[0]'
-      value: 
-      objectReference: {fileID: 2100000, guid: 6ec11349424b2e14d9b9f17e34a48db4, type: 2}
     - target: {fileID: 8687900121695893756, guid: 712d8fa16958ab141b3013e09376820b, type: 3}
       propertyPath: m_LocalPosition.x
       value: 7.5

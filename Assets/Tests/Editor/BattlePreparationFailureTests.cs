@@ -10,6 +10,25 @@ using UnityEngine.TestTools;
 
 public sealed class BattlePreparationFailureTests
 {
+    [Test]
+    public void ClientPreparationKeepsHeartbeatAliveUntilTheLoadingStageEnds()
+    {
+        ClientBattleManager manager = new();
+        Connect connection = new() { State = ConnectState.Connected };
+        manager.battleConnect = connection;
+        object stage = Enum.Parse(StageField.FieldType, "WaitingForScene");
+        MethodInfo stop = typeof(ClientBattleManager).GetMethod("StopPreparationTimeout", PrivateInstance);
+        try
+        {
+            typeof(ClientBattleManager).GetMethod("StartPreparationTimeout", PrivateInstance).Invoke(manager, new[] { stage });
+            connection.LastReceiveTime = NetworkTimer.Instance.TimeNow - 17_300;
+            Assert.That(connection.HasHeartbeatTimedOut(NetworkTimer.Instance.TimeNow), Is.False);
+            stop.Invoke(manager, null);
+            Assert.That(connection.HasHeartbeatTimedOut(NetworkTimer.Instance.TimeNow), Is.True);
+        }
+        finally { stop.Invoke(manager, null); connection.Dispose(); }
+    }
+
     private const BindingFlags PrivateInstance = BindingFlags.Instance | BindingFlags.NonPublic;
 
     [TestCase("WaitingForScene")]

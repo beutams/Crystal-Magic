@@ -14,7 +14,7 @@ public sealed class SettingUIPaperLayoutTests
 {
     private const string PrefabPath = "Assets/Res/UI/SettingUI.prefab";
     private static readonly string[] VolumeNames = { "Master", "Bgm", "Sfx" };
-    private static readonly string[] ButtonNames = { "LanguagePrevious", "LanguageNext", "Save", "Reset", "Back" };
+    private static readonly string[] ButtonNames = { "LanguagePrevious", "LanguageNext", "Save", "Reset", "Back", "SkipTutorial" };
 
     private static GameObject LoadPrefab()
     {
@@ -68,18 +68,19 @@ public sealed class SettingUIPaperLayoutTests
             Assert.That(image.sprite, Is.Not.Null, path);
             var importer = (TextureImporter)AssetImporter.GetAtPath(AssetDatabase.GetAssetPath(image.sprite));
             Assert.That(importer.textureType, Is.EqualTo(TextureImporterType.Sprite), path);
-            Assert.That(importer.spriteImportMode, Is.EqualTo(SpriteImportMode.Single), path);
+            Assert.That(importer.spriteImportMode, Is.EqualTo(path.Contains("DisplayMode") || path.Contains("Resolution")
+                ? SpriteImportMode.Multiple : SpriteImportMode.Single), path);
             sprites++;
         }
         Assert.That(flatPaths, Is.Empty);
-        Assert.That(sprites, Is.EqualTo(31));
+        Assert.That(sprites, Is.EqualTo(37));
     }
 
     [Test]
     public void SliderHandlesAndButtonStatesStayConnectedAndWithinThePaper()
     {
         Transform panel = LoadPrefab().transform.Find("Panel");
-        Assert.That(((RectTransform)panel).sizeDelta, Is.EqualTo(new Vector2(1281, 792)));
+        Assert.That(((RectTransform)panel).sizeDelta, Is.EqualTo(new Vector2(1281, 1072)));
         Assert.That(panel.GetComponentsInChildren<Slider>(true), Has.Length.EqualTo(3));
         foreach (string name in VolumeNames)
         {
@@ -99,7 +100,7 @@ public sealed class SettingUIPaperLayoutTests
             Assert.That(area.anchoredPosition.x - slider.handleRect.sizeDelta.x / 2, Is.EqualTo(0));
             Assert.That(area.anchoredPosition.x + area.sizeDelta.x + slider.handleRect.sizeDelta.x / 2, Is.EqualTo(root.sizeDelta.x));
         }
-        Assert.That(panel.GetComponentsInChildren<ButtonPlus>(true), Has.Length.EqualTo(5));
+        Assert.That(panel.GetComponentsInChildren<ButtonPlus>(true), Has.Length.EqualTo(10));
         foreach (string name in ButtonNames)
         {
             Transform button = panel.Find(name);
@@ -112,10 +113,11 @@ public sealed class SettingUIPaperLayoutTests
                 Assert.That(face.type, Is.EqualTo(Image.Type.Sliced));
                 Assert.That(face.raycastTarget, Is.False);
                 Assert.That(face.sprite, Is.Not.Null);
+                Assert.That(face.rectTransform.sizeDelta.x, Is.EqualTo(((RectTransform)button).sizeDelta.x), name);
             }
             var rect = (RectTransform)button;
             Assert.That(rect.anchoredPosition.x + rect.sizeDelta.x, Is.LessThan(1200));
-            Assert.That(-rect.anchoredPosition.y + rect.sizeDelta.y, Is.LessThanOrEqualTo(710));
+            Assert.That(-rect.anchoredPosition.y + rect.sizeDelta.y, Is.LessThanOrEqualTo(990));
         }
     }
 
@@ -150,7 +152,7 @@ public sealed class SettingUIPaperLayoutTests
         SettingUI view = contents.GetComponent<SettingUI>();
         var data = new SettingUIData();
         data.Bind(contents.transform);
-        int[] counts = new int[8];
+        int[] counts = new int[9];
         view.MasterVolumeChanged += _ => counts[0]++;
         view.BgmVolumeChanged += _ => counts[1]++;
         view.SfxVolumeChanged += _ => counts[2]++;
@@ -159,6 +161,7 @@ public sealed class SettingUIPaperLayoutTests
         view.SaveRequested += () => counts[5]++;
         view.ResetRequested += () => counts[6]++;
         view.BackRequested += () => counts[7]++;
+        view.SkipTutorialRequested += () => counts[8]++;
         try
         {
             view.EnsureInitialized();
@@ -170,6 +173,7 @@ public sealed class SettingUIPaperLayoutTests
                 foreach (string name in ButtonNames)
                     contents.transform.Find("Panel/" + name).GetComponent<ButtonPlus>().onClick.Invoke();
                 view.OnClose();
+                data.Panel_SkipTutorial.ButtonPlus.onClick.Invoke(); // Closed views must not retain the listener.
                 Assert.That(counts, Is.All.EqualTo(cycle + 1));
             }
 
@@ -185,6 +189,8 @@ public sealed class SettingUIPaperLayoutTests
             Assert.That(data.Panel_BgmVolumeValue.TextMeshProUGUI.text, Is.EqualTo("45%"));
             Assert.That(data.Panel_SfxVolumeValue.TextMeshProUGUI.text, Is.EqualTo("90%"));
             Assert.That(data.Panel_LanguageValue.TextMeshProUGUI.text, Is.EqualTo("English"));
+            Assert.That(data.Panel_SkipTutorial_Default_Text.TextMeshProUGUI.text, Is.EqualTo("Skip tutorial: Off"));
+            Assert.That(data.Panel_SkipTutorial_Click_Text.TextMeshProUGUI.text, Is.EqualTo("Skip tutorial: Off"));
             Assert.That(sliderNotifications, Is.Zero);
             Assert.That(counts, Is.All.EqualTo(2));
         }
@@ -193,6 +199,31 @@ public sealed class SettingUIPaperLayoutTests
             view.OnClose();
             PrefabUtility.UnloadPrefabContents(contents);
         }
+    }
+
+    [Test]
+    public void TutorialChoiceDefaultsOffAndSurvivesSerializationAndClone()
+    {
+        Assert.That(GameSettingsData.CreateDefault().SkipTutorial, Is.False);
+        Assert.That(JsonUtility.FromJson<GameSettingsData>("{\"MasterVolume\":0.4}").SkipTutorial, Is.False);
+        var restored = JsonUtility.FromJson<GameSettingsData>(JsonUtility.ToJson(new GameSettingsData { SkipTutorial = true }));
+        Assert.That(restored.SkipTutorial, Is.True);
+        GameSettingsData clone = restored.Clone();
+        Assert.That(clone.SkipTutorial, Is.True);
+        clone.SkipTutorial = false;
+        Assert.That(restored.SkipTutorial, Is.True);
+    }
+
+    [TestCase(GameLanguage.ChineseSimplified, false, "跳过新手教程：关")]
+    [TestCase(GameLanguage.ChineseSimplified, true, "跳过新手教程：开")]
+    [TestCase(GameLanguage.English, false, "Skip tutorial: Off")]
+    [TestCase(GameLanguage.English, true, "Skip tutorial: On")]
+    public void TutorialButtonShowsCurrentChoiceInBothLanguages(GameLanguage language, bool skip, string text)
+    {
+        var model = new SettingUIModel();
+        typeof(SettingUIModel).GetField("_settings", BindingFlags.Instance | BindingFlags.NonPublic)
+            .SetValue(model, new GameSettingsData { Language = language, SkipTutorial = skip });
+        Assert.That(model.SkipTutorialButtonText, Is.EqualTo(text));
     }
 
     [MenuItem("Tools/Crystal Magic/Validate Setting UI")]

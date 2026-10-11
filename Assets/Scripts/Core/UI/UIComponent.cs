@@ -91,9 +91,14 @@ namespace CrystalMagic.Core {
 
         private void LoadConfigFromPath()
         {
-            #if UNITY_EDITOR
-            TextAsset configAsset = UnityEditor.AssetDatabase.LoadAssetAtPath<TextAsset>(ConfigPath);
-            if (configAsset != null)
+            TextAsset configAsset = ResourceComponent.Instance.Load<TextAsset>(ConfigPath);
+            if (configAsset == null)
+            {
+                Debug.LogError($"[UIComponent] Failed to load UI group config: {ConfigPath}");
+                return;
+            }
+
+            try
             {
                 _config = UIConfigLoader.LoadFromJson(configAsset.text);
                 if (_config != null)
@@ -101,7 +106,10 @@ namespace CrystalMagic.Core {
                     CreateGroupsFromConfig();
                 }
             }
-            #endif
+            finally
+            {
+                ResourceComponent.Instance.Unload(ConfigPath);
+            }
         }
 
         private Vector2 GetGroupReferenceResolution()

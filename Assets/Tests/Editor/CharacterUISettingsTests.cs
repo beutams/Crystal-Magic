@@ -45,7 +45,7 @@ public sealed class CharacterUISettingsTests
         Assert.That(_view.gameObject.activeSelf, Is.False);
         Assert.That(_view.GetComponentsInChildren<UIBase>(true), Is.Empty);
         Assert.That(_view.GetComponentsInChildren<Canvas>(true), Is.Empty);
-        Assert.That(_view.GetComponentsInChildren<ButtonPlus>(true), Has.Length.EqualTo(6));
+        Assert.That(_view.GetComponentsInChildren<ButtonPlus>(true), Has.Length.EqualTo(11));
         Assert.That(_view.UI.Navigation_Save.GameObject.transform.parent, Is.EqualTo(_view.UI.Navigation.GameObject.transform));
         Assert.That(_view.UI.Navigation_ReturnMainMenu.GameObject.transform.parent, Is.EqualTo(_view.UI.Navigation.GameObject.transform));
         Assert.That(_view.transform.Find("Game"), Is.Null);
@@ -66,6 +66,13 @@ public sealed class CharacterUISettingsTests
         {
             Assert.That(image.sprite, Is.Not.Null, image.name);
             string path = AssetDatabase.GetAssetPath(image.sprite);
+            if (image.transform.parent == _view.UI.Display.GameObject.transform)
+            {
+                GameObject shop = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Res/UI/ShopBuyUI.prefab");
+                string source = image.name.EndsWith("Previous") ? "Reduce" : "Add";
+                Assert.That(image.sprite, Is.EqualTo(shop.transform.Find(source).GetComponent<Image>().sprite));
+                continue;
+            }
             Assert.That(path, Does.StartWith("Assets/Res/Sprites/UISprites/BookV1/"));
             var importer = (TextureImporter)AssetImporter.GetAtPath(path);
             Assert.That(importer.textureType, Is.EqualTo(TextureImporterType.Sprite), path);
@@ -85,11 +92,12 @@ public sealed class CharacterUISettingsTests
             MasterVolume = 0f, BgmVolume = 0.6f, SfxVolume = 1f,
             Language = GameLanguage.English,
         };
-        for (int section = 0; section < 2; section++)
+        for (int section = 0; section < 3; section++)
         {
             _view.Render(settings, (CharacterSettingsSection)section);
             Assert.That(_view.UI.Audio.GameObject.activeSelf, Is.EqualTo(section == 0));
             Assert.That(_view.UI.Language.GameObject.activeSelf, Is.EqualTo(section == 1));
+            Assert.That(_view.UI.Display.GameObject.activeSelf, Is.EqualTo(section == 2));
         }
         Assert.That(changed, Is.Zero);
         Assert.That(_view.UI.Language_Chinese_Selected.GameObject.activeSelf, Is.False);
@@ -160,7 +168,7 @@ public sealed class CharacterUISettingsTests
         Assert.That(saves, Is.EqualTo(1));
         Assert.That(returns, Is.EqualTo(1));
         Assert.That(sections, Is.Zero);
-        UINode[] navigation = { _view.UI.Navigation_Audio, _view.UI.Navigation_Language,
+        UINode[] navigation = { _view.UI.Navigation_Audio, _view.UI.Navigation_Display, _view.UI.Navigation_Language,
             _view.UI.Navigation_Save, _view.UI.Navigation_ReturnMainMenu };
         for (int i = 1; i < navigation.Length; i++)
             Assert.That(navigation[i - 1].RectTransform.anchoredPosition.y - navigation[i].RectTransform.anchoredPosition.y,

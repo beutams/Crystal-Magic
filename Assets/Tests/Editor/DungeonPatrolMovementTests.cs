@@ -6,6 +6,7 @@ using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
 using CrystalMagic.ThirdParty.RVO2;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
 using NUnit.Framework;
 using Unity.Collections;
 using Unity.Entities;
@@ -33,8 +34,16 @@ public sealed class DungeonPatrolMovementTests
             Assert.That(home.StopDistance.Literal.Float, Is.EqualTo(0.15f));
             Assert.That(home.Conditions, Is.Not.Empty, "A running sequence resumes at MoveTo; its conditions must remain active.");
             Assert.That(tree.Nodes.Any(node => node.Guid.StartsWith("shared_patrol_report_")), Is.False, tree.Name);
+            if (tree.GetNode("shared_revenge_move") is MoveToBehaviorNodeData revenge)
+            {
+                Assert.That(revenge.Destination.GetterKey, Is.EqualTo("unit.variables.getFloat3"));
+                Assert.That(revenge.Destination.Inputs[0].Literal.String, Is.EqualTo("dungeon.revenge.destination"));
+                Assert.That(revenge.Speed.Inputs[0].Literal.String, Is.EqualTo("dungeon.revenge.speed"));
+                Assert.That(revenge.Conditions, Is.Not.Empty, "Marching must yield to combat while MoveTo is running.");
+            }
         }
-        StateScriptData[] scripts = Rows("StateScript").Select(row => row.ToObject<StateScriptData>()).ToArray();
+        JsonSerializer serializer = JsonSerializer.Create(new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.Auto });
+        StateScriptData[] scripts = Rows("StateScript").Select(row => row.ToObject<StateScriptData>(serializer)).ToArray();
         Assert.That(StateScriptCompiler.TryBuildRegistry(scripts, out var scriptRegistry, out error), Is.True, error);
         scriptRegistry.Dispose();
         StateScriptInstanceData patrol = scripts.Single(row => row.Id == 30).Graphs.Single(graph => graph.Name == "Patrol");

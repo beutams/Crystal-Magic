@@ -12,6 +12,9 @@ namespace CrystalMagic.Core
         private const string SettingsFileName = "settings.json";
 
         private GameSettingsData _settings;
+        private int _appliedWidth;
+        private int _appliedHeight;
+        private bool _appliedFullscreen;
 
         public override int Priority => 29;
 
@@ -70,7 +73,42 @@ namespace CrystalMagic.Core
 
         public void ResetToDefault(bool saveToDisk = false)
         {
-            SetSettings(GameSettingsData.CreateDefault(), saveToDisk);
+            GameSettingsData defaults = GameSettingsData.CreateDefault();
+            SetDefaultDisplay(defaults);
+            SetSettings(defaults, saveToDisk);
+        }
+
+        public void ToggleFullscreen()
+        {
+            GameSettingsData settings = GetSettingsCopy();
+            settings.Fullscreen = !settings.Fullscreen;
+            SetSettings(settings);
+        }
+
+        public void ShiftResolution(int offset)
+        {
+            GameSettingsData settings = GetSettingsCopy();
+            Vector2Int current = new(settings.ResolutionWidth, settings.ResolutionHeight);
+            Vector2Int next = GameDisplaySettings.ShiftResolution(current, offset,
+                GameDisplaySettings.GetResolutions(GetDesktopSize(), current));
+            settings.ResolutionWidth = next.x;
+            settings.ResolutionHeight = next.y;
+            SetSettings(settings);
+        }
+
+        public static void SetDefaultDisplay(GameSettingsData settings)
+        {
+            Vector2Int desktop = GetDesktopSize();
+            settings.Fullscreen = true;
+            settings.ResolutionWidth = desktop.x;
+            settings.ResolutionHeight = desktop.y;
+        }
+
+        private static Vector2Int GetDesktopSize()
+        {
+            Resolution desktop = Screen.currentResolution;
+            return new Vector2Int(desktop.width >= 640 ? desktop.width : Mathf.Max(640, Screen.width),
+                desktop.height >= 360 ? desktop.height : Mathf.Max(360, Screen.height));
         }
 
         public void SetMasterVolume(float value)
@@ -146,6 +184,7 @@ namespace CrystalMagic.Core
         {
             EnsureSettingsValid();
 
+            ApplyDisplaySettings();
             if (CameraComponent.Instance != null)
                 CameraComponent.Instance.SetScreenShakeScale(_settings.ScreenShakeScale);
 
@@ -159,9 +198,25 @@ namespace CrystalMagic.Core
 
         private static GameSettingsData Sanitize(GameSettingsData settings)
         {
-            settings ??= GameSettingsData.CreateDefault();
-            settings.Clamp();
+            settings = settings?.Clone() ?? GameSettingsData.CreateDefault();
+            GameDisplaySettings.Resolve(settings, GetDesktopSize(), new Vector2Int(Screen.width, Screen.height), Screen.fullScreen);
             return settings;
+        }
+
+        private void ApplyDisplaySettings()
+        {
+            if (_appliedWidth == _settings.ResolutionWidth && _appliedHeight == _settings.ResolutionHeight &&
+                _appliedFullscreen == _settings.Fullscreen)
+                return;
+            _appliedWidth = _settings.ResolutionWidth;
+            _appliedHeight = _settings.ResolutionHeight;
+            _appliedFullscreen = _settings.Fullscreen;
+            // Editor previews and headless servers must not resize the developer's desktop.
+#if !UNITY_EDITOR && !UNITY_SERVER
+            if (!Application.isBatchMode)
+                Screen.SetResolution(_appliedWidth, _appliedHeight,
+                    _appliedFullscreen ? FullScreenMode.FullScreenWindow : FullScreenMode.Windowed);
+#endif
         }
 
         private string GetSettingsFolderPath()

@@ -383,6 +383,13 @@ namespace Server
                 });
             }
 
+            if (entityInfo.revengeSquadId > 0)
+                SetOrAddComponent(entityManager, entity, new DungeonRevengeSquadMember
+                {
+                    SquadId = entityInfo.revengeSquadId,
+                    Speed = math.max(0f, entityInfo.revengeSquadSpeed),
+                });
+
             if (entityInfo.hasTreasureData)
             {
                 SetOrAddComponent(entityManager, entity, new TreasureComponent
@@ -535,6 +542,8 @@ namespace Server
                 monsterRegionId = source.monsterRegionId,
                 monsterSquadId = source.monsterSquadId,
                 monsterIsBoss = source.monsterIsBoss,
+                revengeSquadId = source.revengeSquadId,
+                revengeSquadSpeed = source.revengeSquadSpeed,
                 hasTreasureData = source.hasTreasureData,
                 treasureRegionId = source.treasureRegionId,
                 treasureRandomSeed = source.treasureRandomSeed,

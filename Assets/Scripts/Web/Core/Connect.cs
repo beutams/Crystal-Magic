@@ -31,6 +31,7 @@ namespace Server
     {
         public long startTime {  get; set; }
         public long LastReceiveTime { get; set; }
+        private long heartbeatGraceDeadline;
         public long RttMs { get; private set; }
         public uint LastReceivedBattleFrameSequence { get; private set; }
         public DisconnectInfo LastDisconnectInfo { get; internal set; }
@@ -46,6 +47,17 @@ namespace Server
         public NetworkEndpoint RemoteEndpoint { get; private set; }
         public Action<Connect> OnConnected;
         public Action<Connect> OnDisconnected;
+
+        // 场景初始化也在主线程执行。宽限只覆盖当前加载阶段，不改变正常运行的心跳时限。
+        public void BeginHeartbeatGrace(long durationMs)
+        {
+            heartbeatGraceDeadline = NetworkTimer.Instance.TimeNow + Math.Max(0, durationMs);
+        }
+
+        public void EndHeartbeatGrace() => heartbeatGraceDeadline = 0;
+
+        public bool HasHeartbeatTimedOut(long now) =>
+            now >= heartbeatGraceDeadline && now - LastReceiveTime >= ServerUtility.Timeout;
 
         public void Init(IConnectionTransport transport)
         {
@@ -187,6 +199,7 @@ namespace Server
         public void Dispose()
         {
             State = ConnectState.Close;
+            EndHeartbeatGrace();
             transport = null;
             callback.Clear();
             pendingBattleFrameSendTimes.Clear();

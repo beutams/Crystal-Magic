@@ -29,6 +29,8 @@ namespace CrystalMagic.UI
             Bindings.Bind(() => View.SettingsView.SectionRequested += OnSettingsSectionRequested, () => View.SettingsView.SectionRequested -= OnSettingsSectionRequested);
             Bindings.Bind(() => View.SettingsView.ValueChanged += OnSettingValueChanged, () => View.SettingsView.ValueChanged -= OnSettingValueChanged);
             Bindings.Bind(() => View.SettingsView.LanguageRequested += OnLanguageRequested, () => View.SettingsView.LanguageRequested -= OnLanguageRequested);
+            Bindings.Bind(() => View.SettingsView.DisplayModeRequested += OnDisplayModeRequested, () => View.SettingsView.DisplayModeRequested -= OnDisplayModeRequested);
+            Bindings.Bind(() => View.SettingsView.ResolutionRequested += OnResolutionRequested, () => View.SettingsView.ResolutionRequested -= OnResolutionRequested);
             Bindings.Bind(() => View.SettingsView.EditCompleted += FlushSettings, () => View.SettingsView.EditCompleted -= FlushSettings);
             Bindings.Bind(() => View.SettingsView.SaveRequested += OnSaveRequested, () => View.SettingsView.SaveRequested -= OnSaveRequested);
             Bindings.Bind(() => View.SettingsView.ReturnMainMenuRequested += OnReturnMainMenuRequested, () => View.SettingsView.ReturnMainMenuRequested -= OnReturnMainMenuRequested);
@@ -124,6 +126,20 @@ namespace CrystalMagic.UI
         {
             if (_settingsPendingSave && GameSettingsComponent.Instance.SaveSettings())
                 _settingsPendingSave = false;
+        }
+
+        private void OnDisplayModeRequested()
+        {
+            _settingsPendingSave = true;
+            GameSettingsComponent.Instance.ToggleFullscreen();
+            FlushSettings();
+        }
+
+        private void OnResolutionRequested(int offset)
+        {
+            _settingsPendingSave = true;
+            GameSettingsComponent.Instance.ShiftResolution(offset);
+            FlushSettings();
         }
 
         private void OnSaveRequested()

@@ -364,7 +364,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 79d51281f5834f17ba4c45a8873342ac, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _activeColor: {r: 0.5176471, g: 0.7176471, b: 0.6745098, a: 1}
+  _smallColor: {r: 0.43529412, g: 0.61960784, b: 0.7254902, a: 1}
+  _mediumColor: {r: 0.78039216, g: 0.64313725, b: 0.36470588, a: 1}
+  _largeColor: {r: 0.74117647, g: 0.45098039, b: 0.40392157, a: 1}
   _clearedColor: {r: 0.5372549, g: 0.5372549, b: 0.5372549, a: 1}
 --- !u!1 &1000070
 GameObject:
@@ -424,7 +426,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 2100000, guid: d33a407ad039430586a8078709ade5da, type: 2}
-  m_Color: {r: 0.5176471, g: 0.7176471, b: 0.6745098, a: 1}
+  m_Color: {r: 0.43529412, g: 0.61960784, b: 0.7254902, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1

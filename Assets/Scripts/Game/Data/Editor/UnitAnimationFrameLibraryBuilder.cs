@@ -150,15 +150,15 @@ namespace CrystalMagic.Editor.Data
             {
                 string prefabPath = AssetDatabase.GUIDToAssetPath(guids[index]);
                 GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(prefabPath);
-                SpriteEffectAnimationAuthoring authoring = prefab != null
-                    ? prefab.GetComponent<SpriteEffectAnimationAuthoring>()
-                    : null;
-                if (authoring == null)
+                if (prefab == null)
                     continue;
-
-                AddClipPath(paths, authoring.EnterClip);
-                AddClipPath(paths, authoring.LoopClip);
-                AddClipPath(paths, authoring.ExitClip);
+                foreach (SpriteEffectAnimationAuthoring authoring in
+                         prefab.GetComponentsInChildren<SpriteEffectAnimationAuthoring>(true))
+                {
+                    AddClipPath(paths, authoring.EnterClip);
+                    AddClipPath(paths, authoring.LoopClip);
+                    AddClipPath(paths, authoring.ExitClip);
+                }
             }
         }
 

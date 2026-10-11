@@ -354,6 +354,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d0031e4d5f1c4ce58d052629484d85f8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  HardControlImmunityEnabled: 1
+  HardControlImmunityDurationMultiplier: 2
+  HardControlImmunityMinimumSeconds: 0.5
 --- !u!114 &900000000000010015
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -489,8 +492,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 0
   serializedVersion: 3
-  m_Size: {x: 0.30084354, y: 0.30350015, z: 1}
-  m_Center: {x: -0.17370872, y: 0.043015897, z: 0}
+  m_Size: {x: 0.362308, y: 0.30350015, z: 1}
+  m_Center: {x: -0.14297667, y: 0.043015897, z: 0}
 --- !u!1 &6965578895531222717
 GameObject:
   m_ObjectHideFlags: 0
@@ -542,5 +545,5 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 0
   serializedVersion: 3
-  m_Size: {x: 0.36135596, y: 0.3530031, z: 1}
-  m_Center: {x: -0.19790284, y: 0.010374745, z: 0}
+  m_Size: {x: 0.4263125, y: 0.3530031, z: 1}
+  m_Center: {x: -0.16542457, y: 0.010374745, z: 0}

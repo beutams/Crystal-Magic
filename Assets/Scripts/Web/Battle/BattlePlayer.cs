@@ -1,5 +1,6 @@
 using CrystalMagic.Core;
 using System;
+using System.Collections.Generic;
 using Unity.Entities;
 using UnityEngine;
 
@@ -31,6 +32,8 @@ namespace Server
         public Entity entity;
         public Vector3 spawnWorldPosition;
         public CharacterData characterData;
+        public readonly List<InventoryItemData> acquiredItems = new();
+        public long acquiredMoney;
         public BattlePlayerLifeState lifeState;
         public bool exitReady;
         public bool hasTransferVitals;

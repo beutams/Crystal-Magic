@@ -65,6 +65,7 @@ namespace Server
             room.startDeadline = session.Deadline;
             RoomData roomData = RoomData.CreateRoomData(room);
             foreach (Player player in room.players.Values) player.connect.Send(new L2C_RefreshRoomInfo { roomData = roomData });
+            session.Host.BeginHeartbeatGrace(ServerUtility.HostStartTimeout);
             session.Host.Send(new L2C_HostBattleStart { connection = session.Connection, room = session.Request,
                 tcpRequired = tcpRequired, steamMembers = session.SteamRoutes.Where(pair => pair.Value).Select(pair => pair.Key).ToArray() });
         }
@@ -89,6 +90,7 @@ namespace Server
             {
                 player.roomId = 0;
                 player.start = true;
+                player.connect.BeginHeartbeatGrace(ServerUtility.BattleInitializeTimeout);
                 player.connect.Send(new L2C_StartTicket
                 { connection = session.Connection.ForTransport(session.SteamRoutes[player.accountId]), ticket = result.secretKeys[player.accountId], reload = false });
             }
@@ -202,6 +204,7 @@ namespace Server
             }
             player.start = true;
             CreatePlayer(player);
+            player.connect.BeginHeartbeatGrace(ServerUtility.BattleInitializeTimeout);
             player.connect.Send(new L2C_StartTicket { reload = true,
                 connection = session.Connection.ForTransport(session.SteamRoutes[player.accountId]), ticket = response.result.ticket });
         }

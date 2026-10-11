@@ -283,16 +283,17 @@ public partial class DungeonMonsterDistanceSystem : SystemBase
                 }
             }
         }
-        else if (Bool(entity, "dungeon.revenge.member") && _positions.Count > 0)
+        else if (EntityManager.HasComponent<DungeonRevengeSquadMember>(entity))
         {
-            // An offscreen reinforcement still advances towards a player.
-            float3 current = EntityManager.GetComponentData<LocalTransform>(entity).Position;
-            float3 target = _positions[0];
-            foreach (float3 position in _positions)
-                if (math.distancesq(current.xy, position.xy) < math.distancesq(current.xy, target.xy)) target = position;
-            UnitNavigationUtility.SetDestination(ref navigation, target, 1f);
-            move.CommandMoveSpeed = -1f;
-            hasDestination = true;
+            // The shared squad system continues to issue marching legs while asleep.
+            if (Bool(entity, "dungeon.revenge.hasDestination") &&
+                UnitVariableSource.TryGetValue(EntityManager, entity, "dungeon.revenge.destination", out UnitSourceValue value) &&
+                value.TryGetFloat3(out float3 target))
+            {
+                UnitNavigationUtility.SetDestination(ref navigation, target, 0.1f);
+                move.CommandMoveSpeed = EntityManager.GetComponentData<DungeonRevengeSquadMember>(entity).Speed;
+                hasDestination = true;
+            }
         }
         else if (UnitVariableSource.TryGetValue(EntityManager, entity, DungeonPatrolRuntimeUtility.GuardHomePositionKey,
                      out UnitSourceValue home) && home.TryGetFloat3(out float3 position))

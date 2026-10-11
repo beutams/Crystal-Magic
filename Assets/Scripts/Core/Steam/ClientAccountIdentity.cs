@@ -5,7 +5,7 @@ using CrystalMagic.Game.Config;
 
 namespace CrystalMagic.Core
 {
-    /// <summary>One immutable identity per launch, shared by saves and lobby login.</summary>
+    /// <summary>Immutable session identity shared by saves and lobby login; debug switching replaces it at the main menu.</summary>
     public readonly struct ClientAccountIdentity
     {
         public const ulong LocalNamespace = 1UL << 63;

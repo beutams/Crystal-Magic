@@ -142,6 +142,26 @@ public sealed class ClientPresentationEventTests
     }
 
     [Test]
+    public void DamageNumberSurvivesTargetDespawnBeforePresentation()
+    {
+        List<DamageAppliedEvent> damage = new();
+        _bus.Subscribe<DamageAppliedEvent>(damage.Add);
+        Entity target = Manager.CreateEntity();
+        Manager.DestroyEntity(target);
+        Queue(new ClientPresentationEventElement
+        {
+            Type = ClientPresentationEventType.Damage, Sequence = 1, Target = target,
+            Position = new float3(3, 4, 0), ValueA = 25f, FlagA = 1,
+        });
+        _system.Update();
+        Assert.That(damage.Count, Is.EqualTo(1));
+        Assert.That(damage[0].Amount, Is.EqualTo(25f));
+        Assert.That(damage[0].WorldPosition, Is.EqualTo(new float3(3, 4, 0)));
+        Assert.That(damage[0].IsLethal, Is.True);
+        AssertDrained(1);
+    }
+
+    [Test]
     public void CallbackCanRemoveEventEntityWithoutWritingToAStaleClock()
     {
         _bus.Subscribe<NotificationSignalEvent>(signal => Manager.DestroyEntity(_eventEntity));

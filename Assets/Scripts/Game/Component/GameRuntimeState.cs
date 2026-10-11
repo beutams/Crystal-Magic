@@ -43,6 +43,9 @@ namespace CrystalMagic.Core
         public CharacterData Data = new();
         public ulong Revision;
         public byte NetworkDirty;
+        // Per-player authoritative loot history; carried across online floors by BattlePlayer.
+        public List<InventoryItemData> AcquiredItems = new();
+        public long AcquiredMoney;
 
         public void MarkChanged()
         {

@@ -18,6 +18,9 @@ namespace Server
         private bool loggedIn;
 
         public bool HasConnection => lobbyConnect != null;
+        public bool IsLoggedIn => loggedIn && !disconnecting;
+        public bool HasPendingRequest => request != null;
+        public string DisplayName { get; private set; } = string.Empty;
         public bool DisconnectRequested { get; private set; }
         public LobbyRequestType LoginFailure { get; private set; }
 
@@ -145,6 +148,7 @@ namespace Server
                 hostedTcpAddress = SteamComponent.Instance.LaunchConfig.hostedTcpAddress,
                 hostedTcpPort = SteamComponent.Instance.LaunchConfig.hostedTcpPort,
             });
+            DisplayName = username;
         }
 
         private void OnLoginResult(IMessage message, Connect connect)
@@ -236,6 +240,7 @@ namespace Server
             }
 
             ulong localAccountId = accountId;
+            connect.BeginHeartbeatGrace(ServerUtility.BattleInitializeTimeout);
             ClientBattleManager battleManager = NetworkComponent.Instance.clientBattleManager;
             string error = null;
             if (battleManager == null || !battleManager.PrepareForOnlineBattle(out error))
@@ -306,14 +311,22 @@ namespace Server
                     break;
             }
         }
-        public void CreateRoom(string name)
+        public void RefreshRoomList()
         {
-            if (room != null || !BeginRequest(LobbyRequestType.CreateRequest))
+            if (IsLoggedIn)
+                lobbyConnect.Send(new C2L_RefreshRoomList());
+        }
+        public bool CreateRoom(string name, int maxPlayers, string displayName)
+        {
+            if (!RoomCreationRules.TryNormalize(name, displayName, maxPlayers,
+                    out string roomName, out string nickname, out _) ||
+                room != null || !BeginRequest(LobbyRequestType.CreateRequest))
             {
-                return;
+                return false;
             }
 
-            lobbyConnect.Send(new C2L_CreateRoom() { roomName = name });
+            lobbyConnect.Send(new C2L_CreateRoom { roomName = roomName, displayName = nickname, maxPlayers = maxPlayers });
+            return true;
         }
         public void OnCreateRoom(IMessage message, Connect connect)
         {
@@ -329,6 +342,8 @@ namespace Server
             {
                 case LobbyRequestType.CreateSuccess:
                     room = createReturn.roomData;
+                    if (room != null && room.players.TryGetValue(accountId, out string nickname))
+                        DisplayName = nickname;
                     onRoomInfoRefresh?.Invoke(room);
                     break;
                 case LobbyRequestType.CreateFail:

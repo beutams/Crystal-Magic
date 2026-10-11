@@ -1,5 +1,8 @@
 using CrystalMagic.Core;
 using CrystalMagic.Game.Data;
+using Server;
+using System.Collections.Generic;
+using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
 using Unity.Transforms;
@@ -12,6 +15,7 @@ namespace CrystalMagic.UI
         private const string GroupName = "Bottom";
         private const float DefaultWorldYOffset = 0.8f;
         private const float CharacterWorldYOffset = 1.2f;
+        private const float PlayerFallbackHeadHeight = .15f;
         private const string MoneyDisplayNameKey = "world.drop.money";
         private const string TreasureDisplayNameKey = "world.drop.treasure";
 
@@ -27,6 +31,10 @@ namespace CrystalMagic.UI
         private float _cachedWorldYOffset;
         private bool _hasCachedDisplay;
         private bool _initialized;
+        private readonly Dictionary<Entity, PlayerNameplate> _playerNameplates = new();
+        private readonly List<Entity> _staleNameplates = new();
+        private World _nameplateWorld;
+        private EntityQuery _nameplateQuery;
 
         public void Initialize()
         {
@@ -38,7 +46,7 @@ namespace CrystalMagic.UI
             SetVisible(false);
             LocalizationComponent.LanguageChanged += HandleLanguageChanged;
             // Project only after camera follow, shake and companion transforms have updated.
-            Canvas.preWillRenderCanvases += RefreshPrompt;
+            Canvas.preWillRenderCanvases += RefreshWorldLabels;
             _initialized = true;
         }
 
@@ -49,6 +57,12 @@ namespace CrystalMagic.UI
                 ResolveFloatingRoot();
                 EnsurePromptView();
             }
+        }
+
+        private void RefreshWorldLabels()
+        {
+            RefreshPrompt();
+            RefreshPlayerNameplates();
         }
 
         private void RefreshPrompt()
@@ -89,7 +103,8 @@ namespace CrystalMagic.UI
         public void Dispose()
         {
             LocalizationComponent.LanguageChanged -= HandleLanguageChanged;
-            Canvas.preWillRenderCanvases -= RefreshPrompt;
+            Canvas.preWillRenderCanvases -= RefreshWorldLabels;
+            ReleasePlayerNameplates();
             _playerWorld = null;
             _cachedPlayer = Entity.Null;
 
@@ -102,6 +117,151 @@ namespace CrystalMagic.UI
             _currentCamera = null;
             InvalidateCachedDisplay();
             _initialized = false;
+        }
+
+        private void RefreshPlayerNameplates()
+        {
+            if (!_initialized)
+                return;
+
+            World world = World.DefaultGameObjectInjectionWorld;
+            if (world == null || !world.IsCreated ||
+                (world.Flags & WorldFlags.GameClient) != WorldFlags.GameClient)
+            {
+                ReleasePlayerNameplates();
+                return;
+            }
+
+            ClientBattleManager battle = NetworkComponent.Instance.clientBattleManager;
+            if (battle.localAccountId == 0UL)
+            {
+                ReleasePlayerNameplates();
+                return;
+            }
+
+            if (_nameplateWorld != world)
+            {
+                ReleasePlayerNameplates();
+                _nameplateWorld = world;
+                _nameplateQuery = world.EntityManager.CreateEntityQuery(new EntityQueryDesc
+                {
+                    All = new[]
+                    {
+                        ComponentType.ReadOnly<NetworkEntitySpawnInfoComponent>(),
+                        ComponentType.ReadOnly<PlayerCharacterComponent>(),
+                        ComponentType.ReadOnly<LocalToWorld>(),
+                    },
+                    None = new[] { ComponentType.ReadOnly<NetworkPlayerComponent>() },
+                });
+            }
+
+            if (_rootRect == null || _currentCamera == null)
+            {
+                foreach (PlayerNameplate nameplate in _playerNameplates.Values)
+                    nameplate.Model.SetVisible(false);
+                return;
+            }
+
+            EntityManager entityManager = world.EntityManager;
+            foreach (PlayerNameplate nameplate in _playerNameplates.Values)
+                nameplate.Seen = false;
+
+            using NativeArray<Entity> players = _nameplateQuery.ToEntityArray(Allocator.Temp);
+            foreach (Entity player in players)
+            {
+                NetworkEntitySpawnInfo info = entityManager.GetComponentObject<NetworkEntitySpawnInfoComponent>(player)?.entityInfo;
+                if (info == null || info.prefabType != NetworkEntityPrefabType.Unit ||
+                    info.ownerAccountId == 0UL || info.ownerAccountId == battle.localAccountId ||
+                    (entityManager.HasComponent<DestroyEntityFlag>(player) &&
+                     entityManager.IsComponentEnabled<DestroyEntityFlag>(player)) ||
+                    !battle.TryGetPlayerDisplayName(info.ownerAccountId, out string displayName))
+                    continue;
+
+                if (!_playerNameplates.TryGetValue(player, out PlayerNameplate nameplate))
+                {
+                    InteractionPromptUI view = UIComponent.Instance.Open<InteractionPromptUI>();
+                    if (view == null)
+                        continue;
+                    UIComponent.Instance.SetLifetime(view, UILifetime.Manual);
+                    nameplate = new PlayerNameplate
+                    {
+                        View = view,
+                        Model = UIComponent.Instance.GetModel<InteractionPromptUIModel>(view),
+                    };
+                    _playerNameplates.Add(player, nameplate);
+                }
+
+                nameplate.Seen = true;
+                LocalToWorld localToWorld = entityManager.GetComponentData<LocalToWorld>(player);
+                SpriteRenderer renderer = entityManager.HasComponent<SpriteRenderer>(player)
+                    ? entityManager.GetComponentObject<SpriteRenderer>(player) : null;
+                Vector3 anchor = ResolveNameplateAnchor(nameplate, renderer, localToWorld);
+                Vector3 screenPosition = _currentCamera.WorldToScreenPoint(anchor);
+                bool visible = screenPosition.z > 0f &&
+                    screenPosition.x >= 0f && screenPosition.x <= Screen.width &&
+                    screenPosition.y >= 0f && screenPosition.y <= Screen.height;
+                if (visible && RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                        _rootRect, screenPosition, null, out Vector2 localPoint))
+                    nameplate.Model.SetDisplay(displayName, localPoint, true, aboveAnchor: true);
+                else
+                    nameplate.Model.SetVisible(false);
+            }
+
+            _staleNameplates.Clear();
+            foreach (KeyValuePair<Entity, PlayerNameplate> pair in _playerNameplates)
+                if (!pair.Value.Seen)
+                    _staleNameplates.Add(pair.Key);
+            foreach (Entity player in _staleNameplates)
+            {
+                ReleaseNameplate(_playerNameplates[player]);
+                _playerNameplates.Remove(player);
+            }
+        }
+
+        private void ReleasePlayerNameplates()
+        {
+            foreach (PlayerNameplate nameplate in _playerNameplates.Values)
+                ReleaseNameplate(nameplate);
+            _playerNameplates.Clear();
+            _staleNameplates.Clear();
+            if (_nameplateWorld != null && _nameplateWorld.IsCreated)
+                _nameplateQuery.Dispose();
+            _nameplateWorld = null;
+            _nameplateQuery = default;
+        }
+
+        private static void ReleaseNameplate(PlayerNameplate nameplate)
+        {
+            nameplate.Model.SetVisible(false);
+            UIComponent.Instance.ReleaseUI(nameplate.View);
+        }
+
+        private sealed class PlayerNameplate
+        {
+            public InteractionPromptUI View;
+            public InteractionPromptUIModel Model;
+            public bool Seen;
+            public bool HasHeadAnchor;
+            public float LocalHeadHeight;
+        }
+
+        private static Vector3 ResolveNameplateAnchor(PlayerNameplate nameplate, SpriteRenderer renderer, LocalToWorld transform)
+        {
+            if (!nameplate.HasHeadAnchor && renderer != null && renderer.sprite != null)
+            {
+                // Player sprites use a tight mesh, which excludes the transparent frame padding.
+                // Keep the first visible head height throughout the animation to avoid label bobbing.
+                Vector2[] vertices = renderer.sprite.vertices;
+                float top = float.NegativeInfinity;
+                foreach (Vector2 vertex in vertices) top = Mathf.Max(top, vertex.y);
+                nameplate.LocalHeadHeight = vertices.Length > 0 ? top : PlayerFallbackHeadHeight;
+                nameplate.HasHeadAnchor = true;
+            }
+
+            float height = nameplate.HasHeadAnchor ? nameplate.LocalHeadHeight : PlayerFallbackHeadHeight;
+            return renderer != null
+                ? renderer.transform.TransformPoint(new Vector3(0, height, 0))
+                : math.transform(transform.Value, new float3(0, height, 0));
         }
 
         private bool ResolveFloatingRoot()

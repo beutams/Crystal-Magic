@@ -247,8 +247,10 @@ namespace CrystalMagic.Core
             }
 
             restoreRequested = true;
-            GameFlowComponent.Instance.BeginTransition(
-                CreateReturnToTownTransitionData(battleManager));
+            if (battleManager.HasPendingSettlement)
+                GameFlowComponent.Instance.SetState<DungeonSettlementState>(DungeonSettlementStateData.CreateOnline(battleManager));
+            else
+                GameFlowComponent.Instance.BeginTransition(CreateReturnToTownTransitionData(battleManager));
         }
 
         public override void OnExit()
@@ -350,8 +352,10 @@ namespace CrystalMagic.Core
                 return;
 
             restoreRequested = true;
-            GameFlowComponent.Instance.BeginTransition(
-                OnlineBattlePreparationState.CreateReturnToTownTransitionData(battleManager));
+            if (battleManager.HasPendingSettlement)
+                GameFlowComponent.Instance.SetState<DungeonSettlementState>(DungeonSettlementStateData.CreateOnline(battleManager));
+            else
+                GameFlowComponent.Instance.BeginTransition(OnlineBattlePreparationState.CreateReturnToTownTransitionData(battleManager));
         }
 
         protected override void OnExitBattle()

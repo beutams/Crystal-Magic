@@ -69,6 +69,8 @@ namespace Server
         public int monsterRegionId;
         public int monsterSquadId;
         public bool monsterIsBoss;
+        public int revengeSquadId;
+        public float revengeSquadSpeed;
         public bool hasTreasureData;
         public int treasureRegionId;
         public uint treasureRandomSeed;

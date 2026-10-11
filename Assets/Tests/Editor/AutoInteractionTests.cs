@@ -326,6 +326,40 @@ public sealed class AutoInteractionTests
         Assert.That(NPCSequenceUtility.AllowsInteraction(fixture.Manager, target), Is.True);
     }
 
+    [TestCase(false)]
+    [TestCase(true)]
+    public void NewGameTutorialChoiceControlsIntroAndTownInteractionRestrictions(bool skip)
+    {
+        using var fixture = new Fixture();
+        TownIntroTriggerUtility.InitializeNewGame(fixture.Variables, skip);
+        Assert.That(TownIntroTriggerUtility.IsPending(fixture.Save), Is.EqualTo(!skip));
+        fixture.Npc.NPC = "BulletinBoard";
+        Entity target = fixture.Target(InteractionKind.Npc);
+        Assert.That(NPCSequenceUtility.AllowsInteraction(fixture.Manager, target), Is.EqualTo(skip));
+        if (skip)
+            Assert.That(TownIntroTriggerUtility.TryCreate(fixture.Manager, fixture.Player), Is.EqualTo(Entity.Null));
+    }
+
+    [Test]
+    public void NewGameTutorialChoiceIsStoredPerSaveAndDoesNotChangeEarlierProgress()
+    {
+        var settings = new GameSettingsData();
+        var earlier = new SaveVariableData();
+        TownIntroTriggerUtility.InitializeNewGame(earlier, settings.SkipTutorial);
+        earlier.Set(NPCSequenceUtility.StageVariable, 3);
+        settings.SkipTutorial = true;
+        var next = new SaveVariableData();
+        next.Set("unrelated_progress", 7);
+        TownIntroTriggerUtility.InitializeNewGame(next, settings.SkipTutorial);
+        var restored = JsonUtility.FromJson<SaveVariableData>(JsonUtility.ToJson(next));
+        Assert.That(restored.Get(TownIntroTriggerUtility.CompletionVariable), Is.EqualTo(1));
+        Assert.That(restored.Get("unrelated_progress"), Is.EqualTo(7));
+        Assert.That(earlier.Get(TownIntroTriggerUtility.CompletionVariable), Is.Zero);
+        Assert.That(earlier.Get(NPCSequenceUtility.StageVariable), Is.EqualTo(3));
+        settings.SkipTutorial = false;
+        Assert.That(restored.Get(TownIntroTriggerUtility.CompletionVariable), Is.EqualTo(1));
+    }
+
     private sealed class ExitDuringTickRunner : NPCInteractionNodeRunner
     {
         private readonly StateScriptManagedCommandSystem _managed;

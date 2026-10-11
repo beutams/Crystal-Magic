@@ -174,7 +174,7 @@ namespace Server
                 if (active && connect.State == ConnectState.Connected) Invoke(OnRecv, connect);
             }
             if (!active || connect.State != ConnectState.Connected) return;
-            if (UsesHeartbeatTimeout && now - connect.LastReceiveTime >= ServerUtility.Timeout)
+            if (UsesHeartbeatTimeout && connect.HasHeartbeatTimedOut(now))
             {
                 Fail(peer, DisconnectReason.Timeout, "HeartbeatTimeout");
                 return;

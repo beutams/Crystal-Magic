@@ -12,6 +12,8 @@ public sealed class CharacterUI_SettingView : UISubView<CharacterUI_SettingData>
     public event Action<CharacterSettingsSection> SectionRequested;
     public event Action<CharacterSettingValue, float> ValueChanged;
     public event Action<GameLanguage> LanguageRequested;
+    public event Action DisplayModeRequested;
+    public event Action<int> ResolutionRequested;
     public event Action EditCompleted;
     public event Action SaveRequested;
     public event Action ReturnMainMenuRequested;
@@ -23,6 +25,11 @@ public sealed class CharacterUI_SettingView : UISubView<CharacterUI_SettingData>
         _initialized = true;
         UI.Navigation_Audio.ButtonPlus.onClick.AddListener(() => SectionRequested?.Invoke(CharacterSettingsSection.Audio));
         UI.Navigation_Language.ButtonPlus.onClick.AddListener(() => SectionRequested?.Invoke(CharacterSettingsSection.Language));
+        UI.Navigation_Display.ButtonPlus.onClick.AddListener(() => SectionRequested?.Invoke(CharacterSettingsSection.Display));
+        UI.Display_DisplayModePrevious.ButtonPlus.onClick.AddListener(() => DisplayModeRequested?.Invoke());
+        UI.Display_DisplayModeNext.ButtonPlus.onClick.AddListener(() => DisplayModeRequested?.Invoke());
+        UI.Display_ResolutionPrevious.ButtonPlus.onClick.AddListener(() => ResolutionRequested?.Invoke(-1));
+        UI.Display_ResolutionNext.ButtonPlus.onClick.AddListener(() => ResolutionRequested?.Invoke(1));
         UI.Navigation_Save.ButtonPlus.onClick.AddListener(() => SaveRequested?.Invoke());
         UI.Navigation_ReturnMainMenu.ButtonPlus.onClick.AddListener(() => ReturnMainMenuRequested?.Invoke());
         UI.Language_Chinese.ButtonPlus.onClick.AddListener(() => LanguageRequested?.Invoke(GameLanguage.ChineseSimplified));
@@ -41,11 +48,16 @@ public sealed class CharacterUI_SettingView : UISubView<CharacterUI_SettingData>
     {
         UI.Audio.GameObject.SetActive(section == CharacterSettingsSection.Audio);
         UI.Language.GameObject.SetActive(section == CharacterSettingsSection.Language);
+        UI.Display.GameObject.SetActive(section == CharacterSettingsSection.Display);
+        UI.Display_DisplayModeValue.TextMeshProUGUI.text = GameDisplaySettings.ModeLabel(settings);
+        UI.Display_ResolutionValue.TextMeshProUGUI.text = GameDisplaySettings.ResolutionLabel(settings);
         UI.Navigation_Audio_Label.TextMeshProUGUI.color = section == CharacterSettingsSection.Audio ? Selected : Idle;
         UI.Navigation_Language_Label.TextMeshProUGUI.color = section == CharacterSettingsSection.Language ? Selected : Idle;
+        UI.Navigation_Display_Label.TextMeshProUGUI.color = section == CharacterSettingsSection.Display ? Selected : Idle;
         ((LocalizedTextMeshProUGUI)UI.DetailTitle.TextMeshProUGUI).LocalizationKey = section switch
         {
             CharacterSettingsSection.Audio => "ui.character.settings.audio",
+            CharacterSettingsSection.Display => "ui.settings.display",
             _ => "ui.settings.language",
         };
         UI.Language_Chinese_Label.TextMeshProUGUI.color = settings.Language == GameLanguage.ChineseSimplified ? Selected : Idle;

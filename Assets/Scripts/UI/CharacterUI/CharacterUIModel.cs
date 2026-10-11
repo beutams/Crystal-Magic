@@ -3,7 +3,7 @@ using CrystalMagic.Game.Skill;
 namespace CrystalMagic.UI
 {
     public enum CharacterPage { Equip, Skill, Handbook, Setting }
-    public enum CharacterSettingsSection { Audio, Language }
+    public enum CharacterSettingsSection { Audio, Language, Display }
     public enum CharacterSettingValue { MasterVolume, BgmVolume, SfxVolume }
 
     public sealed class CharacterUIModel : UIModelBase
@@ -34,7 +34,7 @@ namespace CrystalMagic.UI
 
         public void SelectSettingsSection(CharacterSettingsSection section)
         {
-            if (section < CharacterSettingsSection.Audio || section > CharacterSettingsSection.Language || SelectedSettingsSection == section)
+            if (section < CharacterSettingsSection.Audio || section > CharacterSettingsSection.Display || SelectedSettingsSection == section)
                 return;
             SelectedSettingsSection = section;
             PublishSettingsChanged();

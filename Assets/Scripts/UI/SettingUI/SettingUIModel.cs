@@ -15,6 +15,23 @@ namespace CrystalMagic.UI
         public float BgmVolume => _settings.BgmVolume;
         public float SfxVolume => _settings.SfxVolume;
         public string LanguageDisplayName => _settings.Language == GameLanguage.English ? "English" : "简体中文";
+        public string DisplayModeName => GameDisplaySettings.ModeLabel(_settings);
+        public string ResolutionName => GameDisplaySettings.ResolutionLabel(_settings);
+        public string SkipTutorialButtonText => _settings.Language == GameLanguage.English
+            ? "Skip tutorial: " + (_settings.SkipTutorial ? "On" : "Off")
+            : "跳过新手教程：" + (_settings.SkipTutorial ? "开" : "关");
+
+        public void ToggleFullscreen()
+        {
+            GameSettingsComponent.Instance.ToggleFullscreen();
+            ReloadFromSettings();
+        }
+
+        public void ShiftResolution(int offset)
+        {
+            GameSettingsComponent.Instance.ShiftResolution(offset);
+            ReloadFromSettings();
+        }
 
         public void ReloadFromSettings()
         {
@@ -58,6 +75,8 @@ namespace CrystalMagic.UI
             _settings.BgmVolume = defaults.BgmVolume;
             _settings.SfxVolume = defaults.SfxVolume;
             _settings.Language = defaults.Language;
+            _settings.SkipTutorial = defaults.SkipTutorial;
+            GameSettingsComponent.SetDefaultDisplay(_settings);
             ApplyPreview();
         }
 

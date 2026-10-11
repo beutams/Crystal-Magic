@@ -77,7 +77,7 @@ namespace CrystalMagic.UI
             LocalToWorld transform = manager.GetComponentData<LocalToWorld>(Model.Anchor);
             SpriteRenderer renderer = manager.HasComponent<SpriteRenderer>(Model.Anchor)
                 ? manager.GetComponentObject<SpriteRenderer>(Model.Anchor) : null;
-            Vector3 anchor = InteractionPromptManager.ResolveAnchor(renderer, transform, Model.WorldYOffset);
+            Vector3 anchor = ResolveAnchor(renderer, transform, Model.WorldYOffset);
             Vector3 screen = camera.WorldToScreenPoint(anchor);
             RectTransform root = (RectTransform)View.transform;
             Canvas canvas = View.Canvas.rootCanvas;
@@ -87,6 +87,15 @@ namespace CrystalMagic.UI
                 Model.SetAnchor(point, true);
             else
                 Model.SetAnchor(Model.Position, false);
+        }
+
+        internal static Vector3 ResolveAnchor(SpriteRenderer renderer, LocalToWorld transform, float worldYOffset)
+        {
+            // Dialogue offsets are world units, unlike scale-relative interaction labels.
+            // Player sprites use scale 6: multiplying again puts a 1.35 offset 8.1 units above them.
+            // Prefer the presented position so client interpolation and the bubble stay together.
+            Vector3 position = renderer != null ? renderer.transform.position : (Vector3)transform.Position;
+            return position + Vector3.up * worldYOffset;
         }
     }
 }

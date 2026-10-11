@@ -584,7 +584,7 @@ public partial class StateScriptManagedCommandSystem : SystemBase
                     GameRuntimeStateUtility.TryGetPlayerCharacterData(EntityManager, transaction.Actor, out CharacterData characterData))
                 {
                     characterData.Money = System.Math.Max(0L, characterData.Money + amount);
-                    DungeonSettlementUtility.RecordMoneyAcquired(EntityManager, amount);
+                    DungeonSettlementUtility.RecordMoneyAcquired(EntityManager, amount, transaction.Actor);
                     PlayerCharacterUtility.MarkChanged(EntityManager, transaction.Actor);
                     resultCode = InteractionResultCode.Success;
                     PublishPickupFeedback(transaction.Actor, PickupFeedbackType.Money, -1, amount);
@@ -618,7 +618,7 @@ public partial class StateScriptManagedCommandSystem : SystemBase
                     PlayerCharacterUtility.MarkChanged(EntityManager, transaction.Actor);
                     resultCode = InteractionResultCode.Success;
                     PublishPickupFeedback(transaction.Actor, PickupFeedbackType.Item, data.DataId, amount);
-                    DungeonSettlementUtility.RecordItemAcquired(EntityManager, data.DataId, amount);
+                    DungeonSettlementUtility.RecordItemAcquired(EntityManager, data.DataId, amount, transaction.Actor);
                 }
                 else
                 {
@@ -1083,14 +1083,15 @@ public partial class StateScriptManagedCommandSystem : SystemBase
         int spawnedCount = 0;
         for (int index = 0; index < count; index++)
         {
-            if (!TryReadSpawnEntry(spawner, listKey, index, out StateScriptSpawnBatch.Entry entry))
+            if (!TryReadSpawnEntry(spawner, listKey, index, in node, out StateScriptSpawnBatch.Entry entry))
                 continue;
             if (TrySpawn(spawner, entry.UnitName, entry.Position, in node, entry.Info, entry.HasInfo)) spawnedCount++;
         }
         return spawnedCount;
     }
 
-    private bool TryReadSpawnEntry(Entity spawner, string listKey, int index, out StateScriptSpawnBatch.Entry entry)
+    private bool TryReadSpawnEntry(Entity spawner, string listKey, int index, in StateScriptNodeDefinition node,
+        out StateScriptSpawnBatch.Entry entry)
     {
         entry = default;
         string entryKey = $"{listKey}.{index}";
@@ -1107,6 +1108,19 @@ public partial class StateScriptManagedCommandSystem : SystemBase
             TryGetInt(spawner, $"{entryKey}.monsterRegionId", out entry.Info.monsterRegionId);
             TryGetInt(spawner, $"{entryKey}.monsterSquadId", out entry.Info.monsterSquadId);
             TryGetBool(spawner, $"{entryKey}.monsterIsBoss", out entry.Info.monsterIsBoss);
+        }
+        // Capture the wave at queue creation: delayed spawns must retain their original squad.
+        if (node.Key == (FixedString128Bytes)"dungeon.revenge.member")
+        {
+            entry.Info ??= new NetworkEntitySpawnInfo();
+            entry.HasInfo = true;
+            TryGetInt(spawner, "dungeon.revenge.wave", out int wave);
+            entry.Info.revengeSquadId = math.max(1, wave + 1);
+            entry.Info.revengeSquadSpeed = 3f;
+            if (UnitVariableSource.TryGetValue(EntityManager, spawner, "dungeon.revenge.origin.0", out UnitSourceValue value) &&
+                value.TryGetEntity(out Entity origin) && EntityManager.Exists(origin) &&
+                EntityManager.HasComponent<DungeonInterestPointComponent>(origin))
+                entry.Info.revengeSquadSpeed = EntityManager.GetComponentData<DungeonInterestPointComponent>(origin).PatrolSpeed;
         }
         return true;
     }
@@ -1126,7 +1140,7 @@ public partial class StateScriptManagedCommandSystem : SystemBase
         string listKey = node.Text.ToString();
         if (TryGetInt(spawner, listKey + ".count", out int count))
             for (int i = 0; i < count; i++)
-                if (TryReadSpawnEntry(spawner, listKey, i, out StateScriptSpawnBatch.Entry entry))
+                if (TryReadSpawnEntry(spawner, listKey, i, in node, out StateScriptSpawnBatch.Entry entry))
                     entries.Add(entry);
 
         StateScriptSpawnBatch batch = new(entries, in node);
@@ -1201,6 +1215,8 @@ public partial class StateScriptManagedCommandSystem : SystemBase
             info.monsterRegionId = additionalInfo.monsterRegionId;
             info.monsterSquadId = additionalInfo.monsterSquadId;
             info.monsterIsBoss = additionalInfo.monsterIsBoss;
+            info.revengeSquadId = additionalInfo.revengeSquadId;
+            info.revengeSquadSpeed = additionalInfo.revengeSquadSpeed;
         }
         if (node.IntParameters.y != 0 && EntityManager.HasComponent<UnitFactionComponent>(spawner))
         {

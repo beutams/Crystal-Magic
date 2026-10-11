@@ -35,6 +35,19 @@ namespace CrystalMagic.Core
             var bounds = new Bounds(new Vector3(grid.WorldOrigin.x + grid.Width * grid.CellSize * 0.5f,
                 grid.WorldOrigin.y + grid.Height * grid.CellSize * 0.5f, 0),
                 new Vector3(grid.Width * grid.CellSize, grid.Height * grid.CellSize, 0));
+            // Presentation may extend beyond the playable grid. Use only an
+            // explicitly authored, opaque backdrop, not obstacle/roof bounds.
+            SpriteRenderer backdrop = map.CameraBackdrop;
+            if (backdrop != null && backdrop.enabled && backdrop.gameObject.activeInHierarchy)
+            {
+                Bounds visual = backdrop.bounds;
+                if (!backdrop.transform.IsChildOf(root.transform) || backdrop.sprite == null ||
+                    visual.min.x > bounds.min.x || visual.min.y > bounds.min.y ||
+                    visual.max.x < bounds.max.x || visual.max.y < bounds.max.y)
+                    throw new System.InvalidOperationException("Camera backdrop must belong to and cover the entire map.");
+                bounds.SetMinMax(new Vector3(visual.min.x, visual.min.y, 0),
+                    new Vector3(visual.max.x, visual.max.y, 0));
+            }
             float minZ = 0, maxZ = 0;
             foreach (Renderer renderer in root.GetComponentsInChildren<Renderer>())
             {

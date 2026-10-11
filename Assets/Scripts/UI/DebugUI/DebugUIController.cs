@@ -27,6 +27,14 @@ namespace CrystalMagic.UI
         protected override void OnOpen()
         {
             View.BindModel(Model);
+            Model.SetLocalAccountId(SteamComponent.Instance.LaunchConfig.accountId.ToString(System.Globalization.CultureInfo.InvariantCulture));
+            RefreshAccountInfo();
+            Bindings.Bind(() => View.LocalAccountIdChanged += Model.SetLocalAccountId,
+                () => View.LocalAccountIdChanged -= Model.SetLocalAccountId);
+            Bindings.Bind(() => View.AccountSwitchRequested += HandleAccountSwitch,
+                () => View.AccountSwitchRequested -= HandleAccountSwitch);
+            Bindings.Bind(() => View.AccountReturnMenuRequested += HandleAccountReturnMenu,
+                () => View.AccountReturnMenuRequested -= HandleAccountReturnMenu);
             Bindings.Bind(
                 () => View.ContentToggleRequested += HandleContentToggleRequested,
                 () => View.ContentToggleRequested -= HandleContentToggleRequested);
@@ -91,8 +99,83 @@ namespace CrystalMagic.UI
             {
                 _nextMonsterCountRefresh = UnityEngine.Time.unscaledTime + 0.5f;
                 RefreshMonsterCounts();
+                RefreshAccountInfo();
             }
             Model.RefreshRuntime();
+        }
+
+        private bool HasAccountBattleContext()
+        {
+            NetworkComponent network = NetworkComponent.Instance;
+            return network.Role != NetworkRole.Client || network.clientBattleManager.HasPreBattleSnapshot ||
+                network.clientBattleManager.HasPendingSettlement || network.clientBattleManager.battleConnect != null ||
+                network.battleHostManager.IsHosting || network.clientLobbyManager.BattleControlActive;
+        }
+
+        private void RefreshAccountInfo()
+        {
+            if (!ClientAccountPolicy.DevelopmentAccountsAllowed) return;
+            SteamComponent steam = SteamComponent.Instance;
+            ClientAccountIdentity account = steam.Account;
+            bool ready = !TransitionComponent.Instance.IsTransitioning && !HasAccountBattleContext();
+            GameState state = GameFlowComponent.Instance.GetCurrentState();
+            string mode = account.IsLocalTestAccount ? "本地测试 / Socket" : "Steam / Steam P2P";
+            string identity = account.IsValid ? $"{account.Name}  (ID: {account.AccountId})" : "身份不可用，请检查 Steam 登录";
+            string hint = HasAccountBattleContext() ? "联机战斗/恢复处理中：请先结算回城。" :
+                state is MainMenuState ? "可切换。完成后需重新选择该账号的存档。" :
+                state is TownState || state is TrainingState ? "先保存并返回主菜单，再选择账号。" : "请先正常结束地牢并返回城镇。";
+            Model.SetAccountInfo($"当前：{mode}\n账号：{identity}\n大厅：{steam.LaunchConfig.lobbyAddress}:{steam.LaunchConfig.lobbyPort}\n{hint}",
+                ready && state is MainMenuState, ready && (state is TownState || state is TrainingState));
+        }
+
+        private void HandleAccountSwitch(bool local)
+        {
+            RefreshAccountInfo();
+            if (!Model.CanSwitchAccount) return;
+            try
+            {
+                if (!SteamComponent.Instance.TrySwitchDebugAccount(local, Model.LocalAccountIdText, out string error))
+                    Model.SetAccountStatus(error);
+                else
+                {
+                    // A slot list opened before switching belongs to the old account.
+                    UIComponent.Instance.CloseUI<LoadUI>();
+                    UIComponent.Instance.CloseUI<SaveUI>();
+                    Model.SetAccountStatus("切换成功，已断开旧连接并清空旧存档选择。\n请新建/加载此账号的存档再进大厅；多开测试请使用不同编号。\n已记住选择；启动命令行参数优先。");
+                }
+            }
+            catch (System.Exception exception)
+            {
+                UnityEngine.Debug.LogException(exception);
+                Model.SetAccountStatus("账号切换未完成：" + exception.Message);
+            }
+            RefreshAccountInfo();
+        }
+
+        private void HandleAccountReturnMenu()
+        {
+            RefreshAccountInfo();
+            if (!Model.CanReturnForAccount) return;
+            UIComponent.Instance.OpenChild<ConfirmUI>(View, new ConfirmUIOpenData("切换账号",
+                "保存当前进度并返回主菜单？\n返回后再选择测试账号或 Steam。", () =>
+                {
+                    RefreshAccountInfo();
+                    if (!Model.CanReturnForAccount) return;
+                    if (SaveDataComponent.Instance.CurrentSaveIndex >= 0 && !SaveDataComponent.Instance.Save())
+                    {
+                        Model.SetAccountStatus("保存失败，已取消返回；当前账号未变。请检查 Console。");
+                        return;
+                    }
+                    Model.SetAccountStatus("正在返回主菜单，账号尚未切换。");
+                    GameFlowComponent.Instance.BeginTransition(new TransitionData
+                    {
+                        TargetSceneName = "MainMenu", TargetStateType = typeof(MainMenuState),
+                        TransitionUIName = "TransitionUI", KeepCurrentMainScene = true,
+                        ActiveSubSceneNames = System.Array.Empty<string>(),
+                        OnLoadFailed = message => Model.SetAccountStatus("返回失败，账号未变：" + message),
+                        OnComplete = () => { Model.SetAccountStatus("已回到主菜单，请选择测试账号或 Steam。原账号存档不受影响。"); RefreshAccountInfo(); },
+                    });
+                }));
         }
 
         private void RefreshMonsterCounts()

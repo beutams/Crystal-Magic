@@ -13,6 +13,7 @@ public partial class SpriteEffectAnimationSystem : SystemBase
     private const string FrameLibraryPath = "Assets/Res/Data/UnitAnimationFrameLibrary.asset";
 
     private readonly List<Entity> _pendingDestroy = new();
+    private readonly HashSet<string> _missingTracks = new();
     private UnitAnimationFrameLibrary _frameLibrary;
 
     protected override void OnUpdate()
@@ -79,9 +80,16 @@ public partial class SpriteEffectAnimationSystem : SystemBase
                 return;
         }
 
-        UnitAnimationFrameTrack track = _frameLibrary.Find(animation.CurrentClip);
+        UnitAnimationFrameTrack track = string.IsNullOrEmpty(animation.CurrentClipPath)
+            ? _frameLibrary.Find(animation.CurrentClip)
+            : _frameLibrary.Find(animation.CurrentClipPath);
         if (track == null)
         {
+            string clipKey = !string.IsNullOrEmpty(animation.CurrentClipPath)
+                ? animation.CurrentClipPath
+                : animation.CurrentClip != null ? animation.CurrentClip.name : "<unassigned>";
+            if (_missingTracks.Add(clipKey))
+                Debug.LogError($"[SpriteEffectAnimation] Missing frame track: {clipKey}");
             QueueDestroy(entity, pendingDestroy);
             return;
         }
@@ -108,13 +116,13 @@ public partial class SpriteEffectAnimationSystem : SystemBase
 
         if (animation.EnterClip != null)
         {
-            BeginPhase(animation, SpriteEffectAnimationPhase.Enter, animation.EnterClip);
+            BeginPhase(animation, SpriteEffectAnimationPhase.Enter, animation.EnterClip, animation.EnterClipPath);
             return true;
         }
 
         if (animation.LoopClip != null && animation.EndRequested == 0)
         {
-            BeginPhase(animation, SpriteEffectAnimationPhase.Loop, animation.LoopClip);
+            BeginPhase(animation, SpriteEffectAnimationPhase.Loop, animation.LoopClip, animation.LoopClipPath);
             return true;
         }
 
@@ -129,7 +137,7 @@ public partial class SpriteEffectAnimationSystem : SystemBase
         if (animation.Phase == SpriteEffectAnimationPhase.Enter &&
             animation.LoopClip != null && animation.EndRequested == 0)
         {
-            BeginPhase(animation, SpriteEffectAnimationPhase.Loop, animation.LoopClip);
+            BeginPhase(animation, SpriteEffectAnimationPhase.Loop, animation.LoopClip, animation.LoopClipPath);
             return;
         }
 
@@ -143,7 +151,7 @@ public partial class SpriteEffectAnimationSystem : SystemBase
     {
         if (animation.Phase != SpriteEffectAnimationPhase.Exit && animation.ExitClip != null)
         {
-            BeginPhase(animation, SpriteEffectAnimationPhase.Exit, animation.ExitClip);
+            BeginPhase(animation, SpriteEffectAnimationPhase.Exit, animation.ExitClip, animation.ExitClipPath);
             return true;
         }
 
@@ -154,10 +162,12 @@ public partial class SpriteEffectAnimationSystem : SystemBase
     private static void BeginPhase(
         SpriteEffectAnimationComponent animation,
         SpriteEffectAnimationPhase phase,
-        AnimationClip clip)
+        AnimationClip clip,
+        string clipPath)
     {
         animation.Phase = phase;
         animation.CurrentClip = clip;
+        animation.CurrentClipPath = clipPath;
         animation.CurrentAnimationName = new Unity.Collections.FixedString64Bytes(clip.name);
         animation.PhaseElapsedSeconds = 0f;
         animation.CurrentSampleTime = 0f;

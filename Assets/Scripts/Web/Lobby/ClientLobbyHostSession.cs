@@ -32,6 +32,7 @@ namespace Server
                 return;
             B2L_StartRoomResult result;
             pendingHostSessionId = start.connection?.sessionId;
+            connect.BeginHeartbeatGrace(ServerUtility.HostStartTimeout);
             try
             {
                 if (!NetworkComponent.Instance.clientBattleManager.PrepareForOnlineBattle(out string error))

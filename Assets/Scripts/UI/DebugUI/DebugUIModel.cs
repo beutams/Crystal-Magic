@@ -15,6 +15,7 @@ namespace CrystalMagic.UI
         TrainingGround,
         UnitSpawner,
         UnitInspector,
+        Account,
     }
 
     public readonly struct DebugPageDefinition
@@ -39,8 +40,10 @@ namespace CrystalMagic.UI
         private static readonly DebugPageDefinition TrainingGroundPage = new(DebugPage.TrainingGround, "Training Ground");
         private static readonly DebugPageDefinition UnitSpawnerPage = new(DebugPage.UnitSpawner, "Unit Spawner");
         private static readonly DebugPageDefinition UnitInspectorPage = new(DebugPage.UnitInspector, "Unit Inspector");
+        private static readonly DebugPageDefinition AccountPage = new(DebugPage.Account, "账号与联机");
 
-        private readonly List<DebugPageDefinition> _pages = new() { PlayerAttributesPage };
+        private readonly List<DebugPageDefinition> _pages = ClientAccountPolicy.DevelopmentAccountsAllowed
+            ? new() { PlayerAttributesPage, AccountPage } : new() { PlayerAttributesPage };
         private readonly List<string> _spawnableUnitNames = new();
         private readonly List<UnitDebugUnitEntry> _inspectorUnits = new();
         private readonly List<UnitDebugComponentEntry> _inspectorComponents = new();
@@ -71,6 +74,33 @@ namespace CrystalMagic.UI
         public string MonsterCountsText { get; private set; } = string.Empty;
         public bool HasMonsterCounts => !string.IsNullOrEmpty(MonsterCountsText);
         public bool HasMonsterDiagnostics { get; private set; }
+        public string AccountInfoText { get; private set; } = string.Empty;
+        public string AccountStatusText { get; private set; } = "主菜单切换；本地账号用 Socket，Steam 账号可用 Steam P2P。\n首次切换请新建或加载该账号自己的存档，再进入大厅。";
+        public string LocalAccountIdText { get; private set; } = "1";
+        public bool CanSwitchAccount { get; private set; }
+        public bool CanReturnForAccount { get; private set; }
+
+        public void SetAccountInfo(string text, bool canSwitch, bool canReturn)
+        {
+            if (AccountInfoText == text && CanSwitchAccount == canSwitch && CanReturnForAccount == canReturn) return;
+            AccountInfoText = text;
+            CanSwitchAccount = canSwitch;
+            CanReturnForAccount = canReturn;
+            PublishChanged();
+        }
+
+        public void SetLocalAccountId(string value)
+        {
+            if (LocalAccountIdText == value) return;
+            LocalAccountIdText = value;
+            PublishChanged();
+        }
+
+        public void SetAccountStatus(string text)
+        {
+            AccountStatusText = text;
+            PublishChanged();
+        }
 
         public string SelectedSpawnUnitName => _selectedSpawnUnitIndex >= 0 && _selectedSpawnUnitIndex < _spawnableUnitNames.Count
             ? _spawnableUnitNames[_selectedSpawnUnitIndex]
@@ -468,6 +498,7 @@ namespace CrystalMagic.UI
             _isTrainingGroundActive = isTrainingGroundActive;
             _pages.Clear();
             _pages.Add(PlayerAttributesPage);
+            if (ClientAccountPolicy.DevelopmentAccountsAllowed) _pages.Add(AccountPage);
             if (_isTrainingGroundActive)
             {
                 _pages.Add(TrainingGroundPage);

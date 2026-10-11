@@ -1,5 +1,6 @@
 using CrystalMagic.Core;
 using System;
+using System.Collections.Generic;
 
 namespace Server
 {
@@ -19,6 +20,9 @@ namespace Server
         public uint sceneVersion;
         public BattleSettlementOutcome outcome;
         public CharacterData characterData;
+        public List<InventoryItemData> acquiredItems;
+        public long acquiredMoney;
+        public int reachedFloor;
     }
 
     [Message(Opcode = 57), Serializable]

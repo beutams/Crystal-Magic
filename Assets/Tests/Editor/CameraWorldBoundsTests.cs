@@ -105,16 +105,16 @@ public sealed class CameraWorldBoundsTests
         Assert.That(camera.fieldOfView, Is.EqualTo(70));
     }
 
-    [TestCase("Assets/Res/Tile/OcclusionMaps/TownMap/TownMap_Occlusion.prefab", 90, 60)]
-    [TestCase("Assets/Res/Tile/OcclusionMaps/TrainingMap/TrainingMap_Occlusion.prefab", 15, 15)]
-    public void RealMapsUseCollisionExtentAndVisibleLayerDepth(string path, int width, int height)
+    [TestCase("Assets/Res/Tile/OcclusionMaps/TownMap/TownMap_Occlusion.prefab", 90, 60, 0)]
+    [TestCase("Assets/Res/Tile/OcclusionMaps/TrainingMap/TrainingMap_Occlusion.prefab", 15, 15, 4)]
+    public void RealMapsUseAuthoredBackdropOrCollisionExtentAndVisibleLayerDepth(string path, int width, int height, int padding)
     {
         var map = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(path), _scene);
         Bounds bounds = SceneMapLayout.GetCameraWorldBounds(map);
-        Assert.That(bounds.min.x, Is.EqualTo(0));
-        Assert.That(bounds.min.y, Is.EqualTo(-height));
-        Assert.That(bounds.max.x, Is.EqualTo(width));
-        Assert.That(bounds.max.y, Is.EqualTo(0));
+        Assert.That(bounds.min.x, Is.EqualTo(-padding));
+        Assert.That(bounds.min.y, Is.EqualTo(-height - padding));
+        Assert.That(bounds.max.x, Is.EqualTo(width + padding));
+        Assert.That(bounds.max.y, Is.EqualTo(padding));
         foreach (Renderer renderer in map.GetComponentsInChildren<Renderer>())
             if (renderer.enabled)
             {
@@ -124,6 +124,49 @@ public sealed class CameraWorldBoundsTests
         _constraint.Set(map.GetInstanceID(), bounds);
         _constraint.Apply(_camera);
         AssertViewportInside(_camera, bounds);
+    }
+
+    [TestCase(false, 16f / 9f)]
+    [TestCase(false, 32f / 9f)]
+    [TestCase(true, 16f / 9f)]
+    [TestCase(true, 9f / 16f)]
+    public void TrainingBackdropWidensViewAndReleaseRestoresLens(bool orthographic, float aspect)
+    {
+        var root = (GameObject)PrefabUtility.InstantiatePrefab(
+            AssetDatabase.LoadAssetAtPath<GameObject>(SceneMapLayout.Training.PrefabPath), _scene);
+        var map = root.GetComponent<CrystalMagic.Game.Map.TileOcclusionMap>();
+        _camera.orthographic = orthographic;
+        _camera.aspect = aspect;
+        map.CameraBackdrop.enabled = false;
+        Bounds original = SceneMapLayout.GetCameraWorldBounds(root);
+        _constraint.Set(1, original);
+        _constraint.Apply(_camera);
+        float oldLens = orthographic ? _camera.orthographicSize : _camera.fieldOfView;
+        map.CameraBackdrop.enabled = true;
+        Bounds expanded = SceneMapLayout.GetCameraWorldBounds(root);
+        _constraint.Set(2, expanded);
+        foreach (Vector2 corner in new[] { new Vector2(-100, -100), new Vector2(100, -100), new Vector2(-100, 100), new Vector2(100, 100) })
+        {
+            _camera.transform.position = new Vector3(corner.x, corner.y, -15);
+            _constraint.Apply(_camera);
+            Assert.That(orthographic ? _camera.orthographicSize : _camera.fieldOfView, Is.GreaterThan(oldLens));
+            AssertViewportInside(_camera, expanded);
+        }
+        _constraint.Clear(1); // Old map cleanup cannot remove the expanded map's owner.
+        _constraint.Apply(_camera);
+        AssertViewportInside(_camera, expanded);
+        _constraint.Clear(2);
+        Assert.That(_camera.fieldOfView, Is.EqualTo(60));
+        Assert.That(_camera.orthographicSize, Is.EqualTo(10));
+    }
+
+    [Test]
+    public void InvalidBackdropCannotExposeMissingGround()
+    {
+        var root = (GameObject)PrefabUtility.InstantiatePrefab(
+            AssetDatabase.LoadAssetAtPath<GameObject>(SceneMapLayout.Training.PrefabPath), _scene);
+        root.GetComponent<CrystalMagic.Game.Map.TileOcclusionMap>().CameraBackdrop.size = Vector2.one;
+        Assert.Throws<System.InvalidOperationException>(() => SceneMapLayout.GetCameraWorldBounds(root));
     }
 
     private static void AssertViewportInside(Camera camera, Bounds bounds)

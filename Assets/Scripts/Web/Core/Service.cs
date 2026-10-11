@@ -11,6 +11,8 @@ namespace Server
     {
         protected long startTime;
         protected byte[] cache = new byte[8192];
+        private const int MaxReceiveReadsPerUpdate = 64;
+        private const int MaxReceiveMessagesPerUpdate = 128;
         protected Dictionary<Guid,TCPPair> connects = new Dictionary<Guid, TCPPair>();
         protected Dictionary<Guid, DisconnectInfo> pendingDisconnects = new Dictionary<Guid, DisconnectInfo>();
         protected HashSet<Guid> closeAfterSendList = new HashSet<Guid>();
@@ -202,29 +204,34 @@ namespace Server
 
                 try
                 {
-                    if (!socket.Poll(0, SelectMode.SelectRead))
-                        continue;
-
-                    int count = socket.Receive(cache);
-#if UNITY_EDITOR && NETWORK_TRACE
-                    Debug.Log($"[TCP][Recv] Received {count} raw bytes from {pair.Value.IPEndPoint}, Connect={id}");
-#endif
-                    if (count == 0)
-                    {
-                        MarkDisconnected(id, DisconnectReason.RemoteClosed, "Receive");
-                        continue;
-                    }
-
-                    readStream.Position = readStream.Length;
-                    readStream.Write(cache, 0, count);
-                    while (connect.State == ConnectState.Connected)
+                    int reads = 0;
+                    int messages = 0;
+                    // Drain available bytes instead of limiting battle traffic to one 8 KB read per frame.
+                    // Budgets keep one busy peer from monopolizing the Unity main thread.
+                    while (connect.State == ConnectState.Connected && messages < MaxReceiveMessagesPerUpdate)
                     {
                         PacketReadResult packetResult = TCPPacketCode.TryUnPack(
                             readStream,
                             out byte[] packet,
                             out string packetError);
                         if (packetResult == PacketReadResult.NeedMoreData)
-                            break;
+                        {
+                            if (reads >= MaxReceiveReadsPerUpdate || !socket.Poll(0, SelectMode.SelectRead))
+                                break;
+                            int count = socket.Receive(cache);
+                            reads++;
+#if UNITY_EDITOR && NETWORK_TRACE
+                            Debug.Log($"[TCP][Recv] Received {count} raw bytes from {pair.Value.IPEndPoint}, Connect={id}");
+#endif
+                            if (count == 0)
+                            {
+                                MarkDisconnected(id, DisconnectReason.RemoteClosed, "Receive");
+                                break;
+                            }
+                            readStream.Position = readStream.Length;
+                            readStream.Write(cache, 0, count);
+                            continue;
+                        }
                         if (packetResult == PacketReadResult.Invalid)
                         {
                             MarkDisconnected(id, DisconnectReason.InvalidPacket, "Unpack", detail: packetError);
@@ -242,6 +249,7 @@ namespace Server
                             break;
                         }
 
+                        messages++;
 #if UNITY_EDITOR && NETWORK_TRACE
                         Debug.Log($"[TCP][Recv] Message={packet.Length} bytes, Connect={id}");
 #endif
@@ -333,13 +341,14 @@ namespace Server
                     continue;
                 }
 
-                if(NetworkTimer.Instance.TimeNow - connect.LastReceiveTime > ServerUtility.Timeout)
+                long now = NetworkTimer.Instance.TimeNow;
+                if (connect.HasHeartbeatTimedOut(now))
                 {
                     MarkDisconnected(
                         guid,
                         DisconnectReason.Timeout,
                         "Timeout",
-                        detail: $"LastReceive={connect.LastReceiveTime}ms");
+                        detail: $"Silence={now - connect.LastReceiveTime}ms, HeartbeatTimeout={ServerUtility.Timeout}ms");
                 }
             }
         }

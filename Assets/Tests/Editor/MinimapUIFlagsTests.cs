@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using CrystalMagic.Game.OpenField;
+using CrystalMagic.Core;
+using Server;
 using CrystalMagic.UI;
 using NUnit.Framework;
 using Unity.Entities;
@@ -51,8 +53,11 @@ public sealed class MinimapUIFlagsTests
         Assert.That(prefab.GetComponentsInChildren<Graphic>(true).Any(g => g.raycastTarget), Is.False);
     }
 
-    [Test]
-    public void FlagStaysFixedSizeAndSwitchesBackToCyanWhenReused()
+    [TestCase(OpenFieldInterestSize.Small, 111, 158, 185)]
+    [TestCase(OpenFieldInterestSize.Medium, 199, 164, 93)]
+    [TestCase(OpenFieldInterestSize.Large, 189, 115, 103)]
+    public void FlagKeepsOriginalSpriteAndSizeAndRestoresSizeColorWhenReused(
+        OpenFieldInterestSize size, byte red, byte green, byte blue)
     {
         GameObject root = PrefabUtility.LoadPrefabContents(PrefabPath);
         try
@@ -62,21 +67,54 @@ public sealed class MinimapUIFlagsTests
             var view = data.InterestPointTemplate;
             var rect = (RectTransform)view.transform;
             Sprite flag = view.UI.Icon.Image.sprite;
-            view.Render(new Vector2(0.2f, 0.7f), false);
-            Color active = view.UI.Icon.Image.color;
+            Material material = view.UI.Icon.Image.material;
+            Color32 expected = new(red, green, blue, 255);
+            view.Render(new Vector2(0.2f, 0.7f), size, false);
+            Assert.That((Color32)view.UI.Icon.Image.color, Is.EqualTo(expected));
             Assert.That(rect.anchorMin, Is.EqualTo(rect.anchorMax));
             Assert.That(rect.anchorMin, Is.EqualTo(new Vector2(0.2f, 0.7f)));
             Assert.That(rect.anchoredPosition, Is.EqualTo(Vector2.zero));
             Assert.That(rect.sizeDelta, Is.EqualTo(new Vector2(32, 32)));
-            view.Render(new Vector2(0.8f, 0.1f), true);
-            Color gray = view.UI.Icon.Image.color;
-            Assert.That(gray.r, Is.EqualTo(gray.g).Within(0.00001f));
-            Assert.That(gray.g, Is.EqualTo(gray.b).Within(0.00001f));
-            Assert.That(gray, Is.Not.EqualTo(active));
+            view.Render(new Vector2(0.8f, 0.1f), size, true);
+            Assert.That((Color32)view.UI.Icon.Image.color, Is.EqualTo(new Color32(137, 137, 137, 255)));
             Assert.That(view.UI.Icon.Image.sprite, Is.SameAs(flag));
+            Assert.That(view.UI.Icon.Image.material, Is.SameAs(material));
             Assert.That(rect.sizeDelta, Is.EqualTo(new Vector2(32, 32)));
-            view.Render(Vector2.one * 0.5f, false);
-            Assert.That(view.UI.Icon.Image.color, Is.EqualTo(active));
+            view.Render(Vector2.one * 0.5f, size, false);
+            Assert.That((Color32)view.UI.Icon.Image.color, Is.EqualTo(expected));
+            view.Render(Vector2.one * 0.5f, OpenFieldInterestSize.Small, false);
+            Assert.That((Color32)view.UI.Icon.Image.color, Is.EqualTo(new Color32(111, 158, 185, 255)),
+                "A pooled flag must not retain the previous point's size color.");
+        }
+        finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
+    [TestCase(OpenFieldInterestSize.Small, 111, 158, 185)]
+    [TestCase(OpenFieldInterestSize.Medium, 199, 164, 93)]
+    [TestCase(OpenFieldInterestSize.Large, 189, 115, 103)]
+    public void MapRefreshPassesInterestPointSizeAndClearStateToFlag(
+        OpenFieldInterestSize size, byte red, byte green, byte blue)
+    {
+        using var f = new Fixture(size);
+        GameObject root = PrefabUtility.LoadPrefabContents(PrefabPath);
+        try
+        {
+            var map = root.GetComponent<MinimapUI>();
+            map.EnsureInitialized();
+            map.BindModel(f.Model);
+            var data = new MinimapUIData();
+            data.Bind(root.transform);
+            // Supply an existing view so EditMode can exercise refresh without the runtime pool.
+            SetField(map, "_renderedInterestPointLayout", f.Layout);
+            GetField<List<MinimapInterestPointView>>(map, "_interestPointViews").Add(data.InterestPointTemplate);
+            MethodInfo refresh = typeof(MinimapUI).GetMethod("RefreshView", PrivateInstance);
+            refresh.Invoke(map, null);
+            Assert.That((Color32)data.InterestPointTemplate.UI.Icon.Image.color,
+                Is.EqualTo(new Color32(red, green, blue, 255)));
+            GetField<HashSet<int>>(f.Model, "_clearedInterestPointIds").Add(1);
+            refresh.Invoke(map, null);
+            Assert.That((Color32)data.InterestPointTemplate.UI.Icon.Image.color,
+                Is.EqualTo(new Color32(137, 137, 137, 255)));
         }
         finally { PrefabUtility.UnloadPrefabContents(root); }
     }
@@ -85,7 +123,8 @@ public sealed class MinimapUIFlagsTests
     public void AuthoritativeClearStateChangesWithoutPlayerMovementAndResetsWithMap()
     {
         using var f = new Fixture();
-        Entity point = f.World.EntityManager.CreateEntity(typeof(DungeonInterestPointComponent));
+        Entity point = f.World.EntityManager.CreateEntity(
+            typeof(DungeonInterestPointComponent), typeof(UnitVariableComponent));
         f.World.EntityManager.SetComponentData(point, new DungeonInterestPointComponent
         {
             EncounterId = 1, EncounterReady = 0, AliveGuardCount = 0, PatrolUnitCount = 2
@@ -93,8 +132,8 @@ public sealed class MinimapUIFlagsTests
         f.World.EntityManager.AddBuffer<UnitVariableElement>(point);
         Assert.That(f.RefreshFlags(), Is.False, "An empty or unspawned point is not cleared.");
         Assert.That(f.Model.IsInterestPointCleared(1), Is.False);
-        UnitVariableSource.TrySetValue(f.World.EntityManager, point,
-            DungeonPatrolRuntimeUtility.EncounterDeadKey, UnitSourceValue.FromBool(true));
+        Assert.That(UnitVariableSource.TrySetValue(f.World.EntityManager, point,
+            DungeonPatrolRuntimeUtility.EncounterDeadKey, UnitSourceValue.FromBool(true)), Is.True);
         Assert.That(f.RefreshFlags(), Is.True, "A stationary player must still receive a view refresh.");
         Assert.That(f.Model.IsInterestPointCleared(1), Is.True, "Surviving patrols do not undo the completed encounter.");
         Assert.That(f.RefreshFlags(), Is.False, "The unchanged state must not keep publishing updates.");
@@ -152,6 +191,65 @@ public sealed class MinimapUIFlagsTests
 
     private static void SetField(object instance, string name, object value) =>
         instance.GetType().GetField(name, PrivateInstance).SetValue(instance, value);
+
+    [Test]
+    public void TeammateMarkersExcludeSelfButKeepGhostsAndRemoveDespawnedPlayers()
+    {
+        using var f = new Fixture();
+        EntityManager manager = f.World.EntityManager;
+        Entity CreatePlayer(ulong account, float x)
+        {
+            Entity player = manager.CreateEntity(typeof(LocalTransform), typeof(UnitFacingComponent));
+            manager.SetComponentData(player, LocalTransform.FromPosition(x, 2, 0));
+            manager.SetComponentData(player, new UnitFacingComponent { Direction = new float2(1, 0) });
+            manager.AddComponentObject(player, new PlayerCharacterComponent());
+            manager.AddComponentObject(player, new NetworkEntitySpawnInfoComponent { entityInfo = new NetworkEntitySpawnInfo { ownerAccountId = account } });
+            return player;
+        }
+        Entity self = CreatePlayer(1, 1), teammate = CreatePlayer(2, 2), ghost = CreatePlayer(3, 4);
+        manager.AddComponent<NetworkPlayerComponent>(self);
+        manager.AddComponent<BattleSpectatorComponent>(ghost);
+        SetField(f.Model, "_cachedPlayerEntity", self);
+        Assert.That(f.RefreshMarkers(), Is.True);
+        Assert.That(f.Model.Teammates.Count, Is.EqualTo(2));
+        Assert.That(f.Model.Teammates.Any(m => m.Id == self.Index), Is.False);
+        Assert.That(f.Model.Teammates.Any(m => m.Id == ghost.Index), Is.True);
+        Assert.That(f.Model.Teammates[0].RotationDegrees, Is.EqualTo(90));
+        manager.DestroyEntity(teammate);
+        f.RefreshMarkers();
+        Assert.That(f.Model.Teammates.Count, Is.EqualTo(1));
+        f.ReleaseMap();
+        Assert.That(f.Model.Teammates, Is.Empty);
+    }
+
+    [Test]
+    public void RevengeMapShowsOneCenterPerWaveAndUsesGlobalSnapshotForSleepingWaves()
+    {
+        using var f = new Fixture();
+        EntityManager manager = f.World.EntityManager;
+        Entity Member(int wave, float x)
+        {
+            Entity member = manager.CreateEntity(typeof(LocalTransform));
+            manager.SetComponentData(member, LocalTransform.FromPosition(x, 2, 0));
+            manager.AddComponentData(member, new DungeonRevengeSquadMember { SquadId = wave });
+            return member;
+        }
+        Member(1, 1);
+        Entity sleeping = Member(1, 3);
+        manager.SetEnabled(sleeping, false);
+        Member(2, 6);
+        f.RefreshMarkers();
+        Assert.That(f.Model.RevengeSquads.Count, Is.EqualTo(2));
+        Assert.That(f.Model.RevengeSquads[0].Position.x, Is.EqualTo(3f / 10).Within(0.0001));
+        Entity global = manager.CreateEntity();
+        DynamicBuffer<DungeonRevengeSquadMapElement> buffer = manager.AddBuffer<DungeonRevengeSquadMapElement>(global);
+        buffer.Add(new DungeonRevengeSquadMapElement { SquadId = 9, Position = new float3(4, 2, 0) });
+        f.RefreshMarkers();
+        Assert.That(f.Model.RevengeSquads.Single().Id, Is.EqualTo(9), "The global marker does not require client monster entities.");
+        buffer.Clear();
+        f.RefreshMarkers();
+        Assert.That(f.Model.RevengeSquads, Is.Empty);
+    }
     private static T GetField<T>(object instance, string name) =>
         (T)instance.GetType().GetField(name, PrivateInstance).GetValue(instance);
 
@@ -162,7 +260,7 @@ public sealed class MinimapUIFlagsTests
         public readonly MinimapUIModel Model = new();
         public readonly OpenFieldDungeonLayout Layout;
 
-        public Fixture()
+        public Fixture(OpenFieldInterestSize size = OpenFieldInterestSize.Large)
         {
             World.DefaultGameObjectInjectionWorld = World;
             Layout = (OpenFieldDungeonLayout)Activator.CreateInstance(typeof(OpenFieldDungeonLayout),
@@ -171,7 +269,7 @@ public sealed class MinimapUIFlagsTests
             cells[0] = OpenFieldTerrainCell.Ground;
             cells[1] = OpenFieldTerrainCell.Obstacle;
             typeof(OpenFieldDungeonLayout).GetMethod("AddInterestPoint", PrivateInstance).Invoke(Layout,
-                new object[] { OpenFieldInterestSize.Large, new OpenFieldGridPosition(3, 2), 7 });
+                new object[] { size, new OpenFieldGridPosition(3, 2), 7 });
             SetField(Model, "_layout", Layout);
             GetField<HashSet<int>>(Model, "_interestPointIds").Add(1);
             typeof(MinimapUIModel).GetMethod("BuildTerrainSprite", PrivateInstance).Invoke(Model, new object[] { Layout });
@@ -179,6 +277,9 @@ public sealed class MinimapUIFlagsTests
 
         public bool RefreshFlags() =>
             (bool)typeof(MinimapUIModel).GetMethod("RefreshInterestPointStates", PrivateInstance).Invoke(Model, null);
+
+        public bool RefreshMarkers() =>
+            (bool)typeof(MinimapUIModel).GetMethod("RefreshUnitMarkers", PrivateInstance).Invoke(Model, null);
 
         public void ReleaseMap()
         {

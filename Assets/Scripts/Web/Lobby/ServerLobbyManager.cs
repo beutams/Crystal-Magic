@@ -155,6 +155,7 @@ namespace Server
             BroadcastRoomListChanged();
 
             connect.UnRegisterCallback(MessageCodec.GetOpcode<C2L_CreateRoom>(), OnClientCreateRoom);
+            connect.UnRegisterCallback(MessageCodec.GetOpcode<C2L_RefreshRoomList>(), OnClientRefreshRoomList);
             connect.UnRegisterCallback(MessageCodec.GetOpcode<C2L_JoinRoom>(), OnClientJoinRoom);
             connect.UnRegisterCallback(MessageCodec.GetOpcode<C2L_LeaveRoom>(), OnClientLeaveRoom);
             connect.UnRegisterCallback(MessageCodec.GetOpcode<C2L_Ready>(), OnClientReady);
@@ -241,6 +242,7 @@ namespace Server
             playerList.Add(player.accountId, player);
 
             player.connect.RegisterCallback(MessageCodec.GetOpcode<C2L_CreateRoom>(), OnClientCreateRoom);
+            player.connect.RegisterCallback(MessageCodec.GetOpcode<C2L_RefreshRoomList>(), OnClientRefreshRoomList);
             player.connect.RegisterCallback(MessageCodec.GetOpcode<C2L_JoinRoom>(), OnClientJoinRoom);
             player.connect.RegisterCallback(MessageCodec.GetOpcode<C2L_LeaveRoom>(), OnClientLeaveRoom);
             player.connect.RegisterCallback(MessageCodec.GetOpcode<C2L_Ready>(), OnClientReady);
@@ -350,19 +352,23 @@ namespace Server
         private void OnClientCreateRoom(IMessage message, Connect connect)
         {
             C2L_CreateRoom realMessage = message as C2L_CreateRoom;
-            if (connectAccountDic.TryGetValue(connect, out ulong accountId) && playerList.TryGetValue(accountId, out Player player) && player.roomId == 0UL)
+            if (realMessage != null && connectAccountDic.TryGetValue(connect, out ulong accountId)
+                && playerList.TryGetValue(accountId, out Player player) && player.roomId == 0UL
+                && RoomCreationRules.TryNormalize(realMessage.roomName, realMessage.displayName ?? player.username,
+                    realMessage.maxPlayers, out string roomName, out string displayName, out _))
             {
                 Room room = new Room();
                 room.roomId = ServerUtility.CreateRoomId();
                 room.ownerAccountId = accountId;
-                room.roomName = realMessage.roomName;
+                room.roomName = roomName;
                 room.enterNum = 1;
-                room.maxNum = 4;
+                room.maxNum = realMessage.maxPlayers;
                 room.themeKey = 0;
                 room.start = false;
                 room.players.Add(player.accountId, player);
 
                 player.roomId = room.roomId;
+                player.username = displayName;
 
                 RoomData roomData = RoomData.CreateRoomData(room);
 
@@ -375,6 +381,11 @@ namespace Server
             {
                 connect.Send(new L2C_CreateReturn() { type = LobbyRequestType.CreateFail });
             }
+        }
+        private void OnClientRefreshRoomList(IMessage message, Connect connect)
+        {
+            if (message is C2L_RefreshRoomList && connectAccountDic.ContainsKey(connect))
+                connect.Send(new L2C_RefreshRoomList { roomListData = RoomListData.CreateRoomData(roomList) });
         }
         private void OnClientJoinRoom(IMessage message, Connect connect)
         {

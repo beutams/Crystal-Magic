@@ -31,8 +31,8 @@ public sealed class SceneMapPreviewTests
             Assert.That(SceneMapPreviewUtility.TryGetVisibleBounds(preview, out Bounds bounds), Is.True);
             Assert.That(bounds.center.x, Is.EqualTo(7.5f).Within(0.001f));
             Assert.That(bounds.center.y, Is.EqualTo(-7.5f).Within(0.001f));
-            Assert.That(bounds.size.x, Is.EqualTo(15f).Within(0.001f));
-            Assert.That(bounds.size.y, Is.EqualTo(15f).Within(0.001f));
+            Assert.That(bounds.size.x, Is.EqualTo(23f).Within(0.001f));
+            Assert.That(bounds.size.y, Is.EqualTo(23f).Within(0.001f));
         }
         finally { SceneMapPreviewUtility.Clear(); EditorSceneManager.ClosePreviewScene(scene); }
     }

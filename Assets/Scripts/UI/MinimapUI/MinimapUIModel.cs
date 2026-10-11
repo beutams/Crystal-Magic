@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using CrystalMagic.Core;
 using CrystalMagic.Game.OpenField;
+using Server;
 using Unity.Collections;
 using Unity.Entities;
 using Unity.Mathematics;
@@ -32,6 +33,10 @@ namespace CrystalMagic.UI
         private bool _hasPlayer;
         private Vector2 _playerPosition;
         private float _playerRotationDegrees;
+        private World _markerQueryWorld;
+        private EntityQuery _teammateQuery, _revengeQuery, _revengeMapQuery;
+        private readonly List<MinimapUnitMarker> _teammates = new(), _nextTeammates = new();
+        private readonly List<MinimapUnitMarker> _revengeSquads = new(), _nextRevengeSquads = new();
 
         public override string ChangedEventName => DataChangedEventName;
         public bool HasMap => _terrainSprite != null;
@@ -40,12 +45,15 @@ namespace CrystalMagic.UI
         public bool HasPlayer => _hasPlayer;
         public Vector2 PlayerPosition => _playerPosition;
         public float PlayerRotationDegrees => _playerRotationDegrees;
+        public IReadOnlyList<MinimapUnitMarker> Teammates => _teammates;
+        public IReadOnlyList<MinimapUnitMarker> RevengeSquads => _revengeSquads;
 
         public void Refresh()
         {
             bool changed = EnsureMap();
             changed |= RefreshPlayerMarker();
             changed |= RefreshInterestPointStates();
+            changed |= RefreshUnitMarkers();
             if (changed)
                 PublishChanged();
         }
@@ -226,6 +234,96 @@ namespace CrystalMagic.UI
                 Mathf.Clamp((mapCellPosition.y + 1f) / _textureHeight, 1f / _textureHeight, 1f - 1f / _textureHeight));
         }
 
+        private Vector2 WorldToNormalized(float3 position) => ToTextureNormalized(new Vector2(
+            (position.x - _worldOrigin.x) / _cellWorldSize, (position.y - _worldOrigin.y) / _cellWorldSize));
+
+        private bool RefreshUnitMarkers()
+        {
+            _nextTeammates.Clear();
+            _nextRevengeSquads.Clear();
+            World world = World.DefaultGameObjectInjectionWorld;
+            if (HasMap && world != null && world.IsCreated)
+            {
+                EntityManager manager = world.EntityManager;
+                if (_markerQueryWorld != world)
+                {
+                    ReleaseMarkerQueries();
+                    _markerQueryWorld = world;
+                    _teammateQuery = manager.CreateEntityQuery(new EntityQueryDesc
+                    {
+                        All = new[] { ComponentType.ReadOnly<PlayerCharacterComponent>(),
+                            ComponentType.ReadOnly<LocalTransform>(), ComponentType.ReadOnly<NetworkEntitySpawnInfoComponent>() },
+                        None = new[] { ComponentType.ReadOnly<NetworkPlayerComponent>(), ComponentType.ReadOnly<DestroyEntityFlag>() },
+                    });
+                    _revengeQuery = manager.CreateEntityQuery(new EntityQueryDesc
+                    {
+                        All = new[] { ComponentType.ReadOnly<DungeonRevengeSquadMember>(), ComponentType.ReadOnly<LocalTransform>() },
+                        None = new[] { ComponentType.ReadOnly<UnitDeathComponent>(), ComponentType.ReadOnly<DestroyEntityFlag>() },
+                        Options = EntityQueryOptions.IncludeDisabledEntities,
+                    });
+                    _revengeMapQuery = manager.CreateEntityQuery(ComponentType.ReadOnly<DungeonRevengeSquadMapElement>());
+                }
+                using NativeArray<Entity> teammates = _teammateQuery.ToEntityArray(Allocator.Temp);
+                foreach (Entity entity in teammates)
+                {
+                    if (entity == _cachedPlayerEntity ||
+                        manager.GetComponentObject<NetworkEntitySpawnInfoComponent>(entity).entityInfo?.ownerAccountId is null or 0UL)
+                        continue;
+                    float rotation = 0;
+                    if (manager.HasComponent<UnitFacingComponent>(entity))
+                    {
+                        float2 direction = manager.GetComponentData<UnitFacingComponent>(entity).Direction;
+                        rotation = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg + 90f;
+                    }
+                    _nextTeammates.Add(new MinimapUnitMarker { Id = entity.Index,
+                        Position = WorldToNormalized(manager.GetComponentData<LocalTransform>(entity).Position), RotationDegrees = rotation });
+                }
+                _nextTeammates.Sort((a, b) => a.Id.CompareTo(b.Id));
+                using NativeArray<Entity> maps = _revengeMapQuery.ToEntityArray(Allocator.Temp);
+                if (maps.Length > 0)
+                {
+                    foreach (DungeonRevengeSquadMapElement point in manager.GetBuffer<DungeonRevengeSquadMapElement>(maps[0], true))
+                        _nextRevengeSquads.Add(new MinimapUnitMarker { Id = point.SquadId, Position = WorldToNormalized(point.Position) });
+                }
+                else
+                {
+                    using NativeArray<Entity> members = _revengeQuery.ToEntityArray(Allocator.Temp);
+                    NativeHashMap<int, float4> centers = new(math.max(1, members.Length), Allocator.Temp);
+                    foreach (Entity entity in members)
+                    {
+                        int id = manager.GetComponentData<DungeonRevengeSquadMember>(entity).SquadId;
+                        centers.TryGetValue(id, out float4 center);
+                        centers[id] = center + new float4(manager.GetComponentData<LocalTransform>(entity).Position, 1f);
+                    }
+                    foreach (var point in centers)
+                        _nextRevengeSquads.Add(new MinimapUnitMarker { Id = point.Key, Position = WorldToNormalized(point.Value.xyz / point.Value.w) });
+                    centers.Dispose();
+                }
+                _nextRevengeSquads.Sort((a, b) => a.Id.CompareTo(b.Id));
+            }
+            return ReplaceMarkers(_teammates, _nextTeammates) | ReplaceMarkers(_revengeSquads, _nextRevengeSquads);
+        }
+
+        private static bool ReplaceMarkers(List<MinimapUnitMarker> current, List<MinimapUnitMarker> next)
+        {
+            bool changed = current.Count != next.Count;
+            for (int i = 0; !changed && i < current.Count; i++)
+                changed |= current[i].Id != next[i].Id || current[i].Position != next[i].Position ||
+                           Mathf.Abs(Mathf.DeltaAngle(current[i].RotationDegrees, next[i].RotationDegrees)) > 0.1f;
+            if (changed) { current.Clear(); current.AddRange(next); }
+            return changed;
+        }
+
+        private void ReleaseMarkerQueries()
+        {
+            if (_markerQueryWorld != null && _markerQueryWorld.IsCreated)
+            {
+                _teammateQuery.Dispose(); _revengeQuery.Dispose(); _revengeMapQuery.Dispose();
+            }
+            _markerQueryWorld = null;
+            _teammateQuery = _revengeQuery = _revengeMapQuery = default;
+        }
+
         public Vector2 GetInterestPointPosition(OpenFieldInterestPoint point)
         {
             return ToTextureNormalized(new Vector2(point.Center.X + 0.5f, point.Center.Y + 0.5f));
@@ -278,6 +376,9 @@ namespace CrystalMagic.UI
         private void ReleaseMapVisual()
         {
             ReleaseInterestPointQuery();
+            ReleaseMarkerQueries();
+            _teammates.Clear();
+            _revengeSquads.Clear();
             _interestPointIds.Clear();
             _clearedInterestPointIds.Clear();
             if (_terrainSprite != null)
@@ -306,5 +407,12 @@ namespace CrystalMagic.UI
         {
             EventComponent.Instance.Publish(new CommonGameEvent(DataChangedEventName, this));
         }
+    }
+
+    public struct MinimapUnitMarker
+    {
+        public int Id;
+        public Vector2 Position;
+        public float RotationDegrees;
     }
 }

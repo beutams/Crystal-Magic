@@ -151,6 +151,36 @@ public sealed class SceneMapAssetTests
         Assert.That(scene, Does.Contain("value: Player"));
     }
 
+    [Test]
+    public void TrainingBackdropReusesGrassAndRemainsOwnedByTheVisualMap()
+    {
+        var map = AssetDatabase.LoadAssetAtPath<GameObject>(TrainingPath).GetComponent<TileOcclusionMap>();
+        SpriteRenderer backdrop = map.CameraBackdrop;
+        Assert.That(backdrop, Is.Not.Null);
+        Assert.That(backdrop.transform.parent, Is.SameAs(map.transform));
+        Assert.That(backdrop.transform.IsChildOf(map.GeneratedRoot), Is.False,
+            "Regenerating occlusion must not delete the backdrop.");
+        Assert.That(backdrop.sprite, Is.SameAs(map.Layers[0].Source.GetSprite(new Vector3Int(5, 0, 0))));
+        Assert.That(backdrop.drawMode, Is.EqualTo(SpriteDrawMode.Tiled));
+        Assert.That(backdrop.size, Is.EqualTo(new Vector2(23, 23)));
+        Assert.That(backdrop.color, Is.EqualTo(Color.white));
+        Assert.That(backdrop.sortingOrder, Is.LessThan(-32000));
+        Assert.That(backdrop.GetComponents<Component>().Length, Is.EqualTo(2), "Visual only: Transform + SpriteRenderer.");
+        Assert.That(backdrop.transform.childCount, Is.EqualTo(15));
+        foreach (SpriteRenderer edge in backdrop.GetComponentsInChildren<SpriteRenderer>())
+        {
+            if (edge == backdrop) continue;
+            Assert.That(edge.sprite, Is.Not.Null);
+            Assert.That(edge.bounds.min.x >= 15 || edge.bounds.max.x <= 0 ||
+                edge.bounds.min.y >= 0 || edge.bounds.max.y <= -15, Is.True,
+                "Terrain transitions must remain outside the original map.");
+            Assert.That(edge.sortingOrder, Is.EqualTo(-32000));
+        }
+        Assert.That(map.CollisionData.Width, Is.EqualTo(15));
+        Assert.That(map.CollisionData.Height, Is.EqualTo(15));
+        Assert.That(AssetDatabase.LoadAssetAtPath<GameObject>(TownPath).GetComponent<TileOcclusionMap>().CameraBackdrop, Is.Null);
+    }
+
     [TestCase(TownPath, "TownSubScene", "PlayerTown")]
     [TestCase(TrainingPath, "TrainingSubScene", "Player")]
     [TestCase(TrainingPath, "TrainingSubScene", "MonsterStraw")]

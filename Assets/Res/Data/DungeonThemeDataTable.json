@@ -21,8 +21,8 @@
           "MediumAmplitude": 0.5,
           "DetailFrequencyMultiplier": 8.0,
           "DetailAmplitude": 0.65,
-          "MinimumObstacleHeight": 1,
-          "MaximumObstacleHeight": 4
+          "MinimumObstacleHeight": 2,
+          "MaximumObstacleHeight": 2
         },
         "Anchors": {
           "EntranceRadius": 4,
@@ -48,13 +48,13 @@
           },
           "ObstacleVisual": {
             "TopRuleTile": {
-              "AssetPath": "Assets/Res/Tile/Mountain/MountainTop_Grass1.asset"
+              "AssetPath": "Assets/Res/Tile/Mountain/MountainTop_Fixed16.asset"
             },
             "WallRuleTile": {
-              "AssetPath": "Assets/Res/Tile/Mountain/MountainWall_Grass1.asset"
+              "AssetPath": "Assets/Res/Tile/Mountain/MountainWall_Fixed16.asset"
             },
             "TransitionRuleTile": {
-              "AssetPath": "Assets/Res/Tile/Mountain/MountainFoot_Grass1.asset"
+              "AssetPath": "Assets/Res/Tile/Mountain/MountainFoot_Fixed16.asset"
             }
           },
           "BoundaryRuleTile": {
@@ -68,13 +68,13 @@
                 "AssetPath": "Assets/Res/Tile/Grass1.asset"
               },
               "MountainTransitionRuleTile": {
-                "AssetPath": "Assets/Res/Tile/Mountain/MountainFoot_Grass1.asset"
+                "AssetPath": "Assets/Res/Tile/Mountain/MountainFoot_Fixed16.asset"
               },
               "MountainWallRuleTile": {
-                "AssetPath": "Assets/Res/Tile/Mountain/MountainWall_Grass1.asset"
+                "AssetPath": "Assets/Res/Tile/Mountain/MountainWall_Fixed16.asset"
               },
               "MountainTopRuleTile": {
-                "AssetPath": "Assets/Res/Tile/Mountain/MountainTop_Grass1.asset"
+                "AssetPath": "Assets/Res/Tile/Mountain/MountainTop_Fixed16.asset"
               },
               "Decorations": [
                 {
@@ -367,13 +367,13 @@
                 "AssetPath": "Assets/Res/Tile/Grass2.asset"
               },
               "MountainTransitionRuleTile": {
-                "AssetPath": "Assets/Res/Tile/Mountain/MountainFoot_Grass1.asset"
+                "AssetPath": "Assets/Res/Tile/Mountain/MountainFoot_Fixed16.asset"
               },
               "MountainWallRuleTile": {
-                "AssetPath": "Assets/Res/Tile/Mountain/MountainWall_Grass1.asset"
+                "AssetPath": "Assets/Res/Tile/Mountain/MountainWall_Fixed16.asset"
               },
               "MountainTopRuleTile": {
-                "AssetPath": "Assets/Res/Tile/Mountain/MountainTop_Grass1.asset"
+                "AssetPath": "Assets/Res/Tile/Mountain/MountainTop_Fixed16.asset"
               },
               "Decorations": [
                 {
@@ -666,13 +666,13 @@
                 "AssetPath": "Assets/Res/Tile/Grass3.asset"
               },
               "MountainTransitionRuleTile": {
-                "AssetPath": "Assets/Res/Tile/Mountain/MountainFoot_Grass1.asset"
+                "AssetPath": "Assets/Res/Tile/Mountain/MountainFoot_Fixed16.asset"
               },
               "MountainWallRuleTile": {
-                "AssetPath": "Assets/Res/Tile/Mountain/MountainWall_Grass1.asset"
+                "AssetPath": "Assets/Res/Tile/Mountain/MountainWall_Fixed16.asset"
               },
               "MountainTopRuleTile": {
-                "AssetPath": "Assets/Res/Tile/Mountain/MountainTop_Grass1.asset"
+                "AssetPath": "Assets/Res/Tile/Mountain/MountainTop_Fixed16.asset"
               },
               "Decorations": [
                 {

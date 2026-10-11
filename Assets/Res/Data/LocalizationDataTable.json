@@ -1607,6 +1607,420 @@
             "Key": "guide.chain.first",
             "ChineseSimplified": "点击第一条技能链。",
             "English": "Select the first skill chain."
+        },
+        {
+            "Id": 284,
+            "Key": "ui.settings.display",
+            "ChineseSimplified": "显示",
+            "English": "Display"
+        },
+        {
+            "Id": 285,
+            "Key": "ui.settings.display_mode",
+            "ChineseSimplified": "显示模式",
+            "English": "Display Mode"
+        },
+        {
+            "Id": 286,
+            "Key": "ui.settings.resolution",
+            "ChineseSimplified": "分辨率",
+            "English": "Resolution"
+        },
+        {
+            "Id": 287,
+            "Key": "ui.settings.skip_tutorial_hint",
+            "ChineseSimplified": "仅影响之后的新游戏；点击按钮自动保存",
+            "English": "New games only. Clicking saves this choice automatically."
+        },
+        {
+            "Id": 288,
+            "Key": "ui.lobby.title",
+            "ChineseSimplified": "联机大厅",
+            "English": "Multiplayer Lobby"
+        },
+        {
+            "Id": 289,
+            "Key": "ui.lobby.create_title",
+            "ChineseSimplified": "创建房间",
+            "English": "Create Room"
+        },
+        {
+            "Id": 290,
+            "Key": "ui.lobby.nickname",
+            "ChineseSimplified": "显示昵称",
+            "English": "Display Name"
+        },
+        {
+            "Id": 291,
+            "Key": "ui.lobby.room_name",
+            "ChineseSimplified": "房间名称",
+            "English": "Room Name"
+        },
+        {
+            "Id": 292,
+            "Key": "ui.lobby.max_players",
+            "ChineseSimplified": "最大人数",
+            "English": "Max Players"
+        },
+        {
+            "Id": 293,
+            "Key": "ui.lobby.default_room_name",
+            "ChineseSimplified": "{0}的房间",
+            "English": "{0}'s Room"
+        },
+        {
+            "Id": 294,
+            "Key": "ui.lobby.player_fallback",
+            "ChineseSimplified": "玩家",
+            "English": "Player"
+        },
+        {
+            "Id": 295,
+            "Key": "ui.lobby.nickname_hint",
+            "ChineseSimplified": "默认使用账号昵称，可自行修改",
+            "English": "Defaults to your account name. You can change it."
+        },
+        {
+            "Id": 296,
+            "Key": "ui.lobby.local_account",
+            "ChineseSimplified": "测试账号",
+            "English": "Test Account"
+        },
+        {
+            "Id": 297,
+            "Key": "ui.lobby.steam_name",
+            "ChineseSimplified": "Steam 昵称",
+            "English": "Steam Name"
+        },
+        {
+            "Id": 298,
+            "Key": "ui.lobby.connected",
+            "ChineseSimplified": "已连接",
+            "English": "Connected"
+        },
+        {
+            "Id": 299,
+            "Key": "ui.lobby.connecting",
+            "ChineseSimplified": "连接中…",
+            "English": "Connecting…"
+        },
+        {
+            "Id": 300,
+            "Key": "ui.lobby.room_count",
+            "ChineseSimplified": "{0} 个房间",
+            "English": "{0} Rooms"
+        },
+        {
+            "Id": 301,
+            "Key": "ui.lobby.list",
+            "ChineseSimplified": "房间列表",
+            "English": "Rooms"
+        },
+        {
+            "Id": 302,
+            "Key": "ui.lobby.host",
+            "ChineseSimplified": "房主",
+            "English": "Host"
+        },
+        {
+            "Id": 303,
+            "Key": "ui.lobby.players",
+            "ChineseSimplified": "人数",
+            "English": "Players"
+        },
+        {
+            "Id": 304,
+            "Key": "ui.lobby.state",
+            "ChineseSimplified": "状态",
+            "English": "Status"
+        },
+        {
+            "Id": 305,
+            "Key": "ui.lobby.join",
+            "ChineseSimplified": "加入",
+            "English": "Join"
+        },
+        {
+            "Id": 306,
+            "Key": "ui.lobby.waiting",
+            "ChineseSimplified": "等待中",
+            "English": "Waiting"
+        },
+        {
+            "Id": 307,
+            "Key": "ui.lobby.full",
+            "ChineseSimplified": "已满",
+            "English": "Full"
+        },
+        {
+            "Id": 308,
+            "Key": "ui.lobby.started",
+            "ChineseSimplified": "已开始",
+            "English": "Started"
+        },
+        {
+            "Id": 309,
+            "Key": "ui.lobby.refresh",
+            "ChineseSimplified": "刷新列表",
+            "English": "Refresh"
+        },
+        {
+            "Id": 310,
+            "Key": "ui.lobby.create",
+            "ChineseSimplified": "创建房间",
+            "English": "Create Room"
+        },
+        {
+            "Id": 311,
+            "Key": "ui.lobby.back",
+            "ChineseSimplified": "返回",
+            "English": "Back"
+        },
+        {
+            "Id": 312,
+            "Key": "ui.lobby.create_and_enter",
+            "ChineseSimplified": "创建并进入",
+            "English": "Create and Enter"
+        },
+        {
+            "Id": 313,
+            "Key": "ui.lobby.creating",
+            "ChineseSimplified": "创建中…",
+            "English": "Creating…"
+        },
+        {
+            "Id": 314,
+            "Key": "ui.lobby.capacity_two",
+            "ChineseSimplified": "2 人",
+            "English": "2"
+        },
+        {
+            "Id": 315,
+            "Key": "ui.lobby.capacity_three",
+            "ChineseSimplified": "3 人",
+            "English": "3"
+        },
+        {
+            "Id": 316,
+            "Key": "ui.lobby.capacity_four",
+            "ChineseSimplified": "4 人",
+            "English": "4"
+        },
+        {
+            "Id": 317,
+            "Key": "ui.lobby.capacity_hint",
+            "ChineseSimplified": "包含房主，共 {0} 位玩家",
+            "English": "Up to {0} players, including the host"
+        },
+        {
+            "Id": 318,
+            "Key": "ui.lobby.empty",
+            "ChineseSimplified": "暂无房间，创建一个房间开始冒险",
+            "English": "No rooms yet. Create one to start playing."
+        },
+        {
+            "Id": 319,
+            "Key": "ui.lobby.error.nickname",
+            "ChineseSimplified": "请输入 1–24 字的昵称",
+            "English": "Enter a display name of 1–24 characters"
+        },
+        {
+            "Id": 320,
+            "Key": "ui.lobby.error.room_name",
+            "ChineseSimplified": "请输入 1–32 字的房间名",
+            "English": "Enter a room name of 1–32 characters"
+        },
+        {
+            "Id": 321,
+            "Key": "ui.lobby.error.capacity",
+            "ChineseSimplified": "最大人数必须为 2–4 人",
+            "English": "Choose a capacity of 2–4 players"
+        },
+        {
+            "Id": 322,
+            "Key": "ui.lobby.error.not_ready",
+            "ChineseSimplified": "大厅尚未连接或正在处理请求，请稍后重试",
+            "English": "The lobby is not ready. Please try again shortly."
+        },
+        {
+            "Id": 323,
+            "Key": "ui.lobby.error.timeout",
+            "ChineseSimplified": "创建超时，请重试",
+            "English": "Room creation timed out. Please try again."
+        },
+        {
+            "Id": 324,
+            "Key": "ui.lobby.error.create_failed",
+            "ChineseSimplified": "创建失败，请检查连接后重试",
+            "English": "Could not create the room. Check your connection and retry."
+        },
+        {
+            "Id": 325,
+            "Key": "ui.room.title",
+            "ChineseSimplified": "战斗房间",
+            "English": "Battle Room"
+        },
+        {
+            "Id": 326,
+            "Key": "ui.room.host_name",
+            "ChineseSimplified": "房主：{0}",
+            "English": "Host: {0}"
+        },
+        {
+            "Id": 327,
+            "Key": "ui.room.player_count",
+            "ChineseSimplified": "队伍 {0} / {1}",
+            "English": "Party {0} / {1}"
+        },
+        {
+            "Id": 328,
+            "Key": "ui.room.ready_count",
+            "ChineseSimplified": "已准备 {0} / {1}",
+            "English": "Ready {0} / {1}"
+        },
+        {
+            "Id": 329,
+            "Key": "ui.room.leave",
+            "ChineseSimplified": "离开房间",
+            "English": "Leave Room"
+        },
+        {
+            "Id": 330,
+            "Key": "ui.room.start",
+            "ChineseSimplified": "开始冒险",
+            "English": "Start Adventure"
+        },
+        {
+            "Id": 331,
+            "Key": "ui.room.ready",
+            "ChineseSimplified": "准备",
+            "English": "Ready"
+        },
+        {
+            "Id": 332,
+            "Key": "ui.room.cancel_ready",
+            "ChineseSimplified": "取消准备",
+            "English": "Cancel Ready"
+        },
+        {
+            "Id": 333,
+            "Key": "ui.room.entering",
+            "ChineseSimplified": "正在进入…",
+            "English": "Entering…"
+        },
+        {
+            "Id": 334,
+            "Key": "ui.room.no_room",
+            "ChineseSimplified": "房间已关闭",
+            "English": "Room closed"
+        },
+        {
+            "Id": 335,
+            "Key": "ui.room.entering_hint",
+            "ChineseSimplified": "队伍正在进入战斗，请稍候",
+            "English": "Your party is entering the battle. Please wait."
+        },
+        {
+            "Id": 336,
+            "Key": "ui.room.guest_ready_hint",
+            "ChineseSimplified": "已准备，等待房主开始；取消准备后可以离开房间",
+            "English": "Ready. Waiting for the host. Cancel ready to leave the room."
+        },
+        {
+            "Id": 337,
+            "Key": "ui.room.guest_hint",
+            "ChineseSimplified": "点击准备，和队友一起开始冒险",
+            "English": "Click Ready to begin your adventure with the party."
+        },
+        {
+            "Id": 338,
+            "Key": "ui.room.unready_hint",
+            "ChineseSimplified": "还有 {0} 位队员未准备",
+            "English": "Waiting for {0} party member(s) to get ready."
+        },
+        {
+            "Id": 339,
+            "Key": "ui.room.solo_hint",
+            "ChineseSimplified": "等待队员加入，也可以独自开始冒险",
+            "English": "Wait for others to join, or start an adventure on your own."
+        },
+        {
+            "Id": 340,
+            "Key": "ui.room.all_ready_hint",
+            "ChineseSimplified": "队员已全部准备，可以开始冒险",
+            "English": "Everyone is ready. You can start the adventure."
+        },
+        {
+            "Id": 341,
+            "Key": "ui.room.waiting_ready",
+            "ChineseSimplified": "等待队员准备",
+            "English": "Waiting for party"
+        },
+        {
+            "Id": 342,
+            "Key": "ui.room.can_start",
+            "ChineseSimplified": "准备出发",
+            "English": "Ready to go"
+        },
+        {
+            "Id": 343,
+            "Key": "ui.room.waiting_host",
+            "ChineseSimplified": "等待房主开始",
+            "English": "Waiting for host"
+        },
+        {
+            "Id": 344,
+            "Key": "ui.room.not_ready",
+            "ChineseSimplified": "未准备",
+            "English": "Not ready"
+        },
+        {
+            "Id": 345,
+            "Key": "ui.room.member",
+            "ChineseSimplified": "队员",
+            "English": "Member"
+        },
+        {
+            "Id": 346,
+            "Key": "ui.room.open_slot",
+            "ChineseSimplified": "开放席位",
+            "English": "Open slot"
+        },
+        {
+            "Id": 347,
+            "Key": "ui.room.closed_slot",
+            "ChineseSimplified": "未开放",
+            "English": "Closed slot"
+        },
+        {
+            "Id": 348,
+            "Key": "ui.room.you",
+            "ChineseSimplified": "{0} · 你",
+            "English": "{0} · You"
+        },
+        {
+            "Id": 349,
+            "Key": "ui.room.empty_slot",
+            "ChineseSimplified": "等待玩家加入",
+            "English": "Waiting for player"
+        },
+        {
+            "Id": 350,
+            "Key": "ui.room.closed_slot_hint",
+            "ChineseSimplified": "此席位已关闭",
+            "English": "Slot unavailable"
+        },
+        {
+            "Id": 351,
+            "Key": "ui.room.host_status",
+            "ChineseSimplified": "房主负责开始冒险",
+            "English": "The host starts the adventure"
+        },
+        {
+            "Id": 352,
+            "Key": "ui.room.is_ready",
+            "ChineseSimplified": "已准备",
+            "English": "Ready"
         }
     ]
 }

@@ -169,6 +169,39 @@ public sealed class DungeonSettlementTests
         Assert.That(scope.Manager.Exists(scope.Player), Is.False);
     }
 
+    [Test]
+    public void OnlineSettlementShowsAuthoritativeReportBeforeReturningWithoutSettlingTheLocalRunAgain()
+    {
+        using var scope = new SettlementScope();
+        scope.Character.Money = 999;
+        Assert.That(scope.Save.Save(), Is.True);
+        CharacterData authoritative = PlayerCharacterUtility.Clone(scope.Character);
+        authoritative.Money = 15;
+        var manager = new ClientBattleManager();
+        void Set(string key, object value) => typeof(ClientBattleManager).GetField(key, BindingFlags.Instance | BindingFlags.NonPublic).SetValue(manager, value);
+        Set("preBattleSaveIndex", scope.Save.CurrentSaveIndex);
+        Set("preBattleSaveGuid", scope.Save.CurrentSaveGuid);
+        Set("preBattleCharacterData", scope.Character);
+        Set("pendingSettlement", true);
+        Set("settlementSessionId", System.Guid.NewGuid().ToString("N"));
+        Set("settlementCharacterData", authoritative);
+        var report = DungeonSettlementUtility.CreateResult(DungeonSettlementOutcome.Escaped,
+            new DungeonRunData { CurrentFloor = 4, HasAcquisitionHistory = true, AcquiredMoney = 7,
+                AcquiredItems = new List<InventoryItemData> { new() { ItemId = 10, Quantity = 2 } } }, authoritative);
+        typeof(ClientBattleManager).GetProperty(nameof(ClientBattleManager.PendingSettlementResult)).SetValue(manager, report);
+        DungeonSettlementStateData data = DungeonSettlementStateData.CreateOnline(manager);
+        Assert.That(data.IsSaved, Is.True);
+        Assert.That(data.Result, Is.SameAs(report));
+        Assert.That(data.Result.ReachedFloor, Is.EqualTo(4));
+        Assert.That(data.Result.Money, Is.EqualTo(7));
+        Assert.That(scope.ReadSave().Character.Money, Is.EqualTo(15));
+        Assert.That(scope.Character.Money, Is.EqualTo(999), "Do not settle client inventory over the authoritative result.");
+        Assert.That(data.CreateReturnTransition().TargetStateType, Is.EqualTo(typeof(TownState)));
+        Assert.That(manager.HasPendingSettlement, Is.True, "Retain recovery data until Town restoration completes.");
+        Assert.That(data.TrySave(), Is.True);
+        Assert.That(scope.ReadSave().Character.Money, Is.EqualTo(15));
+    }
+
     private sealed class SettlementScope : System.IDisposable
     {
         public readonly World World = new("Dungeon settlement lifecycle test");

@@ -73,11 +73,18 @@ namespace CrystalMagic.Editor.Resource
                 string outputPath = GetOutputPath(config);
                 Directory.CreateDirectory(outputPath);
 
-                AssetBundleManifest manifest = BuildPipeline.BuildAssetBundles(
-                    outputPath,
-                    builds,
-                    config.BuildOptions,
-                    config.BuildTarget);
+                // Runtime bundles are shared with clients. Never inherit the
+                // Dedicated Server subtarget, which strips textures and shaders.
+                AssetBundleManifest manifest = BuildPipeline.BuildAssetBundles(new BuildAssetBundlesParameters
+                {
+                    outputPath = outputPath,
+                    bundleDefinitions = builds,
+                    options = config.BuildOptions,
+                    targetPlatform = config.BuildTarget,
+                    subtarget = BuildPipeline.GetBuildTargetGroup(config.BuildTarget) == BuildTargetGroup.Standalone
+                        ? (int)StandaloneBuildSubtarget.Player
+                        : 0,
+                });
 
                 bool success = manifest != null;
                 Debug.Log(success

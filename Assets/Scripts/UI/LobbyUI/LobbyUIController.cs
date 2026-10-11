@@ -1,5 +1,7 @@
 ﻿namespace CrystalMagic.UI
 {
+    using CrystalMagic.Core;
+
     public sealed class LobbyUIController : UIControllerBase<LobbyUI, LobbyUIModel>
     {
         private bool closing;
@@ -16,14 +18,20 @@
             View.BindModel(Model);
             Bindings.Bind(() => View.BackClicked += OnBackClicked, () => View.BackClicked -= OnBackClicked);
             Bindings.Bind(() => View.CreateRoomClicked += OnCreateRoomClicked, () => View.CreateRoomClicked -= OnCreateRoomClicked);
+            Bindings.Bind(() => View.RefreshClicked += Lobby.RefreshRoomList, () => View.RefreshClicked -= Lobby.RefreshRoomList);
             Bindings.Bind(() => View.RoomClicked += OnRoomClicked, () => View.RoomClicked -= OnRoomClicked);
             Bindings.Bind(() => Lobby.onRoomRefresh += OnRoomRefresh, () => Lobby.onRoomRefresh -= OnRoomRefresh);
             Bindings.Bind(() => Lobby.onRoomInfoRefresh += OnRoomInfoRefresh, () => Lobby.onRoomInfoRefresh -= OnRoomInfoRefresh);
             Bindings.Bind(() => Lobby.onRequestFail += OnRequestFail, () => Lobby.onRequestFail -= OnRequestFail);
             Bindings.Bind(() => Lobby.onDisconnected += OnDisconnected, () => Lobby.onDisconnected -= OnDisconnected);
+            Bindings.Bind(() => Lobby.onRequestFinished += RefreshConnection, () => Lobby.onRequestFinished -= RefreshConnection);
+            Bindings.Bind(() => LocalizationComponent.LanguageChanged += Model.RefreshLocalization,
+                () => LocalizationComponent.LanguageChanged -= Model.RefreshLocalization);
 
+            Model.SetAccount(CrystalMagic.Core.SteamComponent.Instance.Account.Name,
+                CrystalMagic.Core.SteamComponent.Instance.Account.IsLocalTestAccount);
             Model.SetRooms(Lobby.roomList);
-            View.SetRoomInteraction(Lobby.room == null);
+            RefreshConnection();
             Lobby.Initialize();
         }
 
@@ -41,17 +49,22 @@
 
         private void OnCreateRoomClicked()
         {
-            Lobby.CreateRoom("Test Room");
+            if (!Model.CanEnterRoom) return;
+            foreach (CrystalMagic.Core.UIBase child in CrystalMagic.Core.UIComponent.Instance.GetChildren(View))
+                if (child is CreateRoomUI) return;
+            CrystalMagic.Core.UIComponent.Instance.OpenChild<CreateRoomUI>(View);
         }
 
         private void OnRoomClicked(ulong roomId)
         {
             Lobby.JoinRoom(roomId);
+            RefreshConnection();
         }
 
         private void OnRoomRefresh(Server.RoomListData roomList)
         {
             Model.SetRooms(roomList);
+            RefreshConnection();
         }
 
         private void OnRoomInfoRefresh(Server.RoomData roomData)
@@ -59,6 +72,8 @@
             CrystalMagic.Core.UIBase roomView = null;
             foreach (CrystalMagic.Core.UIBase child in CrystalMagic.Core.UIComponent.Instance.GetChildren(View))
             {
+                if (child is CreateRoomUI && roomData != null)
+                    CrystalMagic.Core.UIComponent.Instance.ReleaseUI(child);
                 if (child is LobbyRoomUI lobbyRoomUI)
                 {
                     roomView = lobbyRoomUI;
@@ -68,20 +83,25 @@
 
             if (roomData == null)
             {
-                View.SetRoomInteraction(true);
+                RefreshConnection();
                 if (roomView != null)
                     CrystalMagic.Core.UIComponent.Instance.ReleaseUI(roomView);
 
                 return;
             }
 
-            View.SetRoomInteraction(false);
+            Model.SetAccount(Lobby.DisplayName, CrystalMagic.Core.SteamComponent.Instance.Account.IsLocalTestAccount);
+            RefreshConnection();
             if (roomView == null)
                 CrystalMagic.Core.UIComponent.Instance.OpenChild<LobbyRoomUI>(View);
         }
 
         private void OnRequestFail(LobbyRequestType type)
         {
+            RefreshConnection();
+            if (type == LobbyRequestType.CreateFail || type == LobbyRequestType.CreateTimeout)
+                foreach (CrystalMagic.Core.UIBase child in CrystalMagic.Core.UIComponent.Instance.GetChildren(View))
+                    if (child is CreateRoomUI) return;
             string content = type switch
             {
                 LobbyRequestType.CreateFail => "创建房间失败",
@@ -107,6 +127,7 @@
 
         private void OnDisconnected()
         {
+            Model.SetConnection(false, false);
             if (closing || Lobby.DisconnectRequested)
             {
                 View.Close();
@@ -151,5 +172,7 @@
 
             View.Close();
         }
+        private void RefreshConnection() => Model.SetConnection(Lobby.IsLoggedIn,
+            Lobby.IsLoggedIn && !Lobby.HasPendingRequest && Lobby.room == null);
     }
 }

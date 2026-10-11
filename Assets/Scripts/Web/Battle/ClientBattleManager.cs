@@ -27,6 +27,7 @@ namespace Server
         public string ticket;
         public ulong localAccountId;
         public Dictionary<Guid, Entity> networkEntities = new Dictionary<Guid, Entity>();
+        private readonly Dictionary<ulong, string> playerDisplayNames = new();
         public BattleEnterData BattleData => battleData;
         public bool SceneInitialized => sceneInitialized;
         public bool EntitiesInitialized => entitiesInitialized;
@@ -36,10 +37,25 @@ namespace Server
         public bool RestoreStandaloneRequested => restoreStandaloneRequested;
         public bool ThemeTransitionRequested => themeTransitionRequested;
         public bool HasPendingSettlement => pendingSettlement;
+        public DungeonSettlementResult PendingSettlementResult { get; private set; }
         public bool HasPreBattleSnapshot => preBattleSaveIndex >= 0 &&
             Guid.TryParse(preBattleSaveGuid, out _) &&
             preBattleCharacterData != null;
         public event Action<string> onPreparationFailed;
+
+        public bool TryGetPlayerDisplayName(ulong accountId, out string displayName)
+        {
+            RoomData room = NetworkComponent.Instance.clientLobbyManager.room;
+            if (room?.players != null && room.players.TryGetValue(accountId, out string currentName)
+                && !string.IsNullOrWhiteSpace(currentName))
+            {
+                playerDisplayNames[accountId] = currentName;
+                displayName = currentName;
+                return true;
+            }
+
+            return playerDisplayNames.TryGetValue(accountId, out displayName);
+        }
 
         private BattleEnterData battleData;
         private NetworkEntitySpawnInfo[] pendingEntityInfos;
@@ -59,7 +75,6 @@ namespace Server
         private bool pendingSettlement;
         private bool exitRequestPending;
         private C2B_BattleExitRequest deferredExitRequest;
-        private BattleSettlementOutcome settlementOutcome;
         private CharacterData settlementCharacterData;
         private string settlementSessionId;
         private string preparationError;
@@ -167,6 +182,7 @@ namespace Server
             pendingSettlement = false;
             settlementSessionId = null;
             settlementCharacterData = null;
+            PendingSettlementResult = null;
         }
 
         public void StopBattle()
@@ -261,6 +277,12 @@ namespace Server
 
             this.ticket = ticket;
             localAccountId = accountId;
+            playerDisplayNames.Clear();
+            RoomData room = NetworkComponent.Instance.clientLobbyManager.room;
+            if (room?.players != null)
+                foreach (KeyValuePair<ulong, string> player in room.players)
+                    if (!string.IsNullOrWhiteSpace(player.Value))
+                        playerDisplayNames[player.Key] = player.Value;
             this.reload = reload;
             runningReload = false;
             pendingReloadSnapshot = null;
@@ -542,12 +564,16 @@ namespace Server
             pendingSettlement = true;
             exitRequestPending = false;
             deferredExitRequest = null;
-            settlementOutcome = settlement.outcome;
             settlementSessionId = settlement.sessionId;
             if (settlementCharacterData == null)
                 settlementCharacterData = settlement.outcome == BattleSettlementOutcome.Defeated
                     ? new CharacterData { SteamAccountId = preBattleCharacterData.SteamAccountId, Name = preBattleCharacterData.Name }
                     : PlayerCharacterUtility.Clone(settlement.characterData);
+            PendingSettlementResult ??= DungeonSettlementUtility.CreateResult(
+                settlement.outcome == BattleSettlementOutcome.Escaped ? DungeonSettlementOutcome.Escaped : DungeonSettlementOutcome.Defeated,
+                new DungeonRunData { CurrentFloor = Math.Max(1, settlement.reachedFloor), HasAcquisitionHistory = true,
+                    AcquiredItems = settlement.acquiredItems, AcquiredMoney = settlement.acquiredMoney },
+                settlement.characterData ?? preBattleCharacterData);
             if (PersistPendingSettlement(out _))
                 connect.Send(new C2B_BattleSettlementAck { battleId = settlement.battleId,
                     sessionId = settlement.sessionId, connectVersion = connectVersion });
@@ -849,6 +875,7 @@ namespace Server
             StopPreparationTimeout();
             preparationStage = stage;
             long timeout = GetPreparationTimeout(stage);
+            battleConnect?.BeginHeartbeatGrace(timeout);
             Debug.Log($"[BattleTrace][Client] Preparation stage={stage}, timeout={timeout}ms");
             Connect expectedConnect = battleConnect;
             long timerId = 0;
@@ -878,6 +905,7 @@ namespace Server
 
         private void StopPreparationTimeout()
         {
+            battleConnect?.EndHeartbeatGrace();
             if (preparationTimerId != 0)
             {
                 NetworkTimer.Instance.Remove(preparationTimerId);
@@ -940,6 +968,7 @@ namespace Server
             runningReload = false;
             connectVersion = 0U;
             networkEntities.Clear();
+            playerDisplayNames.Clear();
             battleData = null;
             pendingEntityInfos = null;
             pendingReloadSnapshot = null;

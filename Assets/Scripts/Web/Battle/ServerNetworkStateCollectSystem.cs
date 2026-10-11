@@ -15,6 +15,8 @@ public partial class ServerNetworkStateCollectSystem : SystemBase
     private BattleSimulationScope _scope;
     private readonly List<NetworkStateData> _states = new();
     private EntityQuery _presentationEventsQuery;
+    private EntityQuery _revengeSquadQuery;
+    private uint _nextRevengeMapFrame;
     private Predicate<Entity> _isMissingEntity;
     private static readonly ProfilerMarker PlayerCollectMarker = new("Network.Server.CollectPlayerStates");
     private static readonly ProfilerMarker WorldCollectMarker = new("Network.Server.CollectWorldStates");
@@ -26,6 +28,12 @@ public partial class ServerNetworkStateCollectSystem : SystemBase
     protected override void OnCreate()
     {
         _presentationEventsQuery = GetEntityQuery(ComponentType.ReadOnly<NetworkPresentationEventQueueComponent>());
+        _revengeSquadQuery = GetEntityQuery(new EntityQueryDesc
+        {
+            All = new[] { ComponentType.ReadOnly<DungeonRevengeSquadMember>(), ComponentType.ReadOnly<LocalTransform>() },
+            None = new[] { ComponentType.ReadOnly<UnitDeathComponent>(), ComponentType.ReadOnly<DestroyEntityFlag>() },
+            Options = EntityQueryOptions.IncludeDisabledEntities,
+        });
         _isMissingEntity = entity => !EntityManager.Exists(entity);
     }
 
@@ -34,6 +42,7 @@ public partial class ServerNetworkStateCollectSystem : SystemBase
         _states.Clear();
         _despawnedEntities.Clear();
         _snapshotCallbacks.Clear();
+        _nextRevengeMapFrame = 0;
     }
 
     public void RequestSnapshot(Action<uint, NetworkEntitySpawnInfo[], List<NetworkStateData>> callback)
@@ -117,6 +126,11 @@ public partial class ServerNetworkStateCollectSystem : SystemBase
         CollectPlayerPropCooldownStates(states, currentFrame, onlyDirty);
         CollectPlayerSkillChainStates(states, onlyDirty);
         CollectCharacterStates(states, onlyDirty);
+        if (!onlyDirty || (_scope.Pass != BattleSimulationPass.Players && currentFrame >= _nextRevengeMapFrame))
+        {
+            states.Add(NetworkRevengeSquadMapStateData.Capture(EntityManager, _revengeSquadQuery));
+            if (onlyDirty) _nextRevengeMapFrame = currentFrame + (uint)Math.Max(1, 200 / _frameInterval);
+        }
     }
 
     private void CollectBattlePlayerStatusStates(List<NetworkStateData> states, bool onlyDirty)

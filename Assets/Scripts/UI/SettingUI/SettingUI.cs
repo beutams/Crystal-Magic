@@ -10,6 +10,9 @@ public sealed class SettingUI : UIBase<SettingUIData, SettingUIModel>
     public event Action<float> SfxVolumeChanged;
     public event Action PreviousLanguageRequested;
     public event Action NextLanguageRequested;
+    public event Action DisplayModeRequested;
+    public event Action<int> ResolutionRequested;
+    public event Action SkipTutorialRequested;
     public event Action SaveRequested;
     public event Action ResetRequested;
     public event Action BackRequested;
@@ -21,6 +24,11 @@ public sealed class SettingUI : UIBase<SettingUIData, SettingUIModel>
         UI.Panel_SfxVolumeSlider.Slider.onValueChanged.AddListener(OnSfxVolumeSliderChanged);
         UI.Panel_LanguagePrevious.ButtonPlus.onClick.AddListener(OnPreviousLanguageButton);
         UI.Panel_LanguageNext.ButtonPlus.onClick.AddListener(OnNextLanguageButton);
+        UI.Panel_DisplayModePrevious.ButtonPlus.onClick.AddListener(OnDisplayModeButton);
+        UI.Panel_DisplayModeNext.ButtonPlus.onClick.AddListener(OnDisplayModeButton);
+        UI.Panel_ResolutionPrevious.ButtonPlus.onClick.AddListener(OnPreviousResolutionButton);
+        UI.Panel_ResolutionNext.ButtonPlus.onClick.AddListener(OnNextResolutionButton);
+        UI.Panel_SkipTutorial.ButtonPlus.onClick.AddListener(OnSkipTutorialButton);
         UI.Panel_Save.ButtonPlus.onClick.AddListener(OnSaveButton);
         UI.Panel_Reset.ButtonPlus.onClick.AddListener(OnResetButton);
         UI.Panel_Back.ButtonPlus.onClick.AddListener(OnBackButton);
@@ -34,6 +42,11 @@ public sealed class SettingUI : UIBase<SettingUIData, SettingUIModel>
         UI.Panel_SfxVolumeSlider.Slider.onValueChanged.RemoveListener(OnSfxVolumeSliderChanged);
         UI.Panel_LanguagePrevious.ButtonPlus.onClick.RemoveListener(OnPreviousLanguageButton);
         UI.Panel_LanguageNext.ButtonPlus.onClick.RemoveListener(OnNextLanguageButton);
+        UI.Panel_DisplayModePrevious.ButtonPlus.onClick.RemoveListener(OnDisplayModeButton);
+        UI.Panel_DisplayModeNext.ButtonPlus.onClick.RemoveListener(OnDisplayModeButton);
+        UI.Panel_ResolutionPrevious.ButtonPlus.onClick.RemoveListener(OnPreviousResolutionButton);
+        UI.Panel_ResolutionNext.ButtonPlus.onClick.RemoveListener(OnNextResolutionButton);
+        UI.Panel_SkipTutorial.ButtonPlus.onClick.RemoveListener(OnSkipTutorialButton);
         UI.Panel_Save.ButtonPlus.onClick.RemoveListener(OnSaveButton);
         UI.Panel_Reset.ButtonPlus.onClick.RemoveListener(OnResetButton);
         UI.Panel_Back.ButtonPlus.onClick.RemoveListener(OnBackButton);
@@ -49,6 +62,10 @@ public sealed class SettingUI : UIBase<SettingUIData, SettingUIModel>
         UI.Panel_BgmVolumeValue.TextMeshProUGUI.text = ToPercent(Model.BgmVolume);
         UI.Panel_SfxVolumeValue.TextMeshProUGUI.text = ToPercent(Model.SfxVolume);
         UI.Panel_LanguageValue.TextMeshProUGUI.text = Model.LanguageDisplayName;
+        UI.Panel_DisplayModeValue.TextMeshProUGUI.text = Model.DisplayModeName;
+        UI.Panel_ResolutionValue.TextMeshProUGUI.text = Model.ResolutionName;
+        UI.Panel_SkipTutorial_Default_Text.TextMeshProUGUI.text = Model.SkipTutorialButtonText;
+        UI.Panel_SkipTutorial_Click_Text.TextMeshProUGUI.text = Model.SkipTutorialButtonText;
     }
 
     private static string ToPercent(float value)
@@ -61,6 +78,10 @@ public sealed class SettingUI : UIBase<SettingUIData, SettingUIModel>
     private void OnSfxVolumeSliderChanged(float value) => SfxVolumeChanged?.Invoke(value);
     private void OnPreviousLanguageButton() => PreviousLanguageRequested?.Invoke();
     private void OnNextLanguageButton() => NextLanguageRequested?.Invoke();
+    private void OnDisplayModeButton() => DisplayModeRequested?.Invoke();
+    private void OnPreviousResolutionButton() => ResolutionRequested?.Invoke(-1);
+    private void OnNextResolutionButton() => ResolutionRequested?.Invoke(1);
+    private void OnSkipTutorialButton() => SkipTutorialRequested?.Invoke();
     private void OnSaveButton() => SaveRequested?.Invoke();
     private void OnResetButton() => ResetRequested?.Invoke();
     private void OnBackButton() => BackRequested?.Invoke();

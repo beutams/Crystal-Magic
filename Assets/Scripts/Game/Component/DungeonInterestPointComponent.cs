@@ -25,6 +25,18 @@ public struct DungeonFloorControllerComponent : IComponentData
 {
 }
 
+public struct DungeonRevengeSquadMember : IComponentData
+{
+    public int SquadId;
+    public float Speed;
+}
+
+public struct DungeonRevengeSquadMapElement : IBufferElementData
+{
+    public int SquadId;
+    public float3 Position;
+}
+
 public struct DungeonWildSquadComponent : IComponentData
 {
     public int SquadId;

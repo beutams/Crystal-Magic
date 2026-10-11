@@ -35,6 +35,9 @@ public sealed class DebugUI : UIBase<DebugUIData, DebugUIModel>
     public event Action UnitInspectorRemoveBuffRequested;
     public event Action UnitInspectorClearBehaviorRequested;
     public event Action UnitInspectorClearStateScriptRequested;
+    public event Action<string> LocalAccountIdChanged;
+    public event Action<bool> AccountSwitchRequested;
+    public event Action AccountReturnMenuRequested;
 
     protected override void OnInit()
     {
@@ -47,6 +50,10 @@ public sealed class DebugUI : UIBase<DebugUIData, DebugUIModel>
 
     public override void OnOpen()
     {
+        UI.Content_Account_LocalId.TMP_InputField.onValueChanged.AddListener(HandleLocalAccountIdChanged);
+        UI.Content_Account_UseLocal.ButtonPlus.onClick.AddListener(HandleUseLocalAccount);
+        UI.Content_Account_UseSteam.ButtonPlus.onClick.AddListener(HandleUseSteamAccount);
+        UI.Content_Account_ReturnMenu.ButtonPlus.onClick.AddListener(HandleAccountReturnMenu);
         UI.Launcher.ButtonPlus.onClick.AddListener(HandleLauncherClicked);
         UI.Content_Close.ButtonPlus.onClick.AddListener(HandleContentHideClicked);
         UI.Content_UnitSpawner_Previous.ButtonPlus.onClick.AddListener(HandlePreviousSpawnUnitClicked);
@@ -76,6 +83,10 @@ public sealed class DebugUI : UIBase<DebugUIData, DebugUIModel>
 
     public override void OnClose()
     {
+        UI.Content_Account_LocalId.TMP_InputField.onValueChanged.RemoveListener(HandleLocalAccountIdChanged);
+        UI.Content_Account_UseLocal.ButtonPlus.onClick.RemoveListener(HandleUseLocalAccount);
+        UI.Content_Account_UseSteam.ButtonPlus.onClick.RemoveListener(HandleUseSteamAccount);
+        UI.Content_Account_ReturnMenu.ButtonPlus.onClick.RemoveListener(HandleAccountReturnMenu);
         UI.Launcher.ButtonPlus.onClick.RemoveListener(HandleLauncherClicked);
         UI.Content_Close.ButtonPlus.onClick.RemoveListener(HandleContentHideClicked);
         UI.Content_UnitSpawner_Previous.ButtonPlus.onClick.RemoveListener(HandlePreviousSpawnUnitClicked);
@@ -121,6 +132,14 @@ public sealed class DebugUI : UIBase<DebugUIData, DebugUIModel>
         UI.Content_TrainingGround.GameObject.SetActive(Model.SelectedPage == DebugPage.TrainingGround);
         UI.Content_UnitSpawner.GameObject.SetActive(Model.SelectedPage == DebugPage.UnitSpawner);
         UI.Content_UnitInspector.GameObject.SetActive(Model.SelectedPage == DebugPage.UnitInspector);
+        UI.Content_Account.GameObject.SetActive(Model.SelectedPage == DebugPage.Account && ClientAccountPolicy.DevelopmentAccountsAllowed);
+        UI.Content_Account_Info.TextMeshProUGUI.text = Model.AccountInfoText;
+        UI.Content_Account_Status.TextMeshProUGUI.text = Model.AccountStatusText;
+        SetAccountButton(UI.Content_Account_UseLocal, UI.Content_Account_UseLocal_Label, Model.CanSwitchAccount);
+        SetAccountButton(UI.Content_Account_UseSteam, UI.Content_Account_UseSteam_Label, Model.CanSwitchAccount);
+        SetAccountButton(UI.Content_Account_ReturnMenu, UI.Content_Account_ReturnMenu_Label, Model.CanReturnForAccount);
+        if (UI.Content_Account_LocalId.TMP_InputField.text != Model.LocalAccountIdText)
+            UI.Content_Account_LocalId.TMP_InputField.SetTextWithoutNotify(Model.LocalAccountIdText);
         UI.Content_PlayerAttributes_Value.TextMeshProUGUI.text = Model.PlayerAttributesText;
         UI.Content_TrainingGround_Value.TextMeshProUGUI.text = Model.TrainingGroundText;
         UI.Content_UnitSpawner_SelectedUnit.TextMeshProUGUI.text = Model.UnitSpawnerText;
@@ -133,6 +152,12 @@ public sealed class DebugUI : UIBase<DebugUIData, DebugUIModel>
             _lastUnitInspectorEditorRevision = Model.UnitInspectorEditorRevision;
             UI.Content_UnitInspector_Editor.TMP_InputField.SetTextWithoutNotify(Model.UnitInspectorDetailText);
         }
+    }
+
+    private static void SetAccountButton(UINode button, UINode label, bool enabled)
+    {
+        button.ButtonPlus.enabled = enabled;
+        label.TextMeshProUGUI.alpha = enabled ? 1f : 0.35f;
     }
 
     private void SetContentVisible(bool visible)
@@ -214,6 +239,10 @@ public sealed class DebugUI : UIBase<DebugUIData, DebugUIModel>
     private void HandlePreviousSpawnUnitClicked() => PreviousSpawnUnitRequested?.Invoke();
     private void HandleNextSpawnUnitClicked() => NextSpawnUnitRequested?.Invoke();
     private void HandleSpawnUnitClicked() => SpawnUnitRequested?.Invoke();
+    private void HandleLocalAccountIdChanged(string value) => LocalAccountIdChanged?.Invoke(value);
+    private void HandleUseLocalAccount() => AccountSwitchRequested?.Invoke(true);
+    private void HandleUseSteamAccount() => AccountSwitchRequested?.Invoke(false);
+    private void HandleAccountReturnMenu() => AccountReturnMenuRequested?.Invoke();
     private void HandleUnitInspectorRefreshClicked() => UnitInspectorRefreshRequested?.Invoke();
     private void HandlePreviousInspectorUnitClicked() => PreviousInspectorUnitRequested?.Invoke();
     private void HandleNextInspectorUnitClicked() => NextInspectorUnitRequested?.Invoke();

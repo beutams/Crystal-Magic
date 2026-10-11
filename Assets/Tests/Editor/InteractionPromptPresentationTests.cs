@@ -150,7 +150,7 @@ public sealed class InteractionPromptPresentationTests
             data.Bind(contents.transform);
             var label = data.Prompt_Label.TextMeshProUGUI;
             Assert.That(label.font, Is.Not.Null);
-            Assert.That(label.font.HasCharacters("E交互训练商人物品拾取宝箱金币", out uint[] missing), Is.True,
+            Assert.That(label.font.HasCharacters("E交互训练商人物品拾取宝箱金币昵称", out uint[] missing, tryAddCharacter: true), Is.True,
                 missing == null ? string.Empty : string.Join(",", missing));
             Assert.That(data.Prompt.Image.color.a, Is.GreaterThanOrEqualTo(0.85f));
             Assert.That(data.Prompt.Image.color.grayscale, Is.LessThan(0.2f));

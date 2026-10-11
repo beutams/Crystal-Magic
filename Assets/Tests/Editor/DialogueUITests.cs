@@ -21,6 +21,45 @@ public sealed class DialogueUITests
 {
     private const string PrefabPath = "Assets/Res/UI/DialogueUI.prefab";
 
+    [TestCase(0.5f)]
+    [TestCase(1f)]
+    [TestCase(6f)]
+    public void DialogueWorldOffsetDoesNotScaleWithPresentedPlayer(float scale)
+    {
+        var actor = new GameObject("Dialogue anchor test", typeof(SpriteRenderer));
+        try
+        {
+            actor.transform.position = new Vector3(8f, 12f, -0.15f);
+            actor.transform.localScale = new Vector3(scale, scale, 1f);
+            var renderer = actor.GetComponent<SpriteRenderer>();
+            var staleTransform = new LocalToWorld { Value = float4x4.Translate(new float3(-20f, -30f, 0f)) };
+            MethodInfo resolve = typeof(DialogueUIController).GetMethod("ResolveAnchor", BindingFlags.Static | BindingFlags.NonPublic);
+            var anchor = (Vector3)resolve.Invoke(null, new object[] { renderer, staleTransform, 1.35f });
+            Assert.That(Vector3.Distance(anchor, new Vector3(8f, 13.35f, -0.15f)), Is.LessThan(0.001f));
+
+            actor.transform.position += new Vector3(2f, -3f, 0f);
+            renderer.flipX = true;
+            anchor = (Vector3)resolve.Invoke(null, new object[] { renderer, staleTransform, 1.35f });
+            Assert.That(Vector3.Distance(anchor, new Vector3(10f, 10.35f, -0.15f)), Is.LessThan(0.001f),
+                "Follow the displayed player without using stale ECS positions or applying sprite scale.");
+        }
+        finally { Object.DestroyImmediate(actor); }
+    }
+
+    [TestCase(0.5f)]
+    [TestCase(1f)]
+    [TestCase(6f)]
+    public void DialogueWithoutRendererKeepsWorldOffsetIndependentOfEntityScale(float scale)
+    {
+        var transform = new LocalToWorld
+        {
+            Value = float4x4.TRS(new float3(4f, 8f, -0.15f), quaternion.identity, new float3(scale, scale, 1f)),
+        };
+        MethodInfo resolve = typeof(DialogueUIController).GetMethod("ResolveAnchor", BindingFlags.Static | BindingFlags.NonPublic);
+        var anchor = (Vector3)resolve.Invoke(null, new object[] { null, transform, 1.35f });
+        Assert.That(Vector3.Distance(anchor, new Vector3(4f, 9.35f, -0.15f)), Is.LessThan(0.001f));
+    }
+
     [Test]
     public void LineCompletesOnlyAfterItsLastCharacter()
     {

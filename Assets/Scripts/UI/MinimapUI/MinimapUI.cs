@@ -8,10 +8,13 @@ public sealed class MinimapUI : UIBase<MinimapUIData, MinimapUIModel>
 {
     private readonly List<MinimapInterestPointView> _interestPointViews = new();
     private OpenFieldDungeonLayout _renderedInterestPointLayout;
+    private readonly List<UINode> _teammateViews = new();
+    private readonly List<MinimapInterestPointView> _revengeSquadViews = new();
 
     public override void OnClose()
     {
         ClearInterestPointViews();
+        ClearUnitMarkers();
         UI.Terrain.Image.sprite = null;
         base.OnClose();
     }
@@ -24,12 +27,14 @@ public sealed class MinimapUI : UIBase<MinimapUIData, MinimapUIModel>
         {
             UI.Terrain.Image.enabled = false;
             ClearInterestPointViews();
+            ClearUnitMarkers();
             return;
         }
 
         UI.Terrain.Image.enabled = true;
         UI.Terrain.Image.sprite = Model.TerrainSprite;
         RenderInterestPoints();
+        RenderUnitMarkers();
         RenderMarker(UI.Player, Model.HasPlayer, Model.PlayerPosition, Model.PlayerRotationDegrees);
     }
 
@@ -59,6 +64,7 @@ public sealed class MinimapUI : UIBase<MinimapUIData, MinimapUIModel>
             OpenFieldInterestPoint point = layout.InterestPoints[index];
             _interestPointViews[index].Render(
                 Model.GetInterestPointPosition(point),
+                point.Size,
                 Model.IsInterestPointCleared(point.EncounterId));
         }
     }
@@ -70,6 +76,51 @@ public sealed class MinimapUI : UIBase<MinimapUIData, MinimapUIModel>
 
         _interestPointViews.Clear();
         _renderedInterestPointLayout = null;
+    }
+
+    private void RenderUnitMarkers()
+    {
+        while (_teammateViews.Count > Model.Teammates.Count)
+        {
+            int index = _teammateViews.Count - 1;
+            PoolComponent.Instance.Release(_teammateViews[index].GameObject);
+            _teammateViews.RemoveAt(index);
+        }
+        while (_teammateViews.Count < Model.Teammates.Count)
+        {
+            UINode marker = UINode.From(PoolComponent.Instance.Get(UI.Player.GameObject));
+            marker.RectTransform.SetParent(UI.Terrain.RectTransform, false);
+            marker.RectTransform.localScale = Vector3.one;
+            marker.Image.color = new Color32(111, 200, 255, 255);
+            _teammateViews.Add(marker);
+        }
+        for (int i = 0; i < _teammateViews.Count; i++)
+        {
+            MinimapUnitMarker marker = Model.Teammates[i];
+            RenderMarker(_teammateViews[i], true, marker.Position, marker.RotationDegrees);
+        }
+        while (_revengeSquadViews.Count > Model.RevengeSquads.Count)
+        {
+            int index = _revengeSquadViews.Count - 1;
+            UISubViewBase.ReleaseToPool(_revengeSquadViews[index]);
+            _revengeSquadViews.RemoveAt(index);
+        }
+        while (_revengeSquadViews.Count < Model.RevengeSquads.Count)
+            _revengeSquadViews.Add(UISubViewBase.AcquireFromPool(UI.InterestPointTemplate, UI.InterestPointRoot.RectTransform));
+        for (int i = 0; i < _revengeSquadViews.Count; i++)
+        {
+            _revengeSquadViews[i].gameObject.SetActive(true);
+            _revengeSquadViews[i].RenderSquad(Model.RevengeSquads[i].Position);
+        }
+        UI.Player.RectTransform.SetAsLastSibling();
+    }
+
+    private void ClearUnitMarkers()
+    {
+        foreach (UINode marker in _teammateViews) PoolComponent.Instance.Release(marker.GameObject);
+        _teammateViews.Clear();
+        foreach (MinimapInterestPointView marker in _revengeSquadViews) UISubViewBase.ReleaseToPool(marker);
+        _revengeSquadViews.Clear();
     }
 
     private static void RenderMarker(UINode marker, bool isVisible, Vector2 normalizedPosition, float rotationDegrees)

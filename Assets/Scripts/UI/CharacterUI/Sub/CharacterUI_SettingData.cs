@@ -1,5 +1,5 @@
-// AUTO-GENERATED — DO NOT EDIT MANUALLY
-// Right-click Prefab → Assets/Tools/Generate UIData to regenerate
+// AUTO-GENERATED - DO NOT EDIT MANUALLY
+// Right-click Prefab -> Assets/Tools/Generate UIData to regenerate
 
 using UnityEngine;
 using CrystalMagic.Core;
@@ -17,26 +17,23 @@ public class CharacterUI_SettingData : UIData
     public UINode Decorations_TopRunes_Artwork;
     public UINode Decorations_BottomRunes;
     public UINode Decorations_BottomRunes_Artwork;
-    public UINode Decorations_AudioLeftDiamond;
-    public UINode Decorations_AudioRightDiamond;
-    public UINode Decorations_LanguageLeftDiamond;
-    public UINode Decorations_LanguageRightDiamond;
-    public UINode Decorations_SaveLeftDiamond;
-    public UINode Decorations_ReturnMainMenuLeftDiamond;
-    public UINode Decorations_SaveRightDiamond;
-    public UINode Decorations_ReturnMainMenuRightDiamond;
     public UINode Title;
     public UINode DetailTitle;
     public UINode Navigation;
     public UINode Navigation_Audio;
     public UINode Navigation_Audio_Label;
+    public UINode Decorations_AudioLeftDiamond;
+    public UINode Decorations_AudioRightDiamond;
     public UINode Navigation_Language;
     public UINode Navigation_Language_Label;
+    public UINode Decorations_LanguageLeftDiamond;
+    public UINode Decorations_LanguageRightDiamond;
     public UINode Navigation_Save;
-    public UINode Navigation_ReturnMainMenu;
     public UINode Navigation_Save_Label;
-    public UINode Navigation_ReturnMainMenu_Label;
+    public UINode Decorations_SaveLeftDiamond;
+    public UINode Decorations_SaveRightDiamond;
     public UINode Audio;
+    public UINode Language;
     public UINode Audio_MasterVolume;
     public UINode Audio_MasterVolume_Label;
     public UINode Audio_MasterVolume_Value;
@@ -82,7 +79,6 @@ public class CharacterUI_SettingData : UIData
     public UINode Audio_SfxVolume_Slider_Dot8;
     public UINode Audio_SfxVolume_Slider_Dot9;
     public UINode Audio_SfxVolume_Slider_Dot10;
-    public UINode Language;
     public UINode Language_Chinese;
     public UINode Language_Chinese_Label;
     public UINode Language_Chinese_Selected;
@@ -90,6 +86,23 @@ public class CharacterUI_SettingData : UIData
     public UINode Language_English_Label;
     public UINode Language_English_Selected;
     public UINode Language_Hint;
+    public UINode Navigation_ReturnMainMenu;
+    public UINode Navigation_ReturnMainMenu_Label;
+    public UINode Decorations_ReturnMainMenuLeftDiamond;
+    public UINode Decorations_ReturnMainMenuRightDiamond;
+    public UINode Navigation_Display;
+    public UINode Navigation_Display_Label;
+    public UINode Decorations_DisplayLeftDiamond;
+    public UINode Decorations_DisplayRightDiamond;
+    public UINode Display;
+    public UINode Display_DisplayModeLabel;
+    public UINode Display_DisplayModeValue;
+    public UINode Display_DisplayModePrevious;
+    public UINode Display_DisplayModeNext;
+    public UINode Display_ResolutionLabel;
+    public UINode Display_ResolutionValue;
+    public UINode Display_ResolutionPrevious;
+    public UINode Display_ResolutionNext;
 
     public override void Bind(Transform root)
     {
@@ -104,26 +117,23 @@ public class CharacterUI_SettingData : UIData
         Decorations_TopRunes_Artwork = UINode.From(Find(root, "Decorations/TopRunes/Artwork"));
         Decorations_BottomRunes = UINode.From(Find(root, "Decorations/BottomRunes"));
         Decorations_BottomRunes_Artwork = UINode.From(Find(root, "Decorations/BottomRunes/Artwork"));
-        Decorations_AudioLeftDiamond = UINode.From(Find(root, "Decorations/AudioLeftDiamond"));
-        Decorations_AudioRightDiamond = UINode.From(Find(root, "Decorations/AudioRightDiamond"));
-        Decorations_LanguageLeftDiamond = UINode.From(Find(root, "Decorations/LanguageLeftDiamond"));
-        Decorations_LanguageRightDiamond = UINode.From(Find(root, "Decorations/LanguageRightDiamond"));
-        Decorations_SaveLeftDiamond = UINode.From(Find(root, "Decorations/SaveLeftDiamond"));
-        Decorations_ReturnMainMenuLeftDiamond = UINode.From(Find(root, "Decorations/ReturnMainMenuLeftDiamond"));
-        Decorations_SaveRightDiamond = UINode.From(Find(root, "Decorations/SaveRightDiamond"));
-        Decorations_ReturnMainMenuRightDiamond = UINode.From(Find(root, "Decorations/ReturnMainMenuRightDiamond"));
         Title = UINode.From(Find(root, "Title"));
         DetailTitle = UINode.From(Find(root, "DetailTitle"));
         Navigation = UINode.From(Find(root, "Navigation"));
         Navigation_Audio = UINode.From(Find(root, "Navigation/Audio"));
         Navigation_Audio_Label = UINode.From(Find(root, "Navigation/Audio/Label"));
+        Decorations_AudioLeftDiamond = UINode.From(Find(root, "Decorations/AudioLeftDiamond"));
+        Decorations_AudioRightDiamond = UINode.From(Find(root, "Decorations/AudioRightDiamond"));
         Navigation_Language = UINode.From(Find(root, "Navigation/Language"));
         Navigation_Language_Label = UINode.From(Find(root, "Navigation/Language/Label"));
+        Decorations_LanguageLeftDiamond = UINode.From(Find(root, "Decorations/LanguageLeftDiamond"));
+        Decorations_LanguageRightDiamond = UINode.From(Find(root, "Decorations/LanguageRightDiamond"));
         Navigation_Save = UINode.From(Find(root, "Navigation/Save"));
-        Navigation_ReturnMainMenu = UINode.From(Find(root, "Navigation/ReturnMainMenu"));
         Navigation_Save_Label = UINode.From(Find(root, "Navigation/Save/Label"));
-        Navigation_ReturnMainMenu_Label = UINode.From(Find(root, "Navigation/ReturnMainMenu/Label"));
+        Decorations_SaveLeftDiamond = UINode.From(Find(root, "Decorations/SaveLeftDiamond"));
+        Decorations_SaveRightDiamond = UINode.From(Find(root, "Decorations/SaveRightDiamond"));
         Audio = UINode.From(Find(root, "Audio"));
+        Language = UINode.From(Find(root, "Language"));
         Audio_MasterVolume = UINode.From(Find(root, "Audio/MasterVolume"));
         Audio_MasterVolume_Label = UINode.From(Find(root, "Audio/MasterVolume/Label"));
         Audio_MasterVolume_Value = UINode.From(Find(root, "Audio/MasterVolume/Value"));
@@ -169,7 +179,6 @@ public class CharacterUI_SettingData : UIData
         Audio_SfxVolume_Slider_Dot8 = UINode.From(Find(root, "Audio/SfxVolume/Slider/Dot8"));
         Audio_SfxVolume_Slider_Dot9 = UINode.From(Find(root, "Audio/SfxVolume/Slider/Dot9"));
         Audio_SfxVolume_Slider_Dot10 = UINode.From(Find(root, "Audio/SfxVolume/Slider/Dot10"));
-        Language = UINode.From(Find(root, "Language"));
         Language_Chinese = UINode.From(Find(root, "Language/Chinese"));
         Language_Chinese_Label = UINode.From(Find(root, "Language/Chinese/Label"));
         Language_Chinese_Selected = UINode.From(Find(root, "Language/Chinese/Selected"));
@@ -177,5 +186,22 @@ public class CharacterUI_SettingData : UIData
         Language_English_Label = UINode.From(Find(root, "Language/English/Label"));
         Language_English_Selected = UINode.From(Find(root, "Language/English/Selected"));
         Language_Hint = UINode.From(Find(root, "Language/Hint"));
+        Navigation_ReturnMainMenu = UINode.From(Find(root, "Navigation/ReturnMainMenu"));
+        Navigation_ReturnMainMenu_Label = UINode.From(Find(root, "Navigation/ReturnMainMenu/Label"));
+        Decorations_ReturnMainMenuLeftDiamond = UINode.From(Find(root, "Decorations/ReturnMainMenuLeftDiamond"));
+        Decorations_ReturnMainMenuRightDiamond = UINode.From(Find(root, "Decorations/ReturnMainMenuRightDiamond"));
+        Navigation_Display = UINode.From(Find(root, "Navigation/Display"));
+        Navigation_Display_Label = UINode.From(Find(root, "Navigation/Display/Label"));
+        Decorations_DisplayLeftDiamond = UINode.From(Find(root, "Decorations/DisplayLeftDiamond"));
+        Decorations_DisplayRightDiamond = UINode.From(Find(root, "Decorations/DisplayRightDiamond"));
+        Display = UINode.From(Find(root, "Display"));
+        Display_DisplayModeLabel = UINode.From(Find(root, "Display/DisplayModeLabel"));
+        Display_DisplayModeValue = UINode.From(Find(root, "Display/DisplayModeValue"));
+        Display_DisplayModePrevious = UINode.From(Find(root, "Display/DisplayModePrevious"));
+        Display_DisplayModeNext = UINode.From(Find(root, "Display/DisplayModeNext"));
+        Display_ResolutionLabel = UINode.From(Find(root, "Display/ResolutionLabel"));
+        Display_ResolutionValue = UINode.From(Find(root, "Display/ResolutionValue"));
+        Display_ResolutionPrevious = UINode.From(Find(root, "Display/ResolutionPrevious"));
+        Display_ResolutionNext = UINode.From(Find(root, "Display/ResolutionNext"));
     }
 }
