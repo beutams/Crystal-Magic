@@ -12,11 +12,11 @@ namespace Server
         private static long roomIdCounter;
         private static long battleRoomIdCounter;
 
-        public static string lobbyIP = "127.0.0.1";
+        public static string lobbyIP = "0.0.0.0";
         public static int lobbyPort = 10002;
         public static NetworkEndpoint GetLobbyEndpoint()
         {
-            return new TcpEndpoint(new IPEndPoint(IPAddress.Parse(lobbyIP), lobbyPort));
+            return TcpEndpointResolver.CreateListenEndpoint(lobbyIP, lobbyPort);
         }
         public static string battleIP = "127.0.0.1";
         public static int battlePort = 10003;
@@ -71,6 +71,7 @@ namespace Server
         public const long PingInterval = 3_000;
         public const long Timeout = 10_000;
         public const long ConnectTimeout = 10_000;
+        public const long DnsResolveTimeout = 10_000;
         public const long DrainTimeout = 2_000;
         public const long HostStartTimeout = 15_000;
         public const long SettlementTimeout = 5_000;

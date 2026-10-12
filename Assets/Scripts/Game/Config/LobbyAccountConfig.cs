@@ -20,8 +20,8 @@ namespace CrystalMagic.Game.Config
         [EditorLabel("Allow Development Fallback")]
         public bool allowDevelopmentFallback = true;
 
-        [EditorLabel("Lobby IP")]
-        public string lobbyAddress = "127.0.0.1";
+        [EditorLabel("Lobby Hostname / IP")]
+        public string lobbyAddress = "lobby.mpsqaq.top";
         [EditorLabel("Lobby Port")]
         public int lobbyPort = 10002;
         [EditorLabel("Hosted TCP Advertised IP (empty = observed by lobby)")]

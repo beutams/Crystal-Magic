@@ -135,7 +135,7 @@
             }
 
             LobbyRequestType loginFailure = Lobby.LoginFailure;
-            if (loginFailure != LobbyRequestType.Unknown)
+            if (loginFailure != LobbyRequestType.Unknown && string.IsNullOrEmpty(Lobby.ConnectionError))
             {
                 string content = loginFailure == LobbyRequestType.LoginSaveMismatch
                     ? "该账号正在进行的联机战斗属于另一份存档，请加载原存档后重试。"
@@ -152,7 +152,7 @@
 
             CrystalMagic.Core.UIComponent.Instance.OpenChild<ConfirmUI>(View, new ConfirmUIOpenData(
                 "Lobby disconnected",
-                "The connection to the lobby was lost.",
+                string.IsNullOrEmpty(Lobby.ConnectionError) ? "The connection to the lobby was lost." : Lobby.ConnectionError,
                 () => Lobby.Initialize(),
                 RequestClose,
                 "Reconnect"));

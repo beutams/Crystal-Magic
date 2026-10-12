@@ -319593,6 +319593,7 @@ MonoBehaviour:
   Preset: {fileID: 11400000, guid: 77d7dc04402eb2945bce8d75fa46a9df, type: 2}
   CollisionData: {fileID: 11400000, guid: 9596187703627984eaaa5be8e833b8b0, type: 2}
   CollisionPrefab: {fileID: 1755038877437595533, guid: 54afc0cdf0a996f4dbb128b37d07964c, type: 3}
+  CameraBackdrop: {fileID: 0}
   CollisionNeedsRebuild: 0
   Layers:
   - Source: {fileID: 763468082219016964}

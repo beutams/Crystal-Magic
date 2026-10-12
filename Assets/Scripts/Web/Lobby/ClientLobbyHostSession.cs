@@ -100,13 +100,15 @@ namespace Server
         public void Update()
         {
             long now = NetworkTimer.Instance.TimeNow;
+            TickResolution(now);
             if (lobbyConnect != null && loginDeadline != 0 && now >= loginDeadline)
             {
                 loginDeadline = 0;
                 LoginFailure = LobbyRequestType.LoginFail;
+                ConnectionError = $"连接大厅 {connectionAddress} 后等待登录响应超时。";
                 clientServic.Disconnect(lobbyConnect);
             }
-            if (BattleControlActive && lobbyConnect == null && now >= reconnectAt)
+            if (BattleControlActive && lobbyConnect == null && pendingResolution == null && now >= reconnectAt)
             {
                 reconnectAt = now + ServerUtility.BattleLobbyReconnectInterval;
                 try { Initialize(); }

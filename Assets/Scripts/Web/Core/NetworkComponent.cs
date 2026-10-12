@@ -58,12 +58,13 @@ namespace Server
                     battleHostManager.SessionEnded += clientLobbyManager.NotifyHostSessionEnded;
                     break;
                 case NetworkRole.LobbyServer:
+                    Application.targetFrameRate = 60;
                     var serverConfig = ClientAccountPolicy.ForLaunch(new CrystalMagic.Game.Config.LobbyAccountConfig
                     { lobbyAddress = ServerUtility.lobbyIP, lobbyPort = ServerUtility.lobbyPort },
                         System.Environment.GetCommandLineArgs(), false);
                     serverLobbyManager = new ServerLobbyManager();
-                    serverLobbyManager.Initialize(new ServerService(new TcpEndpoint(new System.Net.IPEndPoint(
-                        System.Net.IPAddress.Parse(serverConfig.lobbyAddress), serverConfig.lobbyPort))),
+                    serverLobbyManager.Initialize(new ServerService(TcpEndpointResolver.CreateListenEndpoint(
+                        serverConfig.lobbyAddress, serverConfig.lobbyPort)),
                         battleHosting == BattleTransportKind.Tcp ? new ClientService() : null,
                         battleHosting == BattleTransportKind.Steam);
                     break;

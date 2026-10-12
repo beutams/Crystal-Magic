@@ -3,7 +3,7 @@
     "username": "TestPlayer",
     "useLocalTestAccount": true,
     "allowDevelopmentFallback": true,
-    "lobbyAddress": "127.0.0.1",
+    "lobbyAddress": "lobby.mpsqaq.top",
     "lobbyPort": 10002,
     "hostedTcpAddress": "",
     "hostedTcpPort": 0

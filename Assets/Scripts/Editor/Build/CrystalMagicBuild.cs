@@ -187,5 +187,14 @@ public static class CrystalMagicBuild
         {
             throw new BuildFailedException($"Failed to build {fileName}: {report.summary.result}");
         }
+
+        if (dedicatedServer)
+        {
+            string launcher = Path.GetFullPath(Path.Combine(Application.dataPath, "../Tools/Server/Start-LobbyServer.ps1"));
+            if (!File.Exists(launcher)) throw new BuildFailedException($"Lobby server launcher is missing: {launcher}");
+            File.Copy(launcher, Path.Combine(outputFolder, "Start-LobbyServer.ps1"), true);
+            Debug.Log($"[CrystalMagicBuild] Upload the entire {outputFolder} folder and run Start-LobbyServer.ps1. " +
+                "Allow TCP 10002 in the cloud security group and Windows Firewall.");
+        }
     }
 }

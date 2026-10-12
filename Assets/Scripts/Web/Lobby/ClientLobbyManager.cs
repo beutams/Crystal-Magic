@@ -33,32 +33,46 @@ namespace Server
         public Action onDisconnected;
         public void Initialize()
         {
-            if (lobbyConnect != null)
+            if (lobbyConnect != null || pendingResolution != null)
             {
                 return;
             }
 
             LoginFailure = LobbyRequestType.Unknown;
-            var config = SteamComponent.Instance.LaunchConfig;
-            clientServic.Connect(new TcpEndpoint(new System.Net.IPEndPoint(
-                System.Net.IPAddress.Parse(config.lobbyAddress), config.lobbyPort)), out lobbyConnect);
-            loginDeadline = NetworkTimer.Instance.TimeNow + ServerUtility.ConnectTimeout + ServerUtility.Timeout;
+            ConnectionError = string.Empty;
+            DisconnectRequested = false;
+            disconnecting = false;
+            tcpEstablished = false;
+            try
+            {
+                var config = SteamComponent.Instance.LaunchConfig;
+                BeginResolution(config.lobbyAddress, config.lobbyPort);
+                TickResolution(NetworkTimer.Instance.TimeNow);
+            }
+            catch (Exception exception)
+            {
+                FailConnection($"无法准备大厅连接：{exception.GetBaseException().Message}");
+            }
+        }
 
-            lobbyConnect.OnConnected += OnLobbyConnected;
-            lobbyConnect.OnDisconnected += OnDisconnected;
+        private void RegisterLobbyCallbacks(Connect connect)
+        {
+            connect.OnConnected += OnLobbyConnected;
+            connect.OnDisconnected += OnDisconnected;
 
-            lobbyConnect.RegisterCallback(MessageCodec.GetOpcode<L2C_LoginLobbyResult>(), OnLoginResult);
-            lobbyConnect.RegisterCallback(MessageCodec.GetOpcode<L2C_RefreshRoomList>(), OnRefreshRoomList);
-            lobbyConnect.RegisterCallback(MessageCodec.GetOpcode<L2C_RefreshRoomInfo>(), OnRefreshRoomInfo);
-            lobbyConnect.RegisterCallback(MessageCodec.GetOpcode<L2C_JoinReturn>(), OnJoinRoom);
-            lobbyConnect.RegisterCallback(MessageCodec.GetOpcode<L2C_CreateReturn>(), OnCreateRoom);
-            lobbyConnect.RegisterCallback(MessageCodec.GetOpcode<L2C_LeaveReturn>(), OnLeaveRoom);
-            lobbyConnect.RegisterCallback(MessageCodec.GetOpcode<L2C_StartReturn>(), OnStartResult);
-            lobbyConnect.RegisterCallback(MessageCodec.GetOpcode<L2C_StartTicket>(), OnStartTicket);
-            RegisterHostCallbacks(lobbyConnect);
+            connect.RegisterCallback(MessageCodec.GetOpcode<L2C_LoginLobbyResult>(), OnLoginResult);
+            connect.RegisterCallback(MessageCodec.GetOpcode<L2C_RefreshRoomList>(), OnRefreshRoomList);
+            connect.RegisterCallback(MessageCodec.GetOpcode<L2C_RefreshRoomInfo>(), OnRefreshRoomInfo);
+            connect.RegisterCallback(MessageCodec.GetOpcode<L2C_JoinReturn>(), OnJoinRoom);
+            connect.RegisterCallback(MessageCodec.GetOpcode<L2C_CreateReturn>(), OnCreateRoom);
+            connect.RegisterCallback(MessageCodec.GetOpcode<L2C_LeaveReturn>(), OnLeaveRoom);
+            connect.RegisterCallback(MessageCodec.GetOpcode<L2C_StartReturn>(), OnStartResult);
+            connect.RegisterCallback(MessageCodec.GetOpcode<L2C_StartTicket>(), OnStartTicket);
+            RegisterHostCallbacks(connect);
         }
         public void Cleanup()
         {
+            CancelResolution();
             CancelPendingHost();
             if (request != null)
             {
@@ -69,17 +83,7 @@ namespace Server
 
             if (lobbyConnect != null)
             {
-                UnregisterHostCallbacks(lobbyConnect);
-                lobbyConnect.UnRegisterCallback(MessageCodec.GetOpcode<L2C_LoginLobbyResult>(), OnLoginResult);
-                lobbyConnect.UnRegisterCallback(MessageCodec.GetOpcode<L2C_RefreshRoomList>(), OnRefreshRoomList);
-                lobbyConnect.UnRegisterCallback(MessageCodec.GetOpcode<L2C_RefreshRoomInfo>(), OnRefreshRoomInfo);
-                lobbyConnect.UnRegisterCallback(MessageCodec.GetOpcode<L2C_JoinReturn>(), OnJoinRoom);
-                lobbyConnect.UnRegisterCallback(MessageCodec.GetOpcode<L2C_CreateReturn>(), OnCreateRoom);
-                lobbyConnect.UnRegisterCallback(MessageCodec.GetOpcode<L2C_LeaveReturn>(), OnLeaveRoom);
-                lobbyConnect.UnRegisterCallback(MessageCodec.GetOpcode<L2C_StartReturn>(), OnStartResult);
-                lobbyConnect.UnRegisterCallback(MessageCodec.GetOpcode<L2C_StartTicket>(), OnStartTicket);
-                lobbyConnect.OnConnected -= OnLobbyConnected;
-                lobbyConnect.OnDisconnected -= OnDisconnected;
+                UnregisterLobbyCallbacks(lobbyConnect);
                 clientServic.Disconnect(lobbyConnect);
                 lobbyConnect = null;
             }
@@ -89,12 +93,21 @@ namespace Server
             disconnecting = false;
             DisconnectRequested = false;
             LoginFailure = LobbyRequestType.Unknown;
+            ConnectionError = string.Empty;
+            tcpEstablished = false;
             accountId = 0UL;
             room = null;
             roomList = null;
         }
         public void Disconnect()
         {
+            if (pendingResolution != null)
+            {
+                DisconnectRequested = true;
+                CancelResolution();
+                if (!BattleControlActive) onDisconnected?.Invoke();
+                return;
+            }
             if (lobbyConnect == null)
             {
                 return;
@@ -113,6 +126,8 @@ namespace Server
 
             disconnecting = false;
             DisconnectRequested = false;
+            tcpEstablished = true;
+            ConnectionError = string.Empty;
             if (!SteamComponent.Instance.TryGetAccount(out accountId, out string username))
             {
                 LoginFailure = LobbyRequestType.LoginFail;
@@ -169,24 +184,26 @@ namespace Server
             }
 
             bool disconnectRequested = DisconnectRequested;
+            bool tryAnotherAddress = !disconnectRequested && !tcpEstablished && nextEndpoint < resolvedEndpoints.Length &&
+                (connect.LastDisconnectInfo?.Reason == DisconnectReason.ConnectFailed ||
+                 connect.LastDisconnectInfo?.Phase == "ConnectTimeout");
+            UnregisterLobbyCallbacks(connect);
+            lobbyConnect = null;
+            if (tryAnotherAddress)
+            {
+                Debug.LogWarning($"[Lobby] {connect.RemoteEndpoint} failed; trying the next DNS address.");
+                TryNextEndpoint();
+                return;
+            }
+            if (!disconnectRequested && !tcpEstablished && LoginFailure == LobbyRequestType.Unknown)
+                ConnectionError = $"无法连接大厅 {connectionAddress}，请确认服务端运行并放行对应 TCP 端口。";
+            CancelResolution();
             CancelPendingHost();
             loginDeadline = 0;
             reconnectAt = NetworkTimer.Instance.TimeNow + ServerUtility.BattleLobbyReconnectInterval;
-            UnregisterHostCallbacks(connect);
             disconnecting = true;
             loggedIn = false;
             accountId = 0UL;
-            lobbyConnect.UnRegisterCallback(MessageCodec.GetOpcode<L2C_LoginLobbyResult>(), OnLoginResult);
-            lobbyConnect.UnRegisterCallback(MessageCodec.GetOpcode<L2C_RefreshRoomList>(), OnRefreshRoomList);
-            lobbyConnect.UnRegisterCallback(MessageCodec.GetOpcode<L2C_RefreshRoomInfo>(), OnRefreshRoomInfo);
-            lobbyConnect.UnRegisterCallback(MessageCodec.GetOpcode<L2C_JoinReturn>(), OnJoinRoom);
-            lobbyConnect.UnRegisterCallback(MessageCodec.GetOpcode<L2C_CreateReturn>(), OnCreateRoom);
-            lobbyConnect.UnRegisterCallback(MessageCodec.GetOpcode<L2C_LeaveReturn>(), OnLeaveRoom);
-            lobbyConnect.UnRegisterCallback(MessageCodec.GetOpcode<L2C_StartReturn>(), OnStartResult);
-            lobbyConnect.UnRegisterCallback(MessageCodec.GetOpcode<L2C_StartTicket>(), OnStartTicket);
-            lobbyConnect.OnConnected -= OnLobbyConnected;
-            lobbyConnect.OnDisconnected -= OnDisconnected;
-            lobbyConnect = null;
 
             if (request != null)
             {
